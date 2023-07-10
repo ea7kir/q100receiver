@@ -3,11 +3,11 @@
  *  Copyright (c) 2023 Michael Naylor EA7KIR (https://michaelnaylor.es)
  */
 
-package tuner
+package rxControl
 
 import (
-	"q100receiver/lmReader"
-	"q100receiver/spReader"
+	"q100receiver/lmClient"
+	"q100receiver/spectrumClient"
 )
 
 var (
@@ -138,7 +138,7 @@ func switchBand() { // TODO: should switch back to previosly use settings
 }
 
 func somethingChanged() {
-	lmReader.UnTune()
+	lmClient.UnTune()
 	IsTuned = false
-	spReader.SetMarker(Frequency.Value, SymbolRate.Value)
+	spectrumClient.SetMarker(Frequency.Value, SymbolRate.Value)
 }

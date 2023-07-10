@@ -1,4 +1,4 @@
-package spReader
+package spectrumClient
 
 /****************************************************************
 	MARKER FUNCTIONS

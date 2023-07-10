@@ -1,7 +1,7 @@
-package tuner
+package rxControl
 
 import (
-	"q100receiver/lmReader"
+	"q100receiver/lmClient"
 	"q100receiver/logger"
 )
 
@@ -43,7 +43,7 @@ func Intitialize(tuc TuConfig) {
 func Stop() {
 	logger.Info.Printf("Tuner will stop...")
 	if IsTuned {
-		lmReader.UnTune()
+		lmClient.UnTune()
 		IsTuned = false
 	}
 	logger.Info.Printf("Tuner has stopped")
@@ -51,10 +51,10 @@ func Stop() {
 
 func Tune() {
 	if IsTuned {
-		lmReader.UnTune()
+		lmClient.UnTune()
 		IsTuned = false
 	} else {
-		lmReader.Tune(Frequency.Value, SymbolRate.Value)
+		lmClient.Tune(Frequency.Value, SymbolRate.Value)
 		IsTuned = true
 	}
 }

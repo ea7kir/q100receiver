@@ -1,4 +1,4 @@
-package lmReader
+package lmClient
 
 import "q100receiver/logger"
 

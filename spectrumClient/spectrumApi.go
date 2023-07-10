@@ -1,4 +1,4 @@
-package spReader
+package spectrumClient
 
 import (
 	"q100receiver/logger"

@@ -26,10 +26,10 @@ import (
 	"image/color"
 	"os"
 	"os/signal"
-	"q100receiver/lmReader"
+	"q100receiver/lmClient"
 	"q100receiver/logger"
-	"q100receiver/spReader"
-	"q100receiver/tuner"
+	"q100receiver/rxControl"
+	"q100receiver/spectrumClient"
 
 	"github.com/ajstarks/giocanvas"
 
@@ -50,10 +50,10 @@ const appFolder = "/home/pi/Q100/q100receiver/"
 
 // configuration data
 var (
-	spectrumConfig = spReader.SpConfig{
+	spectrumConfig = spectrumClient.SpConfig{
 		Url: "wss://eshail.batc.org.uk/wb/fft/fft_ea7kirsatcontroller:443/",
 	}
-	lmConfig = lmReader.LmConfig{
+	lmConfig = lmClient.LmConfig{
 		Folder:      appFolder + "_longmynd/",
 		Binary:      appFolder + "_longmynd/longmynd",
 		Offset:      float64(9750000),
@@ -61,14 +61,14 @@ var (
 		StartScript: appFolder + "_scripts/longmyndrun",
 		StopScript:  appFolder + "_scripts/longmyndkill",
 	}
-	fpConfig = lmReader.FpConfig{
+	fpConfig = lmClient.FpConfig{
 		Binary:      "/usr/bin/ffplay",
 		TsFifo:      appFolder + "_longmynd/longmynd_main_ts",
 		Volume:      "70",
 		StartScript: appFolder + "_scripts/ffplayrun",
 		StopScript:  appFolder + "_scripts/ffplaykill",
 	}
-	tuConfig = tuner.TuConfig{
+	tuConfig = rxControl.TuConfig{
 		Band:                 "Narrow",
 		WideSymbolrate:       "1000",
 		NarrowSymbolrate:     "333",
@@ -81,21 +81,21 @@ var (
 
 // local data
 var (
-	spData    spReader.SpData
-	spChannel = make(chan spReader.SpData, 5)
-	lmData    lmReader.LongmyndData
-	lmChannel = make(chan lmReader.LongmyndData, 5)
+	spData    spectrumClient.SpData
+	spChannel = make(chan spectrumClient.SpData, 5)
+	lmData    lmClient.LongmyndData
+	lmChannel = make(chan lmClient.LongmyndData, 5)
 )
 
 // main - with some help from Chris Waldon who got me started
 func main() {
 	os.Setenv("DISPLAY", ":0") // required for X11
 
-	spReader.Intitialize(spectrumConfig, spChannel)
+	spectrumClient.Intitialize(spectrumConfig, spChannel)
 
-	tuner.Intitialize(tuConfig)
+	rxControl.Intitialize(tuConfig)
 
-	lmReader.Intitialize(lmConfig, fpConfig, lmChannel)
+	lmClient.Intitialize(lmConfig, fpConfig, lmChannel)
 
 	go func() {
 		w := app.NewWindow(app.Fullscreen.Option())
@@ -105,9 +105,9 @@ func main() {
 			// log.Fatal(err)
 		}
 
-		tuner.Stop()
-		lmReader.Stop()
-		spReader.Stop()
+		rxControl.Stop()
+		lmClient.Stop()
+		spectrumClient.Stop()
 
 		os.Exit(0)
 	}()
@@ -135,9 +135,9 @@ func loop(w *app.Window) error {
 			// Log something to make it obvious this happened.
 			// logger.Info.Printf("context cancelled")
 			// Initiate window shutdown.
-			tuner.Stop()    // TODO: does nothing yet
-			lmReader.Stop() // TODO: does nothing yet
-			spReader.Stop() // TODO: does nothing yet - bombs with Control=C
+			rxControl.Stop()      // TODO: does nothing yet
+			lmClient.Stop()       // TODO: does nothing yet
+			spectrumClient.Stop() // TODO: does nothing yet - bombs with Control=C
 			w.Perform(system.ActionClose)
 		case lmData = <-lmChannel:
 			w.Invalidate()
@@ -155,28 +155,28 @@ func loop(w *app.Window) error {
 					w.Perform(system.ActionClose)
 				}
 				if ui.decBand.Clicked() {
-					tuner.DecBandSelector(&tuner.Band)
+					rxControl.DecBandSelector(&rxControl.Band)
 				}
 				if ui.incBand.Clicked() {
-					tuner.IncBandSelector(&tuner.Band)
+					rxControl.IncBandSelector(&rxControl.Band)
 				}
 				if ui.decSymbolRate.Clicked() {
-					tuner.DecSelector(&tuner.SymbolRate)
+					rxControl.DecSelector(&rxControl.SymbolRate)
 				}
 				if ui.incSymbolRate.Clicked() {
-					tuner.IncSelector(&tuner.SymbolRate)
+					rxControl.IncSelector(&rxControl.SymbolRate)
 				}
 				if ui.decFrequency.Clicked() {
-					tuner.DecSelector(&tuner.Frequency)
+					rxControl.DecSelector(&rxControl.Frequency)
 				}
 				if ui.incFrequency.Clicked() {
-					tuner.IncSelector(&tuner.Frequency)
+					rxControl.IncSelector(&rxControl.Frequency)
 				}
 				if ui.tune.Clicked() {
-					tuner.Tune()
+					rxControl.Tune()
 				}
 				if ui.mute.Clicked() {
-					tuner.Mute()
+					rxControl.Mute()
 				}
 
 				gtx := layout.NewContext(&ops, event)
@@ -343,13 +343,13 @@ func (ui *UI) q100_MainTuningRow(gtx C) D {
 		Spacing: layout.SpaceEvenly,
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return ui.q100_Selector(gtx, &ui.decBand, &ui.incBand, tuner.Band.Value, btnWidth, 100)
+			return ui.q100_Selector(gtx, &ui.decBand, &ui.incBand, rxControl.Band.Value, btnWidth, 100)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return ui.q100_Selector(gtx, &ui.decSymbolRate, &ui.incSymbolRate, tuner.SymbolRate.Value, btnWidth, 50)
+			return ui.q100_Selector(gtx, &ui.decSymbolRate, &ui.incSymbolRate, rxControl.SymbolRate.Value, btnWidth, 50)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return ui.q100_Selector(gtx, &ui.decFrequency, &ui.incFrequency, tuner.Frequency.Value, btnWidth, 100)
+			return ui.q100_Selector(gtx, &ui.decFrequency, &ui.incFrequency, rxControl.Frequency.Value, btnWidth, 100)
 		}),
 	)
 }
@@ -375,7 +375,7 @@ func (ui *UI) q100_SpectrumDisplay(gtx C) D {
 				// tuning marker
 				canvas.Rect(spData.MarkerCentre, 50, spData.MarkerWidth, 100, q100color.gfxMarker)
 				// polygon
-				canvas.Polygon(spReader.Xp, spData.Yp, q100color.gfxGreen)
+				canvas.Polygon(spectrumClient.Xp, spData.Yp, q100color.gfxGreen)
 				// graticule
 				const fyBase float32 = 3
 				const fyInc float32 = 5.88235
@@ -480,14 +480,14 @@ func (ui *UI) q100_Column2Buttons(gtx C) D {
 			return inset.Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Dp(btnWidth)
 				gtx.Constraints.Min.Y = gtx.Dp(btnHeight)
-				return ui.q100_Button(gtx, &ui.tune, "TUNE", tuner.IsTuned, q100color.buttonGreen)
+				return ui.q100_Button(gtx, &ui.tune, "TUNE", rxControl.IsTuned, q100color.buttonGreen)
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
 			return inset.Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Dp(btnWidth)
 				gtx.Constraints.Min.Y = gtx.Dp(btnHeight)
-				return ui.q100_Button(gtx, &ui.mute, "MUTE", tuner.IsMuted, q100color.buttonRed)
+				return ui.q100_Button(gtx, &ui.mute, "MUTE", rxControl.IsMuted, q100color.buttonRed)
 			})
 		}),
 	)
