@@ -1,0 +1,12 @@
+
+panic: runtime error: index out of range [31] with length 29
+
+goroutine 38 [running]:
+q100receiver/lmreader.id18_setConstellationAndFecAndAndMargin({0x4000e782e4?, 0x7?})
+	/home/pi/Q100/q100receiver-v3/lmreader/lmreader.go:564 +0x610
+q100receiver/lmreader.readLongmynd({0x8a33f4, 0x3c}, 0x0?, 0x0?)
+	/home/pi/Q100/q100receiver-v3/lmreader/lmreader.go:373 +0x19ac
+created by q100receiver/lmreader.Start
+	/home/pi/Q100/q100receiver-v3/lmreader/lmapi.go:38 +0xdc
+exit status 2
+pi@rxtouch:~/Q100/q100receiver-v3 $ go run .
