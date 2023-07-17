@@ -27,11 +27,11 @@ sudo tar -C /usr/local -xzf go1.20.6.linux-arm64.tar.gz
 
 echo
 echo "-------------------------------"
-echo "-- Install gio"
+echo "-- Install gioui dependencies"
 echo "-------------------------------"
 echo
 
-go install gioui.org/cmd/gogio@latest
+sudo apt install gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
 
 echo
 echo "-------------------------------"
@@ -43,3 +43,8 @@ echo "Clone q100receiver from within VSCODE"
 echo "using: https://github.com/ea7kir/q100receiver.git"
 echo
 echo "To run q100receiver, type: ./q100receiver"
+
+sleep 5
+
+sudo reboot
+
