@@ -292,14 +292,14 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 
 	file, err := os.OpenFile(fifoPath, os.O_CREATE, os.ModeNamedPipe)
 	if err != nil {
-		logger.Warn("unable to open '%v' fifo %v: ", fifoPath, err)
+		logger.Warn.Printf("unable to open '%v' fifo %v: ", fifoPath, err)
 		return
 	}
 	defer file.Close()
 
 	reader := bufio.NewReader(file)
 
-	logger.Info("the decode forever loop has started")
+	logger.Info.Printf("the decode forever loop has started")
 
 	for {
 
@@ -315,7 +315,7 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 
 		lmId, lmVal, err := idAndValFromString(rawStr)
 		if err != nil {
-			logger.Warn("returned from idAndValFromString: %v", err)
+			logger.Warn.Printf("returned from idAndValFromString: %v", err)
 			continue
 		}
 
@@ -388,7 +388,7 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 			*cacheData = *liveData
 		}
 	}
-	// logger.Info("lmreader has stopped")
+	// logger.Info.Printf("lmreader has stopped")
 }
 
 /***********************************************************
@@ -411,7 +411,7 @@ func id1_setState(stateStr string) {
 		liveData.State = kLocked
 		liveData.Mode = kDVB_S2
 	default:
-		logger.Warn("undefined status: %v", stateStr)
+		logger.Warn.Printf("undefined status: %v", stateStr)
 		// liveData.reset()
 		// return
 	}
@@ -426,7 +426,7 @@ func id1_setState(stateStr string) {
 func id6_setFrequency(carrierFrequencyStr string, offset float64) {
 	kHzFloat, err := strconv.ParseFloat(carrierFrequencyStr, 64)
 	if err != nil {
-		logger.Warn("bad carrierFrequencyStr: %v", err)
+		logger.Warn.Printf("bad carrierFrequencyStr: %v", err)
 		liveData.Frequency = kDash
 		return
 	}
@@ -438,7 +438,7 @@ func id6_setFrequency(carrierFrequencyStr string, offset float64) {
 func id9_setSymbolRate(symbolRateStr string) {
 	sysmbolRateFloat, err := strconv.ParseFloat(symbolRateStr, 64)
 	if err != nil {
-		logger.Warn("bad symbolRateStr: %v", err)
+		logger.Warn.Printf("bad symbolRateStr: %v", err)
 		liveData.SymbolRate = kDash
 		return
 	}
@@ -450,7 +450,7 @@ func id9_setSymbolRate(symbolRateStr string) {
 func id12_setDbMer(merStr string) {
 	dbMerFloat, err := strconv.ParseFloat(merStr, 64)
 	if err != nil {
-		logger.Warn("bad merStr: %v", err)
+		logger.Warn.Printf("bad merStr: %v", err)
 		liveData.DbMer = kDash
 		return
 	}
@@ -479,7 +479,7 @@ func id14_setService(serviceStr string) {
 // Null Ratio - Ratio of Nulls in TS as percentage
 func id15_setNullRatio(nullRatioStr string) {
 	if nullRatioStr == "" {
-		logger.Warn("missing nullRatioStr")
+		logger.Warn.Printf("missing nullRatioStr")
 		liveData.NullRatio = kDash
 		return
 	}
@@ -529,7 +529,7 @@ func id17_setEsType(esType string) {
 	case "129":
 		liveData.AudioCodec = "AC3"
 	default:
-		logger.Info("unknow ES Type: %v", esType)
+		logger.Info.Printf("unknow ES Type: %v", esType)
 	}
 }
 
@@ -538,7 +538,7 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 	// set Constellation and Fec
 	modcodInt, err := strconv.Atoi(modcodStr) // wiil panic panic if modcodInt is > 28
 	if err != nil {
-		logger.Warn("uunable to convert modcodStr %v", err)
+		logger.Warn.Printf("uunable to convert modcodStr %v", err)
 		return
 	}
 	liveData.Constellation = kDash
@@ -551,12 +551,12 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 		liveData.Constellation = kModcodeDvdS2[modcodInt].constellation // throws panic: runtime error: index out of range [31] with length 29
 		liveData.Fec = kModcodeDvdS2[modcodInt].fec
 	default:
-		// logger.Warn("unknkown longmyndData.mode %v", mode) // TODO: why here, when no signal received ?
+		// logger.Warn.Printf("unknkown longmyndData.mode %v", mode) // TODO: why here, when no signal received ?
 		return
 	}
 	// set Margin
 	if liveData.DbMer == kDash || liveData.Fec == kDash || liveData.Constellation == kDash {
-		logger.Warn("unable to set Margin")
+		logger.Warn.Printf("unable to set Margin")
 		liveData.DbMargin = kDash
 		return
 	}
@@ -573,14 +573,14 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 		}
 		key = kDVB_S2 + " " + liveData.Constellation + " " + liveData.Fec
 	default:
-		logger.Warn("unknown liveData.Mode: %v", liveData.Mode)
+		logger.Warn.Printf("unknown liveData.Mode: %v", liveData.Mode)
 		return
 	}
 
 	float_threshold := kModeFecThreshold[key]
 	float_mer, err := strconv.ParseFloat(liveData.DbMer, 64) // using float64 seems excessive !
 	if err != nil {
-		logger.Warn("bad longmyndData.dbMer: %v", err)
+		logger.Warn.Printf("bad longmyndData.dbMer: %v", err)
 		liveData.DbMargin = kDash
 		return
 	}
@@ -594,7 +594,7 @@ func id26_setDbmPower(agc1Str string) {
 	}
 	agc1, err := strconv.Atoi(agc1Str)
 	if err != nil {
-		logger.Warn("uunable to convert agc1Str %v", err)
+		logger.Warn.Printf("uunable to convert agc1Str %v", err)
 		return
 	}
 	agcPair.the1stAgcValue = agc1
@@ -608,7 +608,7 @@ func id27_setDbmPower(agc2Str string) {
 	}
 	agc2, err := strconv.Atoi(agc2Str)
 	if err != nil {
-		logger.Warn("uunable to convert agc2Str %v", err)
+		logger.Warn.Printf("uunable to convert agc2Str %v", err)
 		return
 	}
 	agcPair.the2ndAgcValue = agc2

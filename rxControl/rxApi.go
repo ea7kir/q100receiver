@@ -41,12 +41,12 @@ func Intitialize(tuc TuConfig) {
 }
 
 func Stop() {
-	logger.Info("Tuner will stop...")
+	logger.Info.Printf("Tuner will stop...")
 	if IsTuned {
 		lmClient.UnTune()
 		IsTuned = false
 	}
-	logger.Info("Tuner has stopped")
+	logger.Info.Printf("Tuner has stopped")
 }
 
 func Tune() {

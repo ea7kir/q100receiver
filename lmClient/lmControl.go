@@ -23,7 +23,7 @@ func killAll() {
 	// }
 	// // otherwise, print the output from running the command
 	// fmt.Println("------------------Output: ", string(out))
-	// // logger.Info("cmd: %v", out)
+	// // logger.Info.Printf("cmd: %v", out)
 }
 
 /*****************************************************************************************************************************************
@@ -33,13 +33,13 @@ func killAll() {
 *****************************************************************************************************************************************/
 
 func NEWstartLongmynd() { // TODO: return isTuned etc.
-	logger.Info("longmynd will start...")
+	logger.Info.Printf("longmynd will start...")
 
 	// trim "10491.50 / 00" to "10491.50"
 	freqeuncy := strings.SplitN(withFrequency, " ", 2)[0]
 	requestedFrequency, err := strconv.ParseFloat(freqeuncy, 64)
 	if err != nil {
-		logger.Warn("bad lmFrequency: %v", err)
+		logger.Warn.Printf("bad lmFrequency: %v", err)
 		return
 	}
 	requestKHz := (requestedFrequency * 1000) - lmcfg.Offset
@@ -55,26 +55,26 @@ func NEWstartLongmynd() { // TODO: return isTuned etc.
 	p, err := os.StartProcess(lmcfg.Binary, args, &procAttr)
 	if err != nil {
 		lmPid = 0
-		logger.Warn("longmynd failed to start: %v", err)
+		logger.Warn.Printf("longmynd failed to start: %v", err)
 		return
 	}
 	lmPid = p.Pid
-	logger.Info("longmynd has started with PID: %v", lmPid)
+	logger.Info.Printf("longmynd has started with PID: %v", lmPid)
 }
 
 func NEWstopLongmynd() {
 	if lmPid == 0 {
 		return
 	}
-	logger.Info("longmynd will stop...")
+	logger.Info.Printf("longmynd will stop...")
 	err := syscall.Kill(lmPid, syscall.SIGINT)
 	if err != nil {
 		lmPid = 0
-		logger.Warn("unable to kill longmynd: %v", err)
+		logger.Warn.Printf("unable to kill longmynd: %v", err)
 		return
 	}
 	lmPid = 0
-	logger.Info("longmynd has stopped")
+	logger.Info.Printf("longmynd has stopped")
 }
 
 /****************************************************************************************************************************************/
@@ -83,7 +83,7 @@ func NEWstartFfplay() {
 	// if ffPlayPid != 0 {
 	// 	return
 	// }
-	logger.Info("ffplay will start...")
+	logger.Info.Printf("ffplay will start...")
 	// time.Sleep(time.Second)
 	// // cmd := exec.Command(fpcfg.Binary, "-left 800", "-fs", "-volume "+fpcfg.Volume, "-i "+fpcfg.TsFifo)
 	// cmd := exec.Command(fpcfg.Binary, "-left", "800", "-fs", "-volume", fpcfg.Volume, "-i ", fpcfg.TsFifo)
@@ -91,13 +91,13 @@ func NEWstartFfplay() {
 	// 	"DISPLAY=:0",
 	// )
 	// if err := cmd.Run(); err != nil {
-	// 	logger.Fatal(": %v", err)
+	// 	logger.Fatal.Fatalf(": %v", err)
 	// }
 	// something, err := cmd.Output()
 	// if err != nil {
-	// 	logger.Warn("failed to start ffplay: %v", err)
+	// 	logger.Warn.Printf("failed to start ffplay: %v", err)
 	// }
-	// logger.Info("ffplay has started %v", something)
+	// logger.Info.Printf("ffplay has started %v", something)
 	// return
 
 	var args []string
@@ -119,15 +119,15 @@ func NEWstartFfplay() {
 	p, err := os.StartProcess(fpcfg.Binary, args, &procAttr)
 	if err != nil {
 		ffPlayPid = 0
-		logger.Warn("failed to start ffplay: %v", err)
+		logger.Warn.Printf("failed to start ffplay: %v", err)
 		return
 	}
 	ffPlayPid = p.Pid
-	logger.Info("ffplay has started with PID: %v ARGS: %v", ffPlayPid, args)
+	logger.Info.Printf("ffplay has started with PID: %v ARGS: %v", ffPlayPid, args)
 }
 
 func NEWstopFfplay() {
-	logger.Info("ffplay will stop...")
+	logger.Info.Printf("ffplay will stop...")
 
 	cmd := exec.Command("/usr/bin/killall", "-SIGINT", "ffplay", "pulseaudio")
 	_, _ = cmd.Output()
@@ -135,14 +135,14 @@ func NEWstopFfplay() {
 	// if ffPlayPid == 0 {
 	// 	return
 	// }
-	// logger.Info("ffplay will stop...")
+	// logger.Info.Printf("ffplay will stop...")
 	// err := syscall.Kill(ffPlayPid, syscall.SIGINT)
 	// if err != nil {
-	// 	logger.Warn("unable to kill ffplay: %v", err)
+	// 	logger.Warn.Printf("unable to kill ffplay: %v", err)
 	// 	return
 	// }
 	// ffPlayPid = 0
-	logger.Info("ffplay has stopped")
+	logger.Info.Printf("ffplay has stopped")
 }
 
 /*****************************************************************************************************************************************
@@ -156,57 +156,57 @@ func startLongmynd(frequency, symbolRate string) bool {
 	frequencySplit := strings.SplitN(frequency, " ", 2)[0]
 	requestedFrequency, err := strconv.ParseFloat(frequencySplit, 64)
 	if err != nil {
-		logger.Fatal("bad lmFrequency: %v", err)
+		logger.Fatal.Fatalf("bad lmFrequency: %v", err)
 	}
 	requestKHz := (requestedFrequency * 1000) - lmcfg.Offset
 	requestKHzStr := strconv.FormatFloat(requestKHz, 'f', 0, 64)
-	logger.Info("longmynd will start...")
+	logger.Info.Printf("longmynd will start...")
 	cmd := exec.Command(lmcfg.StartScript, lmcfg.Folder, lmcfg.Binary, requestKHzStr, symbolRate)
-	logger.Info("exec: %v", cmd)
+	logger.Info.Printf("exec: %v", cmd)
 	_, err = cmd.Output()
 	if err != nil {
-		logger.Fatal("unable to start longmynd: %v", err)
+		logger.Fatal.Fatalf("unable to start longmynd: %v", err)
 		return false
 	}
-	logger.Info("longmynd has started")
+	logger.Info.Printf("longmynd has started")
 	return true
 }
 
 func stopLongmynd() bool {
-	logger.Info("longmynd will stop...")
+	logger.Info.Printf("longmynd will stop...")
 	cmd := exec.Command(lmcfg.StopScript)
-	logger.Info("exec: %v", cmd.Args)
+	logger.Info.Printf("exec: %v", cmd.Args)
 	_, err := cmd.Output()
 	if err != nil {
-		logger.Warn("unable to kill longmynd: %v", err)
+		logger.Warn.Printf("unable to kill longmynd: %v", err)
 		return false
 	}
-	logger.Info("longmynd has stopped")
+	logger.Info.Printf("longmynd has stopped")
 	return false
 }
 
 func startFfplay() bool {
-	logger.Info("ffplay will start...")
+	logger.Info.Printf("ffplay will start...")
 	cmd := exec.Command(fpcfg.StartScript, fpcfg.Volume, fpcfg.TsFifo)
-	logger.Info("exec: %v", cmd.Args)
+	logger.Info.Printf("exec: %v", cmd.Args)
 	_, err := cmd.Output()
 	if err != nil {
-		logger.Fatal("unable to start ffplay: %v", err)
+		logger.Fatal.Fatalf("unable to start ffplay: %v", err)
 		return false
 	}
-	logger.Info("ffplay has started")
+	logger.Info.Printf("ffplay has started")
 	return true
 }
 
 func stopFfplay() bool {
-	logger.Info("ffplay will stop...")
+	logger.Info.Printf("ffplay will stop...")
 	cmd := exec.Command(fpcfg.StopScript)
-	logger.Info("exec: %v", cmd)
+	logger.Info.Printf("exec: %v", cmd)
 	_, err := cmd.Output()
 	if err != nil {
-		logger.Warn("unable to stop ffplay: %v", err)
+		logger.Warn.Printf("unable to stop ffplay: %v", err)
 		return false
 	}
-	logger.Info("ffplay has stopped")
+	logger.Info.Printf("ffplay has stopped")
 	return false
 }

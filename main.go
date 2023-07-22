@@ -101,7 +101,7 @@ func main() {
 		w := app.NewWindow(app.Fullscreen.Option())
 		app.Size(800, 480) // I don't know if this is help in any way
 		if err := loop(w); err != nil {
-			logger.Fatal(": ", err)
+			logger.Fatal.Fatalf(": ", err)
 		}
 
 		rxControl.Stop()

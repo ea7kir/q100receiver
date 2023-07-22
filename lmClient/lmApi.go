@@ -35,20 +35,20 @@ func Intitialize(lmc LmConfig, fpc FpConfig, ch chan LongmyndData) {
 }
 
 func Stop() {
-	logger.Info("LmReader will stop...")
+	logger.Info.Printf("LmReader will stop...")
 	// TODO: implement a better way to stop longmynd and ffplay
 	killAll()
-	logger.Info("LmReader has stopped")
+	logger.Info.Printf("LmReader has stopped")
 }
 
 func Tune(frequency, sysmbolRate string) {
-	logger.Info("------ WILL TUNE")
+	logger.Info.Printf("------ WILL TUNE")
 	isTuned = startLongmynd(frequency, sysmbolRate) // TODO: pass arguments
 	// isTuned = true
 }
 
 func UnTune() {
-	logger.Info("------ WILL UNTUNE")
+	logger.Info.Printf("------ WILL UNTUNE")
 	// isTuned = stopLongmynd()
 	killAll()
 	isTuned = false

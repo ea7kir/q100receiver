@@ -31,9 +31,9 @@ func Intitialize(cfg SpConfig, ch chan SpData) {
 }
 
 func Stop() {
-	logger.Warn("Spectrum will stop... - NOT IMPLELENTED")
+	logger.Warn.Printf("Spectrum will stop... - NOT IMPLELENTED")
 	//
-	logger.Info("Spectrum has stopped - NOT IMPLELENTED")
+	logger.Info.Printf("Spectrum has stopped - NOT IMPLELENTED")
 }
 
 // Sets the spData Marker values
