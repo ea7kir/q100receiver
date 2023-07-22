@@ -67,11 +67,11 @@ func CalibratetionPoints() {
 
 	for _, v := range CalibrationMarkerWidth {
 		// yp[v] = 100
-		logger.Info.Printf("CalibratetionPoints %v", v)
+		logger.Info("CalibratetionPoints %v", v)
 	}
 
 	for i, v := range yp {
-		logger.Info.Printf("CalibratetionPoints %v  %v", i, v)
+		logger.Info("CalibratetionPoints %v  %v", i, v)
 	}
 
 }
