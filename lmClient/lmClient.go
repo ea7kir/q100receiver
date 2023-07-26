@@ -172,14 +172,16 @@ var (
 
 // Represenst all the Longmynd status data being receved
 type LongmyndData struct {
-	Msg           string
-	State         string
-	Frequency     string
-	SymbolRate    string
-	DbMer         string
-	Provider      string
-	Service       string
-	NullRatio     string
+	Msg        string
+	State      string
+	Frequency  string
+	SymbolRate string
+	DbMer      string
+	Provider   string
+	Service    string
+	NullRatio  string
+	// EsPid         string
+	// EsType        string
 	VideoCodec    string
 	AudioCodec    string
 	Constellation string
@@ -203,6 +205,8 @@ func (p *LongmyndData) resetPartial() {
 	p.Provider = kDash
 	p.Service = kDash
 	p.NullRatio = kDash
+	// p.EsPid = kDash
+	// p.EsType = kDash
 	p.VideoCodec = kDash
 	p.AudioCodec = kDash
 	p.Constellation = kDash
@@ -213,17 +217,17 @@ func (p *LongmyndData) resetPartial() {
 }
 
 type esPairStuct struct {
-	waitingForType1 bool
-	waitingForType2 bool
-	the1stTypeValue string
-	the2ndTypeValue string
+	waitingForPid   bool
+	waitingForType  bool
+	the1stTypeValue int
+	the2ndTypeValue int
 }
 
 func (p *esPairStuct) reset() {
-	p.waitingForType1 = false
-	p.waitingForType2 = false
-	p.the1stTypeValue = ""
-	p.the2ndTypeValue = ""
+	p.waitingForPid = false
+	p.waitingForType = false
+	p.the1stTypeValue = 0
+	p.the2ndTypeValue = 0
 }
 
 type agcPairStuct struct {
@@ -494,44 +498,71 @@ func id16_setEsPid(esPidStr string) {
 	// $16,257 == PID 257 is of type 27 which you look up in the table to be H.264
 	// $17,27  meaning H.264
 	// $16,258 == PID 258 is type 3 which the table says is MP3
-	// $17,3   maeaning MP3
+	// $17,3   meaaning MP3
 	// The PID numbers themselves are fairly arbitrary, will vary based on the transmitted signal and don't really mean anything in a single program multiplex.
 
 	// ignore and do nothing
+	if esPair.waitingForType {
+		return
+	}
+	pid, err := strconv.Atoi(esPidStr)
+	if err != nil {
+		logger.Warn.Printf("uunable to convert esPidStr %v", err)
+		return
+	}
+	esPair.the1stTypeValue = pid
+	esPair.waitingForType = true
 }
 
 // ES TYPE - Elementary Stream Type (repeated as pair with 16 for each ES)
 func id17_setEsType(esType string) {
-	switch esType {
+	if !esPair.waitingForType {
+		return
+	}
+	typ, err := strconv.Atoi(esType)
+	if err != nil {
+		logger.Warn.Printf("uunable to convert esType %v", err)
+		return
+	}
+	esPair.the2ndTypeValue = typ
 
-	case "1":
+	logger.Info.Printf("----------------------- PID %v Type %v", esPair.the1stTypeValue, esPair.the2ndTypeValue)
+
+	switch esPair.the1stTypeValue {
+	case 1:
 		liveData.VideoCodec = "MPEG1"
-	case "16":
+	case 16:
 		liveData.VideoCodec = "H.263"
-	case "27":
+	case 27:
 		liveData.VideoCodec = "H.264"
-	case "33":
+	case 33:
 		liveData.VideoCodec = "JPG2K"
-	case "36":
+	case 36:
 		liveData.VideoCodec = "H.265"
-	case "51":
+	case 51:
 		liveData.VideoCodec = "H.266"
+	default:
+		liveData.VideoCodec = "???"
+	}
 
-	case "2":
+	switch esPair.the2ndTypeValue {
+	case 2:
 		liveData.AudioCodec = "MPEG2"
-	case "3":
+	case 3:
 		liveData.AudioCodec = "MP3"
-	case "4":
+	case 4:
 		liveData.AudioCodec = "MP3"
-	case "15":
+	case 15:
 		liveData.AudioCodec = "ACC"
-	case "32":
+	case 32:
 		liveData.AudioCodec = "MPA"
-	case "129":
+	case 129:
 		liveData.AudioCodec = "AC3"
 	default:
-		logger.Warn.Printf("unknow ES Type: %v", esType)
+		liveData.AudioCodec = "???"
 	}
+
+	esPair.reset()
 }
 
 // MODCOD - Received Modulation & Coding Rate. See MODCOD Lookup Table below
