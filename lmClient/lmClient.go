@@ -97,7 +97,7 @@ var (
 		"DVB-S2 32APSK 9/10": 16.1,
 	}
 
-	kAgc1 = map[int]string{
+	kAgc1 = map[int]string{ // TODO: MAPS ARE NOT SORTED
 		1:     "-70",
 		10:    "-69",
 		21800: "-68",
@@ -137,34 +137,105 @@ var (
 		37700: "-35",
 	}
 
-	kAgc2 = map[int]string{
-		182:  "71",
-		200:  "72",
-		225:  "73",
-		255:  "74",
-		290:  "75",
-		325:  "76",
-		360:  "77",
-		400:  "78",
-		450:  "79",
-		500:  "80",
-		560:  "81",
-		625:  "82",
-		700:  "83",
-		780:  "84",
-		880:  "85",
-		1000: "86",
-		1140: "87",
-		1300: "88",
-		1480: "89",
-		1660: "90",
-		1840: "91",
-		2020: "92",
-		2200: "93",
-		2380: "94",
-		2560: "95",
-		2740: "96",
-		3200: "97",
+	kAgc2 = map[int]string{ // TODO: MAPS ARE NOT SORTED
+		182:  "-71",
+		200:  "-72",
+		225:  "-73",
+		255:  "-74",
+		290:  "-75",
+		325:  "-76",
+		360:  "-77",
+		400:  "-78",
+		450:  "-79",
+		500:  "-80",
+		560:  "-81",
+		625:  "-82",
+		700:  "-83",
+		780:  "-84",
+		880:  "-85",
+		1000: "-86",
+		1140: "-87",
+		1300: "-88",
+		1480: "-89",
+		1660: "-90",
+		1840: "-91",
+		2020: "-92",
+		2200: "-93",
+		2380: "-94",
+		2560: "-95",
+		2740: "-96",
+		3200: "-97",
+	}
+
+	_kAgc1 = [...][2]int{
+		{1, -70},
+		{10, -69},
+		{21800, -68},
+		{25100, -67},
+		{27100, -66},
+		{28100, -65},
+		{28900, -64},
+		{29600, -63},
+		{30100, -62},
+		{30550, -61},
+		{31000, -60},
+		{31350, -59},
+		{31700, -58},
+		{32050, -57},
+		{32400, -56},
+		{32700, -55},
+		{33000, -54},
+		{33300, -53},
+		{33600, -52},
+		{33900, -51},
+		{34200, -50},
+		{34500, -49},
+		{34750, -48},
+		{35000, -47},
+		{35250, -46},
+		{35500, -45},
+		{35750, -44},
+		{36000, -43},
+		{36200, -42},
+		{36400, -41},
+		{36600, -40},
+		{36800, -39},
+		{37000, -38},
+		{37200, -37},
+		{37400, -36},
+		{37600, -35},
+		{37700, -35},
+	}
+
+	_kAgc2 = [...][2]int{
+		{182, -71},
+		{200, -72},
+		{225, -73},
+		{225, -73},
+		{255, -74},
+		{290, -75},
+		{325, -76},
+		{360, -77},
+		{400, -78},
+		{450, -79},
+		{500, -80},
+		{560, -81},
+		{625, -82},
+		{700, -83},
+		{780, -84},
+		{880, -85},
+		{1000, -86},
+		{1140, -87},
+		{1300, -88},
+		{1480, -89},
+		{1660, -90},
+		{1840, -91},
+		{2020, -92},
+		{2200, -93},
+		{2380, -94},
+		{2560, -95},
+		{2740, -96},
+		{3200, -97},
 	}
 )
 
@@ -526,9 +597,9 @@ func id17_setEsType(esType string) {
 	}
 	esPair.the2ndTypeValue = typ
 
-	logger.Info.Printf("----------------------- PID %v Type %v", esPair.the1stTypeValue, esPair.the2ndTypeValue)
+	// logger.Info.Printf("----------------------- PID %v Type %v", esPair.the1stTypeValue, esPair.the2ndTypeValue)
 
-	switch esPair.the1stTypeValue {
+	switch typ {
 	case 1:
 		liveData.VideoCodec = "MPEG1"
 	case 16:
@@ -542,10 +613,10 @@ func id17_setEsType(esType string) {
 	case 51:
 		liveData.VideoCodec = "H.266"
 	default:
-		liveData.VideoCodec = "???"
+		// liveData.VideoCodec = "???"
 	}
 
-	switch esPair.the2ndTypeValue {
+	switch typ {
 	case 2:
 		liveData.AudioCodec = "MPEG2"
 	case 3:
@@ -559,7 +630,7 @@ func id17_setEsType(esType string) {
 	case 129:
 		liveData.AudioCodec = "AC3"
 	default:
-		liveData.AudioCodec = "???"
+		// liveData.AudioCodec = "???"
 	}
 
 	esPair.reset()
@@ -573,19 +644,21 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 		logger.Warn.Printf("uunable to convert modcodStr %v", err)
 		return
 	}
-	liveData.Constellation = kDash
-	liveData.Fec = kDash
+	// liveData.Constellation = kDash
+	// liveData.Fec = kDash
 	switch liveData.Mode {
 	case kDVB_S:
-		if modcodInt >= len(kModcodeDvdS) {
-			logger.Warn.Printf("DVB-S modcodInt (%v) > (%v) ie len(kModcodeDvdS)", modcodInt, len(kModcodeDvdS)) // to avoid panic
+		if modcodInt > len(kModcodeDvdS)-1 {
+			logger.Warn.Printf("DVB-S modcodInt (%v) > (%v)", modcodInt, len(kModcodeDvdS)-1) // to avoid panic
+			liveData.Constellation = kDash
 			return
 		}
 		liveData.Constellation = kModcodeDvdS[modcodInt].constellation
 		liveData.Fec = kModcodeDvdS[modcodInt].fec
 	case kDVB_S2:
-		if modcodInt >= len(kModcodeDvdS2) {
-			logger.Warn.Printf("DVB-S2 modcodInt (%v) > (%v) ie  len(kModcodeDvdS2)", modcodInt, len(kModcodeDvdS2)) // to avoid panic
+		if modcodInt > len(kModcodeDvdS2)-1 {
+			logger.Warn.Printf("DVB-S2 modcodInt (%v) > (%v)", modcodInt, len(kModcodeDvdS2)-1) // to avoid panic
+			liveData.Constellation = kDash
 			return
 		}
 		liveData.Constellation = kModcodeDvdS2[modcodInt].constellation // TODO: throws panic: runtime error: index out of range [31] with length 29
@@ -596,7 +669,7 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 	}
 	// set Margin
 	if liveData.DbMer == kDash || liveData.Fec == kDash || liveData.Constellation == kDash {
-		logger.Warn.Printf("unable to set Margin")
+		logger.Warn.Printf("unable to set Margin at this time")
 		liveData.DbMargin = kDash
 		return
 	}
@@ -617,8 +690,14 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 		return
 	}
 
-	float_threshold := kModeFecThreshold[key]
-	float_mer, err := strconv.ParseFloat(liveData.DbMer, 64) // using float64 seems excessive !
+	// float_threshold := kModeFecThreshold[key]
+	float_threshold, ok := kModeFecThreshold[key]
+	if !ok {
+		logger.Warn.Printf("kModeFecThreshold key not foundr")
+		liveData.DbMargin = kDash
+		return
+	}
+	float_mer, err := strconv.ParseFloat(liveData.DbMer, 64)
 	if err != nil {
 		logger.Warn.Printf("bad longmyndData.dbMer: %v", err)
 		liveData.DbMargin = kDash
@@ -656,20 +735,42 @@ func id27_setDbmPower(agc2Str string) {
 	power := kDash
 
 	if agcPair.the1stAgcValue > 0 {
-		for key, value := range kAgc1 {
+		for key, value := range kAgc1 { // TODO: MAPS ARE NOT SORTED
 			if agcPair.the1stAgcValue >= key {
 				power = value
 				break
 			}
 		}
 	} else {
-		for key, value := range kAgc2 {
+		for key, value := range kAgc2 { // TODO: MAPS ARE NOT SORTED
 			if agcPair.the2ndAgcValue >= key {
 				power = value
 				break
 			}
 		}
 	}
+
+	p := 0
+	v := agcPair.the1stAgcValue
+	if v > 0 {
+		for _, n := range _kAgc1 {
+			if v < n[0] {
+				p = n[1]
+				break
+			}
+		}
+	} else {
+		for _, n := range _kAgc2 {
+			if v < n[0] {
+				p = n[1]
+				break
+			}
+		}
+
+	}
+	// power = fmt.Sprint(p)
+	fmt.Println(power, p)
+
 	liveData.DbmPower = power
 	agcPair.reset()
 }
