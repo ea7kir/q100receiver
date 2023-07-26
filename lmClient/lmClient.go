@@ -30,7 +30,8 @@ type (
 
 var (
 	kModcodeDvdS = [...]tupleConstellationAndFecStruct{
-		{"QPSK", "1/2"}, {"QPSK", "2/3"}, {"QPSK", "3/4"}, {"QPSK", "5/6"}, {"QPSK", "7/8"},
+		{"QPSK", "1/2"}, {"QPSK", "2/3"}, {"QPSK", "3/4"},
+		{"QPSK", "5/6"}, {"QPSK", "6/7"}, {"QPSK", "7/8"},
 	}
 
 	kModcodeDvdS2 = [...]tupleConstellationAndFecStruct{
