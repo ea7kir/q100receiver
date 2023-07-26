@@ -29,11 +29,11 @@ type (
 )
 
 var (
-	kModcodeDvdS = []tupleConstellationAndFecStruct{
+	kModcodeDvdS = [...]tupleConstellationAndFecStruct{
 		{"QPSK", "1/2"}, {"QPSK", "2/3"}, {"QPSK", "3/4"}, {"QPSK", "5/6"}, {"QPSK", "7/8"},
 	}
 
-	kModcodeDvdS2 = []tupleConstellationAndFecStruct{
+	kModcodeDvdS2 = [...]tupleConstellationAndFecStruct{
 		{"DummyPL", "x"}, {"QPSK", "1/4"}, {"QPSK", "1/3"}, {"QPSK", "2/5"},
 		{"QPSK", "1/2"}, {"QPSK", "3/5"}, {"QPSK", "2/3"}, {"QPSK", "3/4"},
 		{"QPSK", "4/5"}, {"QPSK", "5/6"}, {"QPSK", "8/9"}, {"QPSK", "9/10"},
@@ -529,7 +529,7 @@ func id17_setEsType(esType string) {
 	case "129":
 		liveData.AudioCodec = "AC3"
 	default:
-		logger.Info.Printf("unknow ES Type: %v", esType)
+		logger.Warn.Printf("unknow ES Type: %v", esType)
 	}
 }
 
@@ -545,10 +545,18 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 	liveData.Fec = kDash
 	switch liveData.Mode {
 	case kDVB_S:
+		if modcodInt >= len(kModcodeDvdS) {
+			logger.Warn.Printf("DVB-S modcodInt (%v) > (%v) ie len(kModcodeDvdS)", modcodInt, len(kModcodeDvdS)) // to avoid panic
+			return
+		}
 		liveData.Constellation = kModcodeDvdS[modcodInt].constellation
 		liveData.Fec = kModcodeDvdS[modcodInt].fec
 	case kDVB_S2:
-		liveData.Constellation = kModcodeDvdS2[modcodInt].constellation // throws panic: runtime error: index out of range [31] with length 29
+		if modcodInt >= len(kModcodeDvdS2) {
+			logger.Warn.Printf("DVB-S2 modcodInt (%v) > (%v) ie  len(kModcodeDvdS2)", modcodInt, len(kModcodeDvdS2)) // to avoid panic
+			return
+		}
+		liveData.Constellation = kModcodeDvdS2[modcodInt].constellation // TODO: throws panic: runtime error: index out of range [31] with length 29
 		liveData.Fec = kModcodeDvdS2[modcodInt].fec
 	default:
 		// logger.Warn.Printf("unknkown longmyndData.mode %v", mode) // TODO: why here, when no signal received ?
