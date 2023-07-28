@@ -1,8 +1,6 @@
 package spectrumClient
 
-import (
-	"q100receiver/logger"
-)
+import "q100receiver/logger"
 
 type (
 	SpConfig struct {

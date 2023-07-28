@@ -97,75 +97,75 @@ var (
 		"DVB-S2 32APSK 9/10": 16.1,
 	}
 
-	kAgc1 = map[int]string{ // TODO: MAPS ARE NOT SORTED
-		1:     "-70",
-		10:    "-69",
-		21800: "-68",
-		25100: "-67",
-		27100: "-66",
-		28100: "-65",
-		28900: "-64",
-		29600: "-63",
-		30100: "-62",
-		30550: "-61",
-		31000: "-60",
-		31350: "-59",
-		31700: "-58",
-		32050: "-57",
-		32400: "-56",
-		32700: "-55",
-		33000: "-54",
-		33300: "-53",
-		33600: "-52",
-		33900: "-51",
-		34200: "-50",
-		34500: "-49",
-		34750: "-48",
-		35000: "-47",
-		35250: "-46",
-		35500: "-45",
-		35750: "-44",
-		36000: "-43",
-		36200: "-42",
-		36400: "-41",
-		36600: "-40",
-		36800: "-39",
-		37000: "-38",
-		37200: "-37",
-		37400: "-36",
-		37600: "-35",
-		37700: "-35",
-	}
+	// kAgc1 = map[int]string{ // TODO: MAPS ARE NOT SORTED
+	// 	1:     "-70",
+	// 	10:    "-69",
+	// 	21800: "-68",
+	// 	25100: "-67",
+	// 	27100: "-66",
+	// 	28100: "-65",
+	// 	28900: "-64",
+	// 	29600: "-63",
+	// 	30100: "-62",
+	// 	30550: "-61",
+	// 	31000: "-60",
+	// 	31350: "-59",
+	// 	31700: "-58",
+	// 	32050: "-57",
+	// 	32400: "-56",
+	// 	32700: "-55",
+	// 	33000: "-54",
+	// 	33300: "-53",
+	// 	33600: "-52",
+	// 	33900: "-51",
+	// 	34200: "-50",
+	// 	34500: "-49",
+	// 	34750: "-48",
+	// 	35000: "-47",
+	// 	35250: "-46",
+	// 	35500: "-45",
+	// 	35750: "-44",
+	// 	36000: "-43",
+	// 	36200: "-42",
+	// 	36400: "-41",
+	// 	36600: "-40",
+	// 	36800: "-39",
+	// 	37000: "-38",
+	// 	37200: "-37",
+	// 	37400: "-36",
+	// 	37600: "-35",
+	// 	37700: "-35",
+	// }
 
-	kAgc2 = map[int]string{ // TODO: MAPS ARE NOT SORTED
-		182:  "-71",
-		200:  "-72",
-		225:  "-73",
-		255:  "-74",
-		290:  "-75",
-		325:  "-76",
-		360:  "-77",
-		400:  "-78",
-		450:  "-79",
-		500:  "-80",
-		560:  "-81",
-		625:  "-82",
-		700:  "-83",
-		780:  "-84",
-		880:  "-85",
-		1000: "-86",
-		1140: "-87",
-		1300: "-88",
-		1480: "-89",
-		1660: "-90",
-		1840: "-91",
-		2020: "-92",
-		2200: "-93",
-		2380: "-94",
-		2560: "-95",
-		2740: "-96",
-		3200: "-97",
-	}
+	// kAgc2 = map[int]string{ // TODO: MAPS ARE NOT SORTED
+	// 	182:  "-71",
+	// 	200:  "-72",
+	// 	225:  "-73",
+	// 	255:  "-74",
+	// 	290:  "-75",
+	// 	325:  "-76",
+	// 	360:  "-77",
+	// 	400:  "-78",
+	// 	450:  "-79",
+	// 	500:  "-80",
+	// 	560:  "-81",
+	// 	625:  "-82",
+	// 	700:  "-83",
+	// 	780:  "-84",
+	// 	880:  "-85",
+	// 	1000: "-86",
+	// 	1140: "-87",
+	// 	1300: "-88",
+	// 	1480: "-89",
+	// 	1660: "-90",
+	// 	1840: "-91",
+	// 	2020: "-92",
+	// 	2200: "-93",
+	// 	2380: "-94",
+	// 	2560: "-95",
+	// 	2740: "-96",
+	// 	3200: "-97",
+	// }
 
 	_kAgc1 = [...][2]int{
 		{1, -70},
@@ -243,7 +243,7 @@ var (
 
 // Represenst all the Longmynd status data being receved
 type LongmyndData struct {
-	Msg        string
+	StatusMsg  string
 	State      string
 	Frequency  string
 	SymbolRate string
@@ -268,7 +268,7 @@ func (p *LongmyndData) reset() {
 }
 
 func (p *LongmyndData) resetPartial() {
-	p.Msg = "messsage"
+	p.StatusMsg = "Not tuned"
 	// p.State = kDash
 	p.Frequency = kDash
 	p.SymbolRate = kDash
@@ -457,6 +457,12 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 			isLocked = false
 			isPlaying = stopFfplay()
 			isTuned = stopLongmynd()
+		}
+
+		if isLocked {
+			liveData.StatusMsg = fmt.Sprintf("%s : %s : %s", liveData.State, liveData.Provider, liveData.Service)
+		} else {
+			liveData.StatusMsg = liveData.State
 		}
 
 		if *liveData != *cacheData {
@@ -703,7 +709,7 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 		liveData.DbMargin = kDash
 		return
 	}
-	liveData.DbMargin = fmt.Sprintf("%.1f", float_mer-float_threshold)
+	liveData.DbMargin = fmt.Sprintf("D %.1f", float_mer-float_threshold)
 }
 
 // AGC1 Gain - Gain value of AGC1 (0: Signal too weak, 65535: Signal too strong)
@@ -734,21 +740,21 @@ func id27_setDbmPower(agc2Str string) {
 
 	power := kDash
 
-	if agcPair.the1stAgcValue > 0 {
-		for key, value := range kAgc1 { // TODO: MAPS ARE NOT SORTED
-			if agcPair.the1stAgcValue >= key {
-				power = value
-				break
-			}
-		}
-	} else {
-		for key, value := range kAgc2 { // TODO: MAPS ARE NOT SORTED
-			if agcPair.the2ndAgcValue >= key {
-				power = value
-				break
-			}
-		}
-	}
+	// if agcPair.the1stAgcValue > 0 {
+	// 	for key, value := range kAgc1 { // TODO: MAPS ARE NOT SORTED
+	// 		if agcPair.the1stAgcValue >= key {
+	// 			power = value
+	// 			break
+	// 		}
+	// 	}
+	// } else {
+	// 	for key, value := range kAgc2 { // TODO: MAPS ARE NOT SORTED
+	// 		if agcPair.the2ndAgcValue >= key {
+	// 			power = value
+	// 			break
+	// 		}
+	// 	}
+	// }
 
 	p := 0
 	v := agcPair.the1stAgcValue
@@ -760,6 +766,7 @@ func id27_setDbmPower(agc2Str string) {
 			}
 		}
 	} else {
+		v = agcPair.the2ndAgcValue
 		for _, n := range _kAgc2 {
 			if v < n[0] {
 				p = n[1]
@@ -768,8 +775,8 @@ func id27_setDbmPower(agc2Str string) {
 		}
 
 	}
-	// power = fmt.Sprint(p)
-	fmt.Println(power, p)
+	power = fmt.Sprint(p)
+	// fmt.Println(power, p)
 
 	liveData.DbmPower = power
 	agcPair.reset()

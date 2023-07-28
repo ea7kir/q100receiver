@@ -89,6 +89,9 @@ var (
 
 // main - with some help from Chris Waldon who got me started
 func main() {
+	logger.Open("/home/pi/Q100/receiver.log")
+	defer logger.Close()
+
 	os.Setenv("DISPLAY", ":0") // required for X11
 
 	spectrumClient.Intitialize(spectrumConfig, spChannel)
@@ -286,7 +289,7 @@ func (ui *UI) q100_TopStatusRow(gtx C) D {
 			})
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			return ui.q100_Label(gtx, lmData.State, q100color.labelOrange)
+			return ui.q100_Label(gtx, lmData.StatusMsg, q100color.labelOrange)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return inset.Layout(gtx, func(gtx C) D {
