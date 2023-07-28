@@ -92,6 +92,8 @@ func main() {
 	logger.Open("/home/pi/Q100/receiver.log")
 	defer logger.Close()
 
+	logger.Info.Printf("----- q100receiver Opened -----")
+
 	os.Setenv("DISPLAY", ":0") // required for X11
 
 	spectrumClient.Intitialize(spectrumConfig, spChannel)
@@ -111,6 +113,7 @@ func main() {
 		lmClient.Stop()
 		spectrumClient.Stop()
 
+		logger.Info.Printf("----- q100receiver Closed -----")
 		os.Exit(0)
 	}()
 
