@@ -15,9 +15,105 @@ import (
 	"strings"
 )
 
-var (
-	lmChannel chan LongmyndData
+// BEGIN API ********************************************************
 
+// Represenst all the Longmynd status data being receved
+type LongmyndData struct {
+	StatusMsg     string
+	State         string
+	Frequency     string
+	SymbolRate    string
+	DbMer         string
+	Provider      string
+	Service       string
+	NullRatio     string
+	PidPair1      string
+	PidPair2      string
+	VideoCodec    string
+	AudioCodec    string
+	Constellation string
+	Fec           string
+	Mode          string
+	DbMargin      string
+	DbmPower      string
+}
+
+type (
+	LmConfig struct {
+		Folder      string
+		Binary      string
+		Offset      float64
+		StatusFifo  string
+		StartScript string
+		StopScript  string
+	}
+	FpConfig struct {
+		Binary      string
+		TsFifo      string
+		Volume      string
+		StartScript string
+		StopScript  string
+	}
+)
+
+func Intitialize(lmc LmConfig, fpc FpConfig, ch chan LongmyndData) {
+	lmcfg = &lmc
+	fpcfg = &fpc
+	lmChannel = ch
+	killAll()
+	go readLongmynd(lmcfg.StatusFifo, lmcfg.Offset, lmChannel)
+}
+
+func Stop() {
+	logger.Info.Printf("LmReader will stop...")
+	// TODO: implement a better way to stop longmynd and ffplay
+	killAll()
+	logger.Info.Printf("LmReader has stopped")
+}
+
+func Tune(frequency, sysmbolRate string) {
+	logger.Info.Printf("------ WILL TUNE")
+	isTuned = startLongmynd(frequency, sysmbolRate) // TODO: pass arguments
+	// isTuned = true
+}
+
+func UnTune() {
+	logger.Info.Printf("------ WILL UNTUNE")
+	// isTuned = stopLongmynd()
+	killAll()
+	isTuned = false
+	// stopFfplay()
+}
+
+// END API ********************************************************
+
+func (p *LongmyndData) reset() {
+	p.resetPartial()
+	p.State = kDash
+}
+
+func (p *LongmyndData) resetPartial() {
+	p.StatusMsg = "Not tuned"
+	// p.State = kDash
+	p.Frequency = kDash
+	p.SymbolRate = kDash
+	p.DbMer = kDash
+	p.Provider = kDash
+	p.Service = kDash
+	p.NullRatio = kDash
+	p.PidPair1 = kDash
+	p.PidPair2 = kDash
+	p.VideoCodec = kDash
+	p.AudioCodec = kDash
+	p.Constellation = kDash
+	p.Fec = kDash
+	p.Mode = kDash
+	p.DbMargin = kDash
+	p.DbmPower = kDash
+}
+
+var (
+	lmChannel                      chan LongmyndData
 	withFrequency, withSysmbolRate string
 )
 
@@ -44,21 +140,6 @@ var (
 		{"16APSK", "8/9"}, {"16APSK", "9/10"}, {"32APSK", "3/4"}, {"32APSK", "4/5"},
 		{"32APSK", "5/6"}, {"32APSK", "8/9"}, {"32APSK", "9/10"},
 	}
-
-	// kEsType = map[string]string{
-	// 	"1":   "MPEG1", // Video
-	// 	"2":   "MPEG2", // ???
-	// 	"3":   "MP3",   // Audio
-	// 	"4":   "MP3",   // ???
-	// 	"15":  "ACC",   // Audio
-	// 	"16":  "H.263", // Video
-	// 	"27":  "H.264", // Video
-	// 	"32":  "MPA",   // ???
-	// 	"33":  "JPG2K", // Video
-	// 	"36":  "H.265", // Video
-	// 	"51":  "H.266", // Video
-	// 	"129": "AC3",   // Audio
-	// }
 
 	kModeFecThreshold = map[string]float64{
 		"DVB-S 1/2":          1.7,
@@ -97,77 +178,7 @@ var (
 		"DVB-S2 32APSK 9/10": 16.1,
 	}
 
-	// kAgc1 = map[int]string{ // TODO: MAPS ARE NOT SORTED
-	// 	1:     "-70",
-	// 	10:    "-69",
-	// 	21800: "-68",
-	// 	25100: "-67",
-	// 	27100: "-66",
-	// 	28100: "-65",
-	// 	28900: "-64",
-	// 	29600: "-63",
-	// 	30100: "-62",
-	// 	30550: "-61",
-	// 	31000: "-60",
-	// 	31350: "-59",
-	// 	31700: "-58",
-	// 	32050: "-57",
-	// 	32400: "-56",
-	// 	32700: "-55",
-	// 	33000: "-54",
-	// 	33300: "-53",
-	// 	33600: "-52",
-	// 	33900: "-51",
-	// 	34200: "-50",
-	// 	34500: "-49",
-	// 	34750: "-48",
-	// 	35000: "-47",
-	// 	35250: "-46",
-	// 	35500: "-45",
-	// 	35750: "-44",
-	// 	36000: "-43",
-	// 	36200: "-42",
-	// 	36400: "-41",
-	// 	36600: "-40",
-	// 	36800: "-39",
-	// 	37000: "-38",
-	// 	37200: "-37",
-	// 	37400: "-36",
-	// 	37600: "-35",
-	// 	37700: "-35",
-	// }
-
-	// kAgc2 = map[int]string{ // TODO: MAPS ARE NOT SORTED
-	// 	182:  "-71",
-	// 	200:  "-72",
-	// 	225:  "-73",
-	// 	255:  "-74",
-	// 	290:  "-75",
-	// 	325:  "-76",
-	// 	360:  "-77",
-	// 	400:  "-78",
-	// 	450:  "-79",
-	// 	500:  "-80",
-	// 	560:  "-81",
-	// 	625:  "-82",
-	// 	700:  "-83",
-	// 	780:  "-84",
-	// 	880:  "-85",
-	// 	1000: "-86",
-	// 	1140: "-87",
-	// 	1300: "-88",
-	// 	1480: "-89",
-	// 	1660: "-90",
-	// 	1840: "-91",
-	// 	2020: "-92",
-	// 	2200: "-93",
-	// 	2380: "-94",
-	// 	2560: "-95",
-	// 	2740: "-96",
-	// 	3200: "-97",
-	// }
-
-	_kAgc1 = [...][2]int{
+	kAgc1 = [...][2]int{
 		{1, -70},
 		{10, -69},
 		{21800, -68},
@@ -207,7 +218,7 @@ var (
 		{37700, -35},
 	}
 
-	_kAgc2 = [...][2]int{
+	kAgc2 = [...][2]int{
 		{182, -71},
 		{200, -72},
 		{225, -73},
@@ -239,120 +250,26 @@ var (
 	}
 )
 
-// +++++++++++++++++++++++++++++++++++
-
-// Represenst all the Longmynd status data being receved
-type LongmyndData struct {
-	StatusMsg  string
-	State      string
-	Frequency  string
-	SymbolRate string
-	DbMer      string
-	Provider   string
-	Service    string
-	NullRatio  string
-	// EsPid         string
-	// EsType        string
-	VideoCodec    string
-	AudioCodec    string
-	Constellation string
-	Fec           string
-	Mode          string
-	DbMargin      string
-	DbmPower      string
-}
-
-func (p *LongmyndData) reset() {
-	p.resetPartial()
-	p.State = kDash
-}
-
-func (p *LongmyndData) resetPartial() {
-	p.StatusMsg = "Not tuned"
-	// p.State = kDash
-	p.Frequency = kDash
-	p.SymbolRate = kDash
-	p.DbMer = kDash
-	p.Provider = kDash
-	p.Service = kDash
-	p.NullRatio = kDash
-	// p.EsPid = kDash
-	// p.EsType = kDash
-	p.VideoCodec = kDash
-	p.AudioCodec = kDash
-	p.Constellation = kDash
-	p.Fec = kDash
-	p.Mode = kDash
-	p.DbMargin = kDash
-	p.DbmPower = kDash
-}
-
-type (
-	LmConfig struct {
-		Folder      string
-		Binary      string
-		Offset      float64
-		StatusFifo  string
-		StartScript string
-		StopScript  string
-	}
-	FpConfig struct {
-		Binary      string
-		TsFifo      string
-		Volume      string
-		StartScript string
-		StopScript  string
-	}
-)
-
 var (
 	lmcfg *LmConfig
 	fpcfg *FpConfig
 )
 
-func Intitialize(lmc LmConfig, fpc FpConfig, ch chan LongmyndData) {
-	lmcfg = &lmc
-	fpcfg = &fpc
-	lmChannel = ch
-
-	killAll()
-	go readLongmynd(lmcfg.StatusFifo, lmcfg.Offset, lmChannel)
-}
-
-func Stop() {
-	logger.Info.Printf("LmReader will stop...")
-	// TODO: implement a better way to stop longmynd and ffplay
-	killAll()
-	logger.Info.Printf("LmReader has stopped")
-}
-
-func Tune(frequency, sysmbolRate string) {
-	logger.Info.Printf("------ WILL TUNE")
-	isTuned = startLongmynd(frequency, sysmbolRate) // TODO: pass arguments
-	// isTuned = true
-}
-
-func UnTune() {
-	logger.Info.Printf("------ WILL UNTUNE")
-	// isTuned = stopLongmynd()
-	killAll()
-	isTuned = false
-	// stopFfplay()
-}
-
-// +++++++++++++++++++++++++++++++++++
-
 type esPairStuct struct {
 	waitingForPid   bool
 	waitingForType  bool
+	the1stPidValue  int
 	the1stTypeValue int
+	the2ndPidValue  int
 	the2ndTypeValue int
 }
 
 func (p *esPairStuct) reset() {
 	p.waitingForPid = false
 	p.waitingForType = false
+	p.the1stPidValue = 0
 	p.the1stTypeValue = 0
+	p.the2ndPidValue = 0
 	p.the2ndTypeValue = 0
 }
 
@@ -415,7 +332,6 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 	cacheData.reset()
 	esPair.reset()
 
-	// isTuned := false // TODO: make global and set in Tune() and UnTune()
 	isLocked := false
 	isPlaying := false
 
@@ -423,14 +339,14 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 
 	file, err := os.OpenFile(fifoPath, os.O_CREATE, os.ModeNamedPipe)
 	if err != nil {
-		logger.Warn.Printf("unable to open '%v' fifo %v: ", fifoPath, err)
+		logger.Warn.Printf("Failed to open '%v' fifo %v: ", fifoPath, err)
 		return
 	}
 	defer file.Close()
 
 	reader := bufio.NewReader(file)
 
-	logger.Info.Printf("the decode forever loop has started")
+	logger.Info.Printf("Decode forever loop has started")
 
 	for {
 
@@ -446,7 +362,7 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 
 		lmId, lmVal, err := idAndValFromString(rawStr)
 		if err != nil {
-			logger.Warn.Printf("returned from idAndValFromString: %v", err)
+			logger.Warn.Printf("Returned from idAndValFromString: %v", err)
 			continue
 		}
 
@@ -548,7 +464,7 @@ func id1_setState(stateStr string) {
 		liveData.State = kLocked
 		liveData.Mode = kDVB_S2
 	default:
-		logger.Warn.Printf("undefined status: %v", stateStr)
+		logger.Warn.Printf("Undefined status: %v", stateStr)
 		// liveData.reset()
 		// return
 	}
@@ -563,7 +479,7 @@ func id1_setState(stateStr string) {
 func id6_setFrequency(carrierFrequencyStr string, offset float64) {
 	kHzFloat, err := strconv.ParseFloat(carrierFrequencyStr, 64)
 	if err != nil {
-		logger.Warn.Printf("bad carrierFrequencyStr: %v", err)
+		logger.Warn.Printf("Bad carrierFrequencyStr: %v", err)
 		liveData.Frequency = kDash
 		return
 	}
@@ -575,7 +491,7 @@ func id6_setFrequency(carrierFrequencyStr string, offset float64) {
 func id9_setSymbolRate(symbolRateStr string) {
 	sysmbolRateFloat, err := strconv.ParseFloat(symbolRateStr, 64)
 	if err != nil {
-		logger.Warn.Printf("bad symbolRateStr: %v", err)
+		logger.Warn.Printf("Bad symbolRateStr: %v", err)
 		liveData.SymbolRate = kDash
 		return
 	}
@@ -587,7 +503,7 @@ func id9_setSymbolRate(symbolRateStr string) {
 func id12_setDbMer(merStr string) {
 	dbMerFloat, err := strconv.ParseFloat(merStr, 64)
 	if err != nil {
-		logger.Warn.Printf("bad merStr: %v", err)
+		logger.Warn.Printf("Bad merStr: %v", err)
 		liveData.DbMer = kDash
 		return
 	}
@@ -616,7 +532,7 @@ func id14_setService(serviceStr string) {
 // Null Ratio - Ratio of Nulls in TS as percentage
 func id15_setNullRatio(nullRatioStr string) {
 	if nullRatioStr == "" {
-		logger.Warn.Printf("missing nullRatioStr")
+		logger.Warn.Printf("Missing nullRatioStr")
 		liveData.NullRatio = kDash
 		return
 	}
@@ -639,7 +555,7 @@ func id16_setEsPid(esPidStr string) {
 	}
 	pid, err := strconv.Atoi(esPidStr)
 	if err != nil {
-		logger.Warn.Printf("uunable to convert esPidStr %v", err)
+		logger.Warn.Printf("Failed to convert esPidStr %v", err)
 		return
 	}
 	esPair.the1stTypeValue = pid
@@ -653,12 +569,16 @@ func id17_setEsType(esType string) {
 	}
 	typ, err := strconv.Atoi(esType)
 	if err != nil {
-		logger.Warn.Printf("uunable to convert esType %v", err)
+		logger.Warn.Printf("Failed to convert esType %v", err)
 		return
 	}
 	esPair.the2ndTypeValue = typ
 
-	// logger.Info.Printf("----------------------- PID %v Type %v", esPair.the1stTypeValue, esPair.the2ndTypeValue)
+	liveData.PidPair1 = fmt.Sprintf("%v %v", esPair.the1stTypeValue, esPair.the1stTypeValue)
+
+	liveData.PidPair2 = fmt.Sprintf("%v %v", esPair.the2ndTypeValue, esPair.the2ndTypeValue)
+
+	logger.Info.Printf("----------------------- PID %v Type %v", esPair.the1stTypeValue, esPair.the2ndTypeValue)
 
 	switch typ {
 	case 1:
@@ -702,7 +622,7 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 	// set Constellation and Fec
 	modcodInt, err := strconv.Atoi(modcodStr) // wiil panic panic if modcodInt is > 28
 	if err != nil {
-		logger.Warn.Printf("uunable to convert modcodStr %v", err)
+		logger.Warn.Printf("Failed to convert modcodStr %v", err)
 		return
 	}
 	// liveData.Constellation = kDash
@@ -725,12 +645,12 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 		liveData.Constellation = kModcodeDvdS2[modcodInt].constellation // TODO: throws panic: runtime error: index out of range [31] with length 29
 		liveData.Fec = kModcodeDvdS2[modcodInt].fec
 	default:
-		// logger.Warn.Printf("unknkown longmyndData.mode %v", mode) // TODO: why here, when no signal received ?
+		// logger.Warn.Printf("Unknkown longmyndData.mode %v", mode) // TODO: why here, when no signal received ?
 		return
 	}
 	// set Margin
 	if liveData.DbMer == kDash || liveData.Fec == kDash || liveData.Constellation == kDash {
-		logger.Warn.Printf("unable to set Margin at this time")
+		logger.Warn.Printf("Failed to set Margin at this time")
 		liveData.DbMargin = kDash
 		return
 	}
@@ -747,7 +667,7 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 		}
 		key = kDVB_S2 + " " + liveData.Constellation + " " + liveData.Fec
 	default:
-		logger.Warn.Printf("unknown liveData.Mode: %v", liveData.Mode)
+		logger.Warn.Printf("Unknown liveData.Mode: %v", liveData.Mode)
 		return
 	}
 
@@ -760,7 +680,7 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 	}
 	float_mer, err := strconv.ParseFloat(liveData.DbMer, 64)
 	if err != nil {
-		logger.Warn.Printf("bad longmyndData.dbMer: %v", err)
+		logger.Warn.Printf("Bad longmyndData.dbMer: %v", err)
 		liveData.DbMargin = kDash
 		return
 	}
@@ -774,7 +694,7 @@ func id26_setDbmPower(agc1Str string) {
 	}
 	agc1, err := strconv.Atoi(agc1Str)
 	if err != nil {
-		logger.Warn.Printf("uunable to convert agc1Str %v", err)
+		logger.Warn.Printf("Failed to convert agc1Str %v", err)
 		return
 	}
 	agcPair.the1stAgcValue = agc1
@@ -788,51 +708,33 @@ func id27_setDbmPower(agc2Str string) {
 	}
 	agc2, err := strconv.Atoi(agc2Str)
 	if err != nil {
-		logger.Warn.Printf("uunable to convert agc2Str %v", err)
+		logger.Warn.Printf("Failed to convert agc2Str %v", err)
+		liveData.DbmPower = kDash
 		return
 	}
 	agcPair.the2ndAgcValue = agc2
 
-	power := kDash
-
-	// if agcPair.the1stAgcValue > 0 {
-	// 	for key, value := range kAgc1 { // TODO: MAPS ARE NOT SORTED
-	// 		if agcPair.the1stAgcValue >= key {
-	// 			power = value
-	// 			break
-	// 		}
-	// 	}
-	// } else {
-	// 	for key, value := range kAgc2 { // TODO: MAPS ARE NOT SORTED
-	// 		if agcPair.the2ndAgcValue >= key {
-	// 			power = value
-	// 			break
-	// 		}
-	// 	}
-	// }
-
 	p := 0
 	v := agcPair.the1stAgcValue
 	if v > 0 {
-		for _, n := range _kAgc1 {
-			if v < n[0] {
+		for _, n := range kAgc1 {
+			if n[0] >= v {
 				p = n[1]
 				break
 			}
 		}
 	} else {
 		v = agcPair.the2ndAgcValue
-		for _, n := range _kAgc2 {
-			if v < n[0] {
+		for _, n := range kAgc2 {
+			if n[0] >= v {
 				p = n[1]
 				break
 			}
 		}
 
 	}
-	power = fmt.Sprint(p)
-	// fmt.Println(power, p)
+	// logger.Info.Printf("----------------------- agc1 %v agc2 %v", agcPair.the1stAgcValue, agcPair.the2ndAgcValue)
 
-	liveData.DbmPower = power
+	liveData.DbmPower = fmt.Sprint(p)
 	agcPair.reset()
 }
