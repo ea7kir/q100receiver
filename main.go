@@ -506,7 +506,7 @@ func (ui *UI) q100_3x4statusMatrixPlus2buttons(gtx C) D {
 	values2 := [4]string{lmData.Fec, lmData.VideoCodec + " " + lmData.AudioCodec, lmData.DbMer, lmData.DbMargin}
 	// names3 := [4]string{"dBm Power", "Null Ratio", "Provider", "Service"}
 	// values3 := [4]string{lmData.DbmPower, lmData.NullRatio, lmData.Provider, lmData.Service}
-	names3 := [4]string{"dBm Power", "Null Ratio", "PidPair1", "PidPair2"}
+	names3 := [4]string{"dBm Power", "Null Ratio %", "Video PID", "Audio PID"}
 	values3 := [4]string{lmData.DbmPower, lmData.NullRatio, lmData.PidPair1, lmData.PidPair2}
 
 	return layout.Flex{

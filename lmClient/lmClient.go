@@ -331,6 +331,7 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 	liveData.reset()
 	cacheData.reset()
 	esPair.reset()
+	NEWesPair.reset()
 
 	isLocked := false
 	isPlaying := false
@@ -374,6 +375,7 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 				liveData.resetPartial()
 				cacheData.reset()
 				esPair.reset()
+				NEWesPair.reset()
 				agcPair.reset()
 				lonymyndChannel <- *liveData
 				// time.Sleep(5 * time.Millisecond)
@@ -539,6 +541,30 @@ func id15_setNullRatio(nullRatioStr string) {
 	liveData.NullRatio = nullRatioStr
 }
 
+type NEWesPairStuct struct {
+	waitingFor1stPid  bool
+	waitingFor2ndPid  bool
+	waitingFor1stType bool
+	waitingFor2ndType bool
+	the1stPidValue    string
+	the1stTypeValue   string
+	the2ndPidValue    string
+	the2ndTypeValue   string
+}
+
+func (p *NEWesPairStuct) reset() {
+	p.waitingFor1stPid = true
+	p.waitingFor2ndPid = false
+	p.waitingFor1stType = false
+	p.waitingFor2ndType = false
+	p.the1stPidValue = kDash
+	p.the1stTypeValue = kDash
+	p.the2ndPidValue = kDash
+	p.the2ndTypeValue = kDash
+}
+
+var NEWesPair = NEWesPairStuct{}
+
 // The PID numbers themselves are fairly arbitrary, will vary based on the transmitted signal and don't really mean anything in a single program multiplex.
 func id16_setEsPid(esPidStr string) {
 	// In the status stream 16 and 17 always come in pairs, 16 is the PID and 17 is the type for that PID, e.g.
@@ -548,6 +574,24 @@ func id16_setEsPid(esPidStr string) {
 	// $16,258 == PID 258 is type 3 which the table says is MP3
 	// $17,3   meaaning MP3
 	// The PID numbers themselves are fairly arbitrary, will vary based on the transmitted signal and don't really mean anything in a single program multiplex.
+
+	if NEWesPair.waitingFor1stPid {
+		NEWesPair.the1stPidValue = esPidStr
+		NEWesPair.waitingFor1stPid = false
+		NEWesPair.waitingFor2ndPid = false
+		NEWesPair.waitingFor1stType = true
+		NEWesPair.waitingFor2ndType = false
+	}
+
+	if NEWesPair.waitingFor2ndPid {
+		NEWesPair.the2ndPidValue = esPidStr
+		NEWesPair.waitingFor1stPid = false
+		NEWesPair.waitingFor2ndPid = false
+		NEWesPair.waitingFor1stType = false
+		NEWesPair.waitingFor2ndType = true
+	}
+
+	/**********************************************************************/
 
 	// ignore and do nothing
 	if esPair.waitingForType {
@@ -564,6 +608,27 @@ func id16_setEsPid(esPidStr string) {
 
 // ES TYPE - Elementary Stream Type (repeated as pair with 16 for each ES)
 func id17_setEsType(esType string) {
+	if NEWesPair.waitingFor1stType {
+		NEWesPair.the1stTypeValue = esType
+		NEWesPair.waitingFor1stPid = false
+		NEWesPair.waitingFor2ndPid = true
+		NEWesPair.waitingFor1stType = false
+		NEWesPair.waitingFor2ndType = false
+		liveData.PidPair1 = fmt.Sprintf("%v %v", NEWesPair.the1stPidValue, NEWesPair.the1stTypeValue) // beacon 257 27 = video
+	}
+
+	if NEWesPair.waitingFor2ndType {
+		NEWesPair.the2ndTypeValue = esType
+		NEWesPair.waitingFor1stPid = true
+		NEWesPair.waitingFor2ndPid = false
+		NEWesPair.waitingFor1stType = false
+		NEWesPair.waitingFor2ndType = false
+		liveData.PidPair2 = fmt.Sprintf("%v %v", NEWesPair.the2ndPidValue, NEWesPair.the2ndTypeValue) // beacon 258 3 = audio
+		// NEWesPair.reset()
+	}
+
+	/**********************************************************************/
+
 	if !esPair.waitingForType {
 		return
 	}
@@ -574,11 +639,7 @@ func id17_setEsType(esType string) {
 	}
 	esPair.the2ndTypeValue = typ
 
-	liveData.PidPair2 = fmt.Sprintf("%v %v", esPair.the1stTypeValue, esPair.the2ndTypeValue)
-
-	// liveData.PidPair2 = fmt.Sprintf("%v %v", esPair.the2ndPidValue, esPair.the2ndTypeValue)
-
-	logger.Info.Printf("----------------------- PID %v Type %v", esPair.the1stTypeValue, esPair.the2ndTypeValue)
+	// logger.Info.Printf("----------------------- PID %v Type %v", esPair.the1stTypeValue, esPair.the2ndTypeValue)
 
 	switch typ {
 	case 1:
