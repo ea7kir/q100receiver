@@ -574,9 +574,9 @@ func id17_setEsType(esType string) {
 	}
 	esPair.the2ndTypeValue = typ
 
-	liveData.PidPair1 = fmt.Sprintf("%v %v", esPair.the1stTypeValue, esPair.the1stTypeValue)
+	liveData.PidPair2 = fmt.Sprintf("%v %v", esPair.the1stTypeValue, esPair.the2ndTypeValue)
 
-	liveData.PidPair2 = fmt.Sprintf("%v %v", esPair.the2ndTypeValue, esPair.the2ndTypeValue)
+	// liveData.PidPair2 = fmt.Sprintf("%v %v", esPair.the2ndPidValue, esPair.the2ndTypeValue)
 
 	logger.Info.Printf("----------------------- PID %v Type %v", esPair.the1stTypeValue, esPair.the2ndTypeValue)
 
