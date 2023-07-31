@@ -30,7 +30,7 @@ var (
 	Xp = make([]float32, numPoints) // x coordinates from 0.0 to 100.0
 )
 
-func Intitialize(cfg SpConfig, ch chan SpData) {
+func Intitialize(cfg *SpConfig, ch chan SpData) {
 	spChannel = ch
 	Xp[0] = 0
 	for i := 1; i < numPoints-1; i++ {

@@ -56,9 +56,9 @@ type (
 	}
 )
 
-func Intitialize(lmc LmConfig, fpc FpConfig, ch chan LongmyndData) {
-	lmcfg = &lmc
-	fpcfg = &fpc
+func Intitialize(lmc *LmConfig, fpc *FpConfig, ch chan LongmyndData) {
+	lmcfg = lmc
+	fpcfg = fpc
 	lmChannel = ch
 	killAll()
 	go readLongmynd(lmcfg.StatusFifo, lmcfg.Offset, lmChannel)

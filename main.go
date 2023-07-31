@@ -50,7 +50,7 @@ const appFolder = "/home/pi/Q100/q100receiver/"
 
 // configuration data
 var (
-	spectrumConfig = spectrumClient.SpConfig{
+	spConfig = spectrumClient.SpConfig{
 		Url: "wss://eshail.batc.org.uk/wb/fft/fft_ea7kirsatcontroller:443/",
 	}
 	lmConfig = lmClient.LmConfig{
@@ -96,11 +96,11 @@ func main() {
 
 	os.Setenv("DISPLAY", ":0") // required for X11
 
-	spectrumClient.Intitialize(spectrumConfig, spChannel)
+	spectrumClient.Intitialize(&spConfig, spChannel)
 
-	rxControl.Intitialize(tuConfig)
+	rxControl.Intitialize(&tuConfig)
 
-	lmClient.Intitialize(lmConfig, fpConfig, lmChannel)
+	lmClient.Intitialize(&lmConfig, &fpConfig, lmChannel)
 
 	go func() {
 		w := app.NewWindow(app.Fullscreen.Option())
