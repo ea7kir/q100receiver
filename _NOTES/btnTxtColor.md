@@ -1,2 +1,0 @@
-# Button & Label Color
-
