@@ -213,7 +213,7 @@ var q100color = struct {
 	gfxBgd:       color.NRGBA(colornames.Black),
 	gfxGreen:     color.NRGBA(colornames.Green),
 	gfxBeacon:    color.NRGBA(colornames.Red),
-	gfxMarker:    color.NRGBA{R: 10, G: 10, B: 10, A: 255},
+	gfxMarker:    color.NRGBA{R: 20, G: 20, B: 20, A: 255},
 	gfxGraticule: color.NRGBA(colornames.Darkgray),
 	gfxLabel:     color.NRGBA{R: 32, G: 32, B: 32, A: 255}, // DarkGrey is too light
 }
