@@ -12,4 +12,5 @@
 - move _longmynd to /home/pi/Q100/longmynd
 - clone longmynd from https://github.com/BritishAmateurTelevisionClub/longmynd.git
 - implement calibrater.go and marker widths
+- during install, raspi-config, select System / Audio, choose 1, then reboot
 - create a ffplay not running caption

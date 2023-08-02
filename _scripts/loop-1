@@ -1,3 +1,0 @@
-#!/bin/bash
-export DISPLAY=:0
-/usr/bin/ffplay -fs -loop 0 /home/pi/Q100/Video-Loop-1-h264.mov
