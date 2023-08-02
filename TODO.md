@@ -12,3 +12,4 @@
 - move _longmynd to /home/pi/Q100/longmynd
 - clone longmynd from https://github.com/BritishAmateurTelevisionClub/longmynd.git
 - implement calibrater.go and marker widths
+- create a ffplay not running caption
