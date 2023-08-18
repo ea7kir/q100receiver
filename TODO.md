@@ -5,7 +5,7 @@
 - add wiring schematic
 - automate the install process
 - remove unused files and folders
-- revisit logger
+- revisit mylogger
 - revise what data to monitor
 - revise what parameters to use
 - rename spectrumClient

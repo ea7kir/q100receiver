@@ -7,7 +7,7 @@ package rxControl
 
 import (
 	"q100receiver/lmClient"
-	"q100receiver/logger"
+	"q100receiver/mylogger"
 	"q100receiver/spectrumClient"
 )
 
@@ -49,12 +49,12 @@ func Intitialize(tuc *TuConfig) {
 }
 
 func Stop() {
-	logger.Info.Printf("Tuner will stop...")
+	mylogger.Info.Printf("Tuner will stop...")
 	if IsTuned {
 		lmClient.UnTune()
 		IsTuned = false
 	}
-	logger.Info.Printf("Tuner has stopped")
+	mylogger.Info.Printf("Tuner has stopped")
 }
 
 func Tune() {

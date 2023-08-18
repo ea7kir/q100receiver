@@ -10,7 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"q100receiver/logger"
+	"q100receiver/mylogger"
 	"strconv"
 	"strings"
 )
@@ -65,20 +65,20 @@ func Intitialize(lmc *LmConfig, fpc *FpConfig, ch chan LongmyndData) {
 }
 
 func Stop() {
-	logger.Info.Printf("LmReader will stop...")
+	mylogger.Info.Printf("LmReader will stop...")
 	// TODO: implement a better way to stop longmynd and ffplay
 	killAll()
-	logger.Info.Printf("LmReader has stopped")
+	mylogger.Info.Printf("LmReader has stopped")
 }
 
 func Tune(frequency, sysmbolRate string) {
-	logger.Info.Printf("------ WILL TUNE")
+	mylogger.Info.Printf("------ WILL TUNE")
 	isTuned = startLongmynd(frequency, sysmbolRate) // TODO: pass arguments
 	// isTuned = true
 }
 
 func UnTune() {
-	logger.Info.Printf("------ WILL UNTUNE")
+	mylogger.Info.Printf("------ WILL UNTUNE")
 	// isTuned = stopLongmynd()
 	killAll()
 	isTuned = false
@@ -340,20 +340,20 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 
 	file, err := os.OpenFile(fifoPath, os.O_CREATE, os.ModeNamedPipe)
 	if err != nil {
-		logger.Warn.Printf("Failed to open '%v' fifo %v: ", fifoPath, err)
+		mylogger.Warn.Printf("Failed to open '%v' fifo %v: ", fifoPath, err)
 		return
 	}
 	defer file.Close()
 
 	reader := bufio.NewReader(file)
 
-	logger.Info.Printf("Decode forever loop has started")
+	mylogger.Info.Printf("Decode forever loop has started")
 
 	for {
 
 		rawStr, err := reader.ReadString(10) // delimited by char(10) == LF
 		if err != nil {
-			//logger.Error("reading fifo: %v", err)
+			//mylogger.Error("reading fifo: %v", err)
 			liveData.reset()
 			cacheData.reset()
 			lonymyndChannel <- *liveData
@@ -363,7 +363,7 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 
 		lmId, lmVal, err := idAndValFromString(rawStr)
 		if err != nil {
-			logger.Warn.Printf("Returned from idAndValFromString: %v", err)
+			mylogger.Warn.Printf("Returned from idAndValFromString: %v", err)
 			continue
 		}
 
@@ -443,7 +443,7 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 			*cacheData = *liveData
 		}
 	}
-	// logger.Info.Printf("lmreader has stopped")
+	// mylogger.Info.Printf("lmreader has stopped")
 }
 
 /***********************************************************
@@ -466,7 +466,7 @@ func id1_setState(stateStr string) {
 		liveData.State = kLocked
 		liveData.Mode = kDVB_S2
 	default:
-		logger.Warn.Printf("Undefined status: %v", stateStr)
+		mylogger.Warn.Printf("Undefined status: %v", stateStr)
 		// liveData.reset()
 		// return
 	}
@@ -481,7 +481,7 @@ func id1_setState(stateStr string) {
 func id6_setFrequency(carrierFrequencyStr string, offset float64) {
 	kHzFloat, err := strconv.ParseFloat(carrierFrequencyStr, 64)
 	if err != nil {
-		logger.Warn.Printf("Bad carrierFrequencyStr: %v", err)
+		mylogger.Warn.Printf("Bad carrierFrequencyStr: %v", err)
 		liveData.Frequency = kDash
 		return
 	}
@@ -493,7 +493,7 @@ func id6_setFrequency(carrierFrequencyStr string, offset float64) {
 func id9_setSymbolRate(symbolRateStr string) {
 	sysmbolRateFloat, err := strconv.ParseFloat(symbolRateStr, 64)
 	if err != nil {
-		logger.Warn.Printf("Bad symbolRateStr: %v", err)
+		mylogger.Warn.Printf("Bad symbolRateStr: %v", err)
 		liveData.SymbolRate = kDash
 		return
 	}
@@ -505,7 +505,7 @@ func id9_setSymbolRate(symbolRateStr string) {
 func id12_setDbMer(merStr string) {
 	dbMerFloat, err := strconv.ParseFloat(merStr, 64)
 	if err != nil {
-		logger.Warn.Printf("Bad merStr: %v", err)
+		mylogger.Warn.Printf("Bad merStr: %v", err)
 		liveData.DbMer = kDash
 		return
 	}
@@ -534,7 +534,7 @@ func id14_setService(serviceStr string) {
 // Null Ratio - Ratio of Nulls in TS as percentage
 func id15_setNullRatio(nullRatioStr string) {
 	if nullRatioStr == "" {
-		logger.Warn.Printf("Missing nullRatioStr")
+		mylogger.Warn.Printf("Missing nullRatioStr")
 		liveData.NullRatio = kDash
 		return
 	}
@@ -599,7 +599,7 @@ func id16_setEsPid(esPidStr string) {
 	}
 	pid, err := strconv.Atoi(esPidStr)
 	if err != nil {
-		logger.Warn.Printf("Failed to convert esPidStr %v", err)
+		mylogger.Warn.Printf("Failed to convert esPidStr %v", err)
 		return
 	}
 	esPair.the1stTypeValue = pid
@@ -634,12 +634,12 @@ func id17_setEsType(esType string) {
 	}
 	typ, err := strconv.Atoi(esType)
 	if err != nil {
-		logger.Warn.Printf("Failed to convert esType %v", err)
+		mylogger.Warn.Printf("Failed to convert esType %v", err)
 		return
 	}
 	esPair.the2ndTypeValue = typ
 
-	// logger.Info.Printf("----------------------- PID %v Type %v", esPair.the1stTypeValue, esPair.the2ndTypeValue)
+	// mylogger.Info.Printf("----------------------- PID %v Type %v", esPair.the1stTypeValue, esPair.the2ndTypeValue)
 
 	switch typ {
 	case 1:
@@ -683,7 +683,7 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 	// set Constellation and Fec
 	modcodInt, err := strconv.Atoi(modcodStr) // wiil panic panic if modcodInt is > 28
 	if err != nil {
-		logger.Warn.Printf("Failed to convert modcodStr %v", err)
+		mylogger.Warn.Printf("Failed to convert modcodStr %v", err)
 		return
 	}
 	// liveData.Constellation = kDash
@@ -691,7 +691,7 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 	switch liveData.Mode {
 	case kDVB_S:
 		if modcodInt > len(kModcodeDvdS)-1 {
-			logger.Warn.Printf("DVB-S modcodInt (%v) > (%v)", modcodInt, len(kModcodeDvdS)-1) // to avoid panic
+			mylogger.Warn.Printf("DVB-S modcodInt (%v) > (%v)", modcodInt, len(kModcodeDvdS)-1) // to avoid panic
 			liveData.Constellation = kDash
 			return
 		}
@@ -699,19 +699,19 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 		liveData.Fec = kModcodeDvdS[modcodInt].fec
 	case kDVB_S2:
 		if modcodInt > len(kModcodeDvdS2)-1 {
-			logger.Warn.Printf("DVB-S2 modcodInt (%v) > (%v)", modcodInt, len(kModcodeDvdS2)-1) // to avoid panic
+			mylogger.Warn.Printf("DVB-S2 modcodInt (%v) > (%v)", modcodInt, len(kModcodeDvdS2)-1) // to avoid panic
 			liveData.Constellation = kDash
 			return
 		}
 		liveData.Constellation = kModcodeDvdS2[modcodInt].constellation // TODO: throws panic: runtime error: index out of range [31] with length 29
 		liveData.Fec = kModcodeDvdS2[modcodInt].fec
 	default:
-		// logger.Warn.Printf("Unknkown longmyndData.mode %v", mode) // TODO: why here, when no signal received ?
+		// mylogger.Warn.Printf("Unknkown longmyndData.mode %v", mode) // TODO: why here, when no signal received ?
 		return
 	}
 	// set Margin
 	if liveData.DbMer == kDash || liveData.Fec == kDash || liveData.Constellation == kDash {
-		logger.Warn.Printf("Failed to set Margin at this time")
+		mylogger.Warn.Printf("Failed to set Margin at this time")
 		liveData.DbMargin = kDash
 		return
 	}
@@ -728,20 +728,20 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 		}
 		key = kDVB_S2 + " " + liveData.Constellation + " " + liveData.Fec
 	default:
-		logger.Warn.Printf("Unknown liveData.Mode: %v", liveData.Mode)
+		mylogger.Warn.Printf("Unknown liveData.Mode: %v", liveData.Mode)
 		return
 	}
 
 	// float_threshold := kModeFecThreshold[key]
 	float_threshold, ok := kModeFecThreshold[key]
 	if !ok {
-		logger.Warn.Printf("kModeFecThreshold key not foundr")
+		mylogger.Warn.Printf("kModeFecThreshold key not foundr")
 		liveData.DbMargin = kDash
 		return
 	}
 	float_mer, err := strconv.ParseFloat(liveData.DbMer, 64)
 	if err != nil {
-		logger.Warn.Printf("Bad longmyndData.dbMer: %v", err)
+		mylogger.Warn.Printf("Bad longmyndData.dbMer: %v", err)
 		liveData.DbMargin = kDash
 		return
 	}
@@ -755,7 +755,7 @@ func id26_setDbmPower(agc1Str string) {
 	}
 	agc1, err := strconv.Atoi(agc1Str)
 	if err != nil {
-		logger.Warn.Printf("Failed to convert agc1Str %v", err)
+		mylogger.Warn.Printf("Failed to convert agc1Str %v", err)
 		return
 	}
 	agcPair.the1stAgcValue = agc1
@@ -769,7 +769,7 @@ func id27_setDbmPower(agc2Str string) {
 	}
 	agc2, err := strconv.Atoi(agc2Str)
 	if err != nil {
-		logger.Warn.Printf("Failed to convert agc2Str %v", err)
+		mylogger.Warn.Printf("Failed to convert agc2Str %v", err)
 		liveData.DbmPower = kDash
 		return
 	}
@@ -794,7 +794,7 @@ func id27_setDbmPower(agc2Str string) {
 		}
 
 	}
-	// logger.Info.Printf("----------------------- agc1 %v agc2 %v", agcPair.the1stAgcValue, agcPair.the2ndAgcValue)
+	// mylogger.Info.Printf("----------------------- agc1 %v agc2 %v", agcPair.the1stAgcValue, agcPair.the2ndAgcValue)
 
 	liveData.DbmPower = fmt.Sprint(p)
 	agcPair.reset()

@@ -35,7 +35,7 @@ func main() {
 	go func() {
 		w := app.NewWindow(app.Title("Flex"))
 		if err := loop(w); err != nil {
-			log.Fatal(err)
+			log.Fatal.Printf(err)
 		}
 		os.Exit(0)
 	}()

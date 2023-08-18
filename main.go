@@ -27,7 +27,7 @@ import (
 	"os"
 	"os/signal"
 	"q100receiver/lmClient"
-	"q100receiver/logger"
+	"q100receiver/mylogger"
 	"q100receiver/rxControl"
 	"q100receiver/spectrumClient"
 
@@ -39,6 +39,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/paint"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -89,10 +90,10 @@ var (
 
 // main - with some help from Chris Waldon who got me started
 func main() {
-	logger.Open("/home/pi/Q100/receiver.log")
-	defer logger.Close()
+	mylogger.Open("/home/pi/Q100/receiver.log")
+	defer mylogger.Close()
 
-	logger.Info.Printf("----- q100receiver Opened -----")
+	mylogger.Info.Printf("----- q100receiver Opened -----")
 
 	os.Setenv("DISPLAY", ":0") // required for X11
 
@@ -106,14 +107,14 @@ func main() {
 		w := app.NewWindow(app.Fullscreen.Option())
 		app.Size(800, 480) // I don't know if this is help in any way
 		if err := loop(w); err != nil {
-			logger.Fatal.Fatalf(": ", err)
+			mylogger.Fatal.Fatalf("failed to start loop: %v", err)
 		}
 
 		rxControl.Stop()
 		lmClient.Stop()
 		spectrumClient.Stop()
 
-		logger.Info.Printf("----- q100receiver Closed -----")
+		mylogger.Info.Printf("----- q100receiver Closed -----")
 		os.Exit(0)
 	}()
 
@@ -124,8 +125,18 @@ func loop(w *app.Window) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 	ui := UI{
-		th: material.NewTheme(gofont.Collection()),
+		// th: material.NewTheme(gofont.Collection()),
+		th: material.NewTheme(),
 	}
+	// fails to pickup the system font
+	// $ fc-list
+	//
+	// ui.th.Face = "Times New Roman" // ok
+	// ui.th.Face = "NimbusRoman Italic" // no
+
+	// Chris keep using the original font
+	ui.th.Shaper = text.NewShaper(text.NoSystemFonts(), text.WithCollection(gofont.Collection()))
+
 	var ops op.Ops
 	// Capture the context done channel in a variable so that we can nil it
 	// out after it closes and prevent its select case from firing again.
@@ -138,7 +149,7 @@ func loop(w *app.Window) error {
 			// prevent it from firing over and over.
 			done = nil
 			// Log something to make it obvious this happened.
-			// logger.Info("context cancelled")
+			// mylogger.Info.Printf("context cancelled")
 			// Initiate window shutdown.
 			rxControl.Stop()      // TODO: does nothing yet
 			lmClient.Stop()       // TODO: does nothing yet
@@ -315,7 +326,7 @@ func (ui *UI) q100_Selector(gtx C, dec, inc *widget.Clickable, value string, btn
 	return layout.Flex{
 		Axis: layout.Horizontal,
 		// Spacing: layout.SpaceBetween,
-		// Alignment: layout.Middle,
+		Alignment: layout.Middle, // Chris
 		// WeightSum: 0.3,
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
