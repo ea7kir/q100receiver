@@ -2,9 +2,7 @@
 
 Control and monitor a DATV receiver with a touch screen.
 
-<code style="color : red">RED</code>
-
-**THIS PROJECT IS IN EARLY DEVELOPMENT AND MAY BE UNSTABLE**
+<code style="color : red">THIS PROJECT IS IN EARLY DEVELOPMENT AND MAY BE UNSTABLE</code>
 
 ## Hardware
 
