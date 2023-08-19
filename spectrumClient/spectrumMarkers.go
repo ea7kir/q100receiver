@@ -5,7 +5,7 @@ package spectrumClient
 ****************************************************************/
 
 const (
-	divisor = float32(9.18) // TODO: temp until I provide a mathematical soloution
+	divisor = float32(9.18) // TODO: calculatee a mathematical value
 )
 
 var (
@@ -40,7 +40,7 @@ var (
 		"10499.25 / 27": 894 / divisor,
 	}
 
-	symbolRateWidth = map[string]float32{
+	symbolRateWidth = map[string]float32{ // TODO: calculatee a mathematical values
 		"2000": 20,
 		"1500": 15,
 		"1000": 10,

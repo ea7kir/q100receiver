@@ -52,7 +52,8 @@ const appFolder = "/home/pi/Q100/q100receiver/"
 // configuration data
 var (
 	spConfig = spectrumClient.SpConfig{
-		Url: "wss://eshail.batc.org.uk/wb/fft/fft_ea7kirsatcontroller:443/",
+		Url:    "wss://eshail.batc.org.uk/wb/fft/fft_ea7kirsatcontroller:443/",
+		Origin: "http://eshail.batc.org.uk/wb",
 	}
 	lmConfig = lmClient.LmConfig{
 		Folder:      appFolder + "_longmynd/",
