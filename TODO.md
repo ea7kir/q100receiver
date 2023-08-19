@@ -14,3 +14,4 @@
 - implement calibrater.go and marker widths
 - during install, raspi-config, select System / Audio, choose 1, then reboot
 - create a ffplay not running caption
+- implement spectrum calibration points
