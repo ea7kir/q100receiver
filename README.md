@@ -10,6 +10,12 @@ Control and monitor a DATV receiver with a touch screen.
 - Raspberry Pi Official 7" Touch Screen
 - Bult BATC MiniTiouner v2.0
 
+**A keyboard and mouse are not required.**
+
+## Coonections
+
+TODO: add schematic
+
 ## Installing
 
 TODO: add install instructions

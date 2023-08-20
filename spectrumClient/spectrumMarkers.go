@@ -1,8 +1,9 @@
-package spectrumClient
+/*
+ *  Q-100 Receiver
+ *  Copyright (c) 2023 Michael Naylor EA7KIR (https://michaelnaylor.es)
+ */
 
-/****************************************************************
-	MARKER FUNCTIONS
-****************************************************************/
+package spectrumClient
 
 const (
 	divisor = float32(9.18) // TODO: calculatee a mathematical value
@@ -74,5 +75,21 @@ func CalibratetionPoints() {
 		mylogger.Info.Printf("CalibratetionPoints %v  %v", i, v)
 	}
 
+}
+*/
+
+/*
+func readCalibrationData(ch chan SpData) {
+	mylogger.Info.Printf("Spectrun calibration running...")
+	for {
+		spData.Yp[0] = 0
+		for i := 1; i < numPoints-2; i++ {
+			spData.Yp[i] = rand.Float32() * 50.0
+		}
+		spData.Yp[numPoints-1] = 0
+		spData.BeaconLevel = rand.Float32() * 100
+		ch <- spData
+		time.Sleep(3 * time.Millisecond)
+	}
 }
 */

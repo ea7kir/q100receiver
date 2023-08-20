@@ -135,7 +135,7 @@ func loop(w *app.Window) error {
 	// ui.th.Face = "Times New Roman" // ok
 	// ui.th.Face = "NimbusRoman Italic" // no
 
-	// Chris keep using the original font
+	// Chris says keep using the original font
 	ui.th.Shaper = text.NewShaper(text.NoSystemFonts(), text.WithCollection(gofont.Collection()))
 
 	var ops op.Ops
