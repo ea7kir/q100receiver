@@ -1,4 +1,4 @@
-# cd /home/pi/TxTouch/_Resources
+# cd /home/pi/Q100/q100receiver/_INSTALL
 # sudo cp q100receiver.service /etc/systemd/system/
 # sudo chmod 644 /etc/systemd/system/q100receiver.service
 # sudo systemctl daemon-reload
