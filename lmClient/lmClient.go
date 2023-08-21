@@ -60,25 +60,26 @@ func Intitialize(lmc *LmConfig, fpc *FpConfig, ch chan LongmyndData) {
 	lmcfg = lmc
 	fpcfg = fpc
 	lmChannel = ch
-	isTuned = V1_killAll()
+	V2a_killAll()
 	go readLongmynd(lmcfg.StatusFifo, lmcfg.Offset, lmChannel)
 }
 
 func Stop() {
-	mylogger.Info.Printf("LmReader will stop...")
+	mylogger.Info.Printf("LmReader will stop... - NOT IMPLEMENTED")
 	// TODO: implement a better way to stop longmynd and ffplay
-	isTuned = V1_killAll()
+	V2a_killAll()
 	mylogger.Info.Printf("LmReader has stopped")
 }
 
 func Tune(frequency, sysmbolRate string) {
 	mylogger.Info.Printf("------ WILL TUNE")
-	isTuned = V1_startLongmynd(frequency, sysmbolRate) // TODO: pass arguments
+	V2_startLongmynd(frequency, sysmbolRate) // TODO: pass arguments
 }
 
 func UnTune() {
 	mylogger.Info.Printf("------ WILL UNTUNE")
-	isTuned = V1_killAll()
+	V2a_killAll()
+
 }
 
 // END API ********************************************************
@@ -252,21 +253,25 @@ var (
 )
 
 type esPairStuct struct {
-	waitingForPid   bool
-	waitingForType  bool
-	the1stPidValue  int
-	the1stTypeValue int
-	the2ndPidValue  int
-	the2ndTypeValue int
+	waitingFor1stPid  bool
+	waitingFor2ndPid  bool
+	waitingFor1stType bool
+	waitingFor2ndType bool
+	the1stPidValue    string
+	the1stTypeValue   string
+	the2ndPidValue    string
+	the2ndTypeValue   string
 }
 
 func (p *esPairStuct) reset() {
-	p.waitingForPid = false
-	p.waitingForType = false
-	p.the1stPidValue = 0
-	p.the1stTypeValue = 0
-	p.the2ndPidValue = 0
-	p.the2ndTypeValue = 0
+	p.waitingFor1stPid = true
+	p.waitingFor2ndPid = false
+	p.waitingFor1stType = false
+	p.waitingFor2ndType = false
+	p.the1stPidValue = kDash
+	p.the1stTypeValue = kDash
+	p.the2ndPidValue = kDash
+	p.the2ndTypeValue = kDash
 }
 
 type agcPairStuct struct {
@@ -310,7 +315,7 @@ const (
 )
 
 var (
-	esPair    = new(esPairStuct)
+	esPair    = esPairStuct{}
 	agcPair   = new(agcPairStuct)
 	liveData  = new(LongmyndData)
 	cacheData = new(LongmyndData)
@@ -318,6 +323,7 @@ var (
 	lmPid     int // used in V3
 	ffPlayPid int // used in V3
 	isTuned   bool
+	isPlaying bool
 )
 
 // readLongmynd reads the longmynd status fifo and translates to formated strings.
@@ -327,10 +333,9 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 	liveData.reset()
 	cacheData.reset()
 	esPair.reset()
-	NEWesPair.reset()
 
 	isLocked := false
-	isPlaying := false
+	// isPlaying = false
 
 	lonymyndChannel <- *liveData
 
@@ -346,6 +351,7 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 	mylogger.Info.Printf("Decode forever loop has started")
 
 	for {
+		// TODO: select goes here ?
 
 		rawStr, err := reader.ReadString(10) // delimited by char(10) == LF
 		if err != nil {
@@ -371,7 +377,6 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 				liveData.resetPartial()
 				cacheData.reset()
 				esPair.reset()
-				NEWesPair.reset()
 				agcPair.reset()
 				lonymyndChannel <- *liveData
 				// time.Sleep(5 * time.Millisecond)
@@ -417,15 +422,16 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 		} // switch
 
 		if isTuned && isLocked && !isPlaying {
-			isPlaying = V1_startFfplay()
+			V2_startFfplay()
 		}
 		if isTuned && !isLocked && isPlaying {
-			isPlaying = V1_stopFfplay()
+			V2_stopFfplay()
 		}
 		if !isTuned && isPlaying {
 			isLocked = false
-			isPlaying = V1_stopFfplay()
-			isTuned = V1_stopLongmynd()
+			V2a_killAll()
+			// V2_stopFfplay()
+			// V2_stopLongmynd()
 		}
 
 		if isLocked {
@@ -463,14 +469,7 @@ func id1_setState(stateStr string) {
 		liveData.Mode = kDVB_S2
 	default:
 		mylogger.Warn.Printf("Undefined status: %v", stateStr)
-		// liveData.reset()
-		// return
 	}
-	// if stateStr < "3" { // if not locked, reset most status
-	// 	liveData.resetPartial()
-	// 	esPair.reset()
-	// 	agcPair.reset()
-	// }
 }
 
 // Carrier Frequency - During a search this is the carrier frequency being trialled. When locked this is the Carrier Frequency detected in the stream. Sent in KHz
@@ -537,30 +536,6 @@ func id15_setNullRatio(nullRatioStr string) {
 	liveData.NullRatio = nullRatioStr
 }
 
-type NEWesPairStuct struct {
-	waitingFor1stPid  bool
-	waitingFor2ndPid  bool
-	waitingFor1stType bool
-	waitingFor2ndType bool
-	the1stPidValue    string
-	the1stTypeValue   string
-	the2ndPidValue    string
-	the2ndTypeValue   string
-}
-
-func (p *NEWesPairStuct) reset() {
-	p.waitingFor1stPid = true
-	p.waitingFor2ndPid = false
-	p.waitingFor1stType = false
-	p.waitingFor2ndType = false
-	p.the1stPidValue = kDash
-	p.the1stTypeValue = kDash
-	p.the2ndPidValue = kDash
-	p.the2ndTypeValue = kDash
-}
-
-var NEWesPair = NEWesPairStuct{}
-
 // The PID numbers themselves are fairly arbitrary, will vary based on the transmitted signal and don't really mean anything in a single program multiplex.
 func id16_setEsPid(esPidStr string) {
 	// In the status stream 16 and 17 always come in pairs, 16 is the PID and 17 is the type for that PID, e.g.
@@ -571,72 +546,47 @@ func id16_setEsPid(esPidStr string) {
 	// $17,3   meaaning MP3
 	// The PID numbers themselves are fairly arbitrary, will vary based on the transmitted signal and don't really mean anything in a single program multiplex.
 
-	if NEWesPair.waitingFor1stPid {
-		NEWesPair.the1stPidValue = esPidStr
-		NEWesPair.waitingFor1stPid = false
-		NEWesPair.waitingFor2ndPid = false
-		NEWesPair.waitingFor1stType = true
-		NEWesPair.waitingFor2ndType = false
+	if esPair.waitingFor1stPid {
+		esPair.the1stPidValue = esPidStr
+		esPair.waitingFor1stPid = false
+		esPair.waitingFor2ndPid = false
+		esPair.waitingFor1stType = true
+		esPair.waitingFor2ndType = false
 	}
-
-	if NEWesPair.waitingFor2ndPid {
-		NEWesPair.the2ndPidValue = esPidStr
-		NEWesPair.waitingFor1stPid = false
-		NEWesPair.waitingFor2ndPid = false
-		NEWesPair.waitingFor1stType = false
-		NEWesPair.waitingFor2ndType = true
+	if esPair.waitingFor2ndPid {
+		esPair.the2ndPidValue = esPidStr
+		esPair.waitingFor1stPid = false
+		esPair.waitingFor2ndPid = false
+		esPair.waitingFor1stType = false
+		esPair.waitingFor2ndType = true
 	}
-
-	/**********************************************************************/
-
-	// ignore and do nothing
-	if esPair.waitingForType {
-		return
-	}
-	pid, err := strconv.Atoi(esPidStr)
-	if err != nil {
-		mylogger.Warn.Printf("Failed to convert esPidStr %v", err)
-		return
-	}
-	esPair.the1stTypeValue = pid
-	esPair.waitingForType = true
 }
 
 // ES TYPE - Elementary Stream Type (repeated as pair with 16 for each ES)
 func id17_setEsType(esType string) {
-	if NEWesPair.waitingFor1stType {
-		NEWesPair.the1stTypeValue = esType
-		NEWesPair.waitingFor1stPid = false
-		NEWesPair.waitingFor2ndPid = true
-		NEWesPair.waitingFor1stType = false
-		NEWesPair.waitingFor2ndType = false
-		liveData.PidPair1 = fmt.Sprintf("%v %v", NEWesPair.the1stPidValue, NEWesPair.the1stTypeValue) // beacon 257 27 = video
+	if esPair.waitingFor1stType {
+		esPair.the1stTypeValue = esType
+		esPair.waitingFor1stPid = false
+		esPair.waitingFor2ndPid = true
+		esPair.waitingFor1stType = false
+		esPair.waitingFor2ndType = false
+		liveData.PidPair1 = fmt.Sprintf("%v %v", esPair.the1stPidValue, esPair.the1stTypeValue) // beacon 257 27 = video
 	}
-
-	if NEWesPair.waitingFor2ndType {
-		NEWesPair.the2ndTypeValue = esType
-		NEWesPair.waitingFor1stPid = true
-		NEWesPair.waitingFor2ndPid = false
-		NEWesPair.waitingFor1stType = false
-		NEWesPair.waitingFor2ndType = false
-		liveData.PidPair2 = fmt.Sprintf("%v %v", NEWesPair.the2ndPidValue, NEWesPair.the2ndTypeValue) // beacon 258 3 = audio
+	if esPair.waitingFor2ndType {
+		esPair.the2ndTypeValue = esType
+		esPair.waitingFor1stPid = true
+		esPair.waitingFor2ndPid = false
+		esPair.waitingFor1stType = false
+		esPair.waitingFor2ndType = false
+		liveData.PidPair2 = fmt.Sprintf("%v %v", esPair.the2ndPidValue, esPair.the2ndTypeValue) // beacon 258 3 = audio
 		// NEWesPair.reset()
 	}
 
-	/**********************************************************************/
-
-	if !esPair.waitingForType {
-		return
-	}
 	typ, err := strconv.Atoi(esType)
 	if err != nil {
 		mylogger.Warn.Printf("Failed to convert esType %v", err)
 		return
 	}
-	esPair.the2ndTypeValue = typ
-
-	// mylogger.Info.Printf("----------------------- PID %v Type %v", esPair.the1stTypeValue, esPair.the2ndTypeValue)
-
 	switch typ {
 	case 1:
 		liveData.VideoCodec = "MPEG1"
@@ -671,7 +621,6 @@ func id17_setEsType(esType string) {
 		// liveData.AudioCodec = "???"
 	}
 
-	esPair.reset()
 }
 
 // MODCOD - Received Modulation & Coding Rate. See MODCOD Lookup Table below

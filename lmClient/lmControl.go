@@ -18,6 +18,7 @@ import (
 func V1_killAll() bool {
 	cmd := exec.Command("/usr/bin/killall", "-SIGINT", "ffplay", "pulseaudio", "longmynd") // "longmynd", "ffplay", "pulseaudio")
 	_, _ = cmd.Output()
+	isPlaying = false
 	return false
 }
 
@@ -78,6 +79,7 @@ func V1_stopFfplay() bool {
 		return false
 	}
 	mylogger.Info.Printf("ffplay has stopped")
+	isPlaying = false
 	return false
 }
 
@@ -87,22 +89,42 @@ func V1_stopFfplay() bool {
 *****************************************************
 *****************************************************/
 
-func V2_killAll() bool {
-	_, err := exec.Command("/usr/bin/pkill", "ffplay", "pulseaudio", "longmynd").Output()
+func V2_killAll() {
+	_, err := exec.Command("/usr/bin/pkill", "ffplay").Output()
 	if err != nil {
-		mylogger.Error.Printf("failed to stop ffplay, pulseaudio, longmynd: %v", err)
-		return false
+		mylogger.Error.Printf("failed to stop ffplay: %v", err)
+		return
 	}
-	return false
+	_, err = exec.Command("/usr/bin/pkill", "pulseaudio").Output()
+	if err != nil {
+		mylogger.Error.Printf("failed to stop pulseaudio: %v", err)
+		return
+	}
+	_, err = exec.Command("/usr/bin/pkill", "longmynd").Output()
+	if err != nil {
+		mylogger.Error.Printf("failed to stop longmynd: %v", err)
+		return
+	}
+	isPlaying = false
+	isTuned = false
 }
 
-func V2_startLongmynd(frequency, symbolRate string) bool {
+func V2a_killAll() {
+	if isPlaying {
+		V2_stopFfplay()
+	}
+	if isTuned {
+		V2_stopLongmynd()
+	}
+}
+
+func V2_startLongmynd(frequency, symbolRate string) {
 	// trim "10491.50 / 00" to "10491.50"
 	frequencySplit := strings.SplitN(frequency, " ", 2)[0]
 	requestedFrequency, err := strconv.ParseFloat(frequencySplit, 64)
 	if err != nil {
 		mylogger.Fatal.Fatalf("bad lmFrequency: %v", err)
-		return false
+		return
 	}
 	requestKHz := (requestedFrequency * 1000) - lmcfg.Offset
 	requestKHzStr := strconv.FormatFloat(requestKHz, 'f', 0, 64)
@@ -110,38 +132,54 @@ func V2_startLongmynd(frequency, symbolRate string) bool {
 	_, err = exec.Command(lmcfg.StartScript, lmcfg.Folder, lmcfg.Binary, requestKHzStr, symbolRate).Output()
 	if err != nil {
 		mylogger.Error.Printf("failed to start longmynd: %v", err)
-		return false
+		return
 	}
-	return true
+	mylogger.Info.Printf("longmynd has started")
+	isTuned = true
 }
 
-func V2_stopLongmynd() bool {
-	_, err := exec.Command("/usr/bin/pkill", "longmynd").Output()
-	if err != nil {
-		mylogger.Error.Printf("failed to stop longmynd: %v", err)
-		return false
+func V2_stopLongmynd() {
+	if isTuned {
+		mylogger.Info.Printf("longmynd will stop...")
+		_, err := exec.Command("/usr/bin/pkill", "longmynd").Output()
+		if err != nil {
+			mylogger.Error.Printf("failed to stop longmynd: %v", err)
+			return
+		}
+		mylogger.Info.Printf("longmynd has stopped")
 	}
-	return false
+	isTuned = false
 }
 
-func V2_startFfplay() bool {
-	mylogger.Info.Printf("ffplay will start...")
-	_, err := exec.Command(fpcfg.StartScript, fpcfg.Volume, fpcfg.TsFifo).Output()
-	if err != nil {
-		mylogger.Error.Printf("failed to start ffplay: %v", err)
-		return false
+func V2_startFfplay() {
+	if !isPlaying {
+		mylogger.Info.Printf("ffplay will start...")
+		_, err := exec.Command(fpcfg.StartScript, fpcfg.Volume, fpcfg.TsFifo).Output()
+		if err != nil {
+			mylogger.Error.Printf("failed to start ffplay: %v", err)
+			return
+		}
+		mylogger.Info.Printf("ffplay has started")
 	}
-	mylogger.Info.Printf("ffplay has started")
-	return true
+	isPlaying = true
 }
 
-func V2_stopFfplay() bool {
-	_, err := exec.Command("/usr/bin/pkill", "ffplay", "pulseaudio").Output()
-	if err != nil {
-		mylogger.Error.Printf("failed to stop ffplay and/or pulseaudio: %v", err)
-		return false
+func V2_stopFfplay() {
+	if isPlaying {
+		mylogger.Info.Printf("ffplay will stop...")
+		_, err := exec.Command("/usr/bin/pkill", "ffplay").Output()
+		if err != nil {
+			mylogger.Error.Printf("failed to stop ffplay: %v", err)
+			return
+		}
+		_, err = exec.Command("/usr/bin/pkill", "pulseaudio").Output()
+		if err != nil {
+			mylogger.Error.Printf("failed to stop pulseaudio: %v", err)
+			return
+		}
 	}
-	return false
+	mylogger.Info.Printf("ffplay has stppoed")
+	isPlaying = false
 }
 
 /****************************************************
