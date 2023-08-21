@@ -60,14 +60,14 @@ func Intitialize(lmc *LmConfig, fpc *FpConfig, ch chan LongmyndData) {
 	lmcfg = lmc
 	fpcfg = fpc
 	lmChannel = ch
-	V2a_killAll()
+	V2_killAll()
 	go readLongmynd(lmcfg.StatusFifo, lmcfg.Offset, lmChannel)
 }
 
 func Stop() {
 	mylogger.Info.Printf("LmReader will stop... - NOT IMPLEMENTED")
 	// TODO: implement a better way to stop longmynd and ffplay
-	V2a_killAll()
+	V2_killAll()
 	mylogger.Info.Printf("LmReader has stopped")
 }
 
@@ -78,7 +78,7 @@ func Tune(frequency, sysmbolRate string) {
 
 func UnTune() {
 	mylogger.Info.Printf("------ WILL UNTUNE")
-	V2a_killAll()
+	V2_killAll()
 
 }
 
@@ -429,9 +429,7 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 		}
 		if !isTuned && isPlaying {
 			isLocked = false
-			V2a_killAll()
-			// V2_stopFfplay()
-			// V2_stopLongmynd()
+			V2_killAll()
 		}
 
 		if isLocked {

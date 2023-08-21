@@ -90,26 +90,6 @@ func V1_stopFfplay() bool {
 *****************************************************/
 
 func V2_killAll() {
-	_, err := exec.Command("/usr/bin/pkill", "ffplay").Output()
-	if err != nil {
-		mylogger.Error.Printf("failed to stop ffplay: %v", err)
-		return
-	}
-	_, err = exec.Command("/usr/bin/pkill", "pulseaudio").Output()
-	if err != nil {
-		mylogger.Error.Printf("failed to stop pulseaudio: %v", err)
-		return
-	}
-	_, err = exec.Command("/usr/bin/pkill", "longmynd").Output()
-	if err != nil {
-		mylogger.Error.Printf("failed to stop longmynd: %v", err)
-		return
-	}
-	isPlaying = false
-	isTuned = false
-}
-
-func V2a_killAll() {
 	if isPlaying {
 		V2_stopFfplay()
 	}
