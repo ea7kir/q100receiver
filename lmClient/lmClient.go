@@ -60,29 +60,25 @@ func Intitialize(lmc *LmConfig, fpc *FpConfig, ch chan LongmyndData) {
 	lmcfg = lmc
 	fpcfg = fpc
 	lmChannel = ch
-	killAll()
+	isTuned = V1_killAll()
 	go readLongmynd(lmcfg.StatusFifo, lmcfg.Offset, lmChannel)
 }
 
 func Stop() {
 	mylogger.Info.Printf("LmReader will stop...")
 	// TODO: implement a better way to stop longmynd and ffplay
-	killAll()
+	isTuned = V1_killAll()
 	mylogger.Info.Printf("LmReader has stopped")
 }
 
 func Tune(frequency, sysmbolRate string) {
 	mylogger.Info.Printf("------ WILL TUNE")
-	isTuned = startLongmynd(frequency, sysmbolRate) // TODO: pass arguments
-	// isTuned = true
+	isTuned = V1_startLongmynd(frequency, sysmbolRate) // TODO: pass arguments
 }
 
 func UnTune() {
 	mylogger.Info.Printf("------ WILL UNTUNE")
-	// isTuned = stopLongmynd()
-	killAll()
-	isTuned = false
-	// stopFfplay()
+	isTuned = V1_killAll()
 }
 
 // END API ********************************************************
@@ -319,8 +315,8 @@ var (
 	liveData  = new(LongmyndData)
 	cacheData = new(LongmyndData)
 
-	lmPid     int
-	ffPlayPid int
+	lmPid     int // used in V3
+	ffPlayPid int // used in V3
 	isTuned   bool
 )
 
@@ -421,15 +417,15 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 		} // switch
 
 		if isTuned && isLocked && !isPlaying {
-			isPlaying = startFfplay()
+			isPlaying = V1_startFfplay()
 		}
 		if isTuned && !isLocked && isPlaying {
-			isPlaying = stopFfplay()
+			isPlaying = V1_stopFfplay()
 		}
 		if !isTuned && isPlaying {
 			isLocked = false
-			isPlaying = stopFfplay()
-			isTuned = stopLongmynd()
+			isPlaying = V1_stopFfplay()
+			isTuned = V1_stopLongmynd()
 		}
 
 		if isLocked {

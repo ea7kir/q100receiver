@@ -9,18 +9,94 @@ import (
 	"syscall"
 )
 
-/******* BEGIN LATEST *******************************************************************/
+/****************************************************
+*****************************************************
+*** V 1 *********************************************
+*****************************************************
+*****************************************************/
 
-// TODO: also see lmClient.go: Initialize, Stop, Tune and UnTune
-//	plus: ther is no ShutDown !  Same for spectrum !
-
-func latest_killAll() bool {
-	ok := latest_stopLongmynd()
-	ok = ok && latest_stopFfplay()
-	return ok
+func V1_killAll() bool {
+	cmd := exec.Command("/usr/bin/killall", "-SIGINT", "ffplay", "pulseaudio", "longmynd") // "longmynd", "ffplay", "pulseaudio")
+	_, _ = cmd.Output()
+	return false
 }
 
-func latest_startLongmynd(frequency, symbolRate string) bool {
+func V1_startLongmynd(frequency, symbolRate string) bool {
+	// trim "10491.50 / 00" to "10491.50"
+	frequencySplit := strings.SplitN(frequency, " ", 2)[0]
+	requestedFrequency, err := strconv.ParseFloat(frequencySplit, 64)
+	if err != nil {
+		mylogger.Fatal.Fatalf("bad lmFrequency: %v", err)
+	}
+	requestKHz := (requestedFrequency * 1000) - lmcfg.Offset
+	requestKHzStr := strconv.FormatFloat(requestKHz, 'f', 0, 64)
+	mylogger.Info.Printf("longmynd will start...")
+	cmd := exec.Command(lmcfg.StartScript, lmcfg.Folder, lmcfg.Binary, requestKHzStr, symbolRate)
+	mylogger.Info.Printf("exec: %v", cmd)
+	_, err = cmd.Output()
+	if err != nil {
+		mylogger.Fatal.Fatalf("unable to start longmynd: %v", err)
+		return false
+	}
+	mylogger.Info.Printf("longmynd has started")
+	return true
+}
+
+func V1_stopLongmynd() bool {
+	mylogger.Info.Printf("longmynd will stop...")
+	cmd := exec.Command(lmcfg.StopScript)
+	mylogger.Info.Printf("exec: %v", cmd.Args)
+	_, err := cmd.Output()
+	if err != nil {
+		mylogger.Warn.Printf("unable to kill longmynd: %v", err)
+		return false
+	}
+	mylogger.Info.Printf("longmynd has stopped")
+	return false
+}
+
+func V1_startFfplay() bool {
+	mylogger.Info.Printf("ffplay will start...")
+	cmd := exec.Command(fpcfg.StartScript, fpcfg.Volume, fpcfg.TsFifo)
+	mylogger.Info.Printf("exec: %v", cmd.Args)
+	_, err := cmd.Output()
+	if err != nil {
+		mylogger.Fatal.Fatalf("unable to start ffplay: %v", err)
+		return false
+	}
+	mylogger.Info.Printf("ffplay has started")
+	return true
+}
+
+func V1_stopFfplay() bool {
+	mylogger.Info.Printf("ffplay will stop...")
+	cmd := exec.Command(fpcfg.StopScript)
+	mylogger.Info.Printf("exec: %v", cmd)
+	_, err := cmd.Output()
+	if err != nil {
+		mylogger.Warn.Printf("unable to stop ffplay: %v", err)
+		return false
+	}
+	mylogger.Info.Printf("ffplay has stopped")
+	return false
+}
+
+/****************************************************
+*****************************************************
+*** V 2 *********************************************
+*****************************************************
+*****************************************************/
+
+func V2_killAll() bool {
+	_, err := exec.Command("/usr/bin/pkill", "ffplay", "pulseaudio", "longmynd").Output()
+	if err != nil {
+		mylogger.Error.Printf("failed to stop ffplay, pulseaudio, longmynd: %v", err)
+		return false
+	}
+	return false
+}
+
+func V2_startLongmynd(frequency, symbolRate string) bool {
 	// trim "10491.50 / 00" to "10491.50"
 	frequencySplit := strings.SplitN(frequency, " ", 2)[0]
 	requestedFrequency, err := strconv.ParseFloat(frequencySplit, 64)
@@ -39,16 +115,16 @@ func latest_startLongmynd(frequency, symbolRate string) bool {
 	return true
 }
 
-func latest_stopLongmynd() bool {
-	_, err := exec.Command("/usr/bin/killall", "-SIGINT", "longmynd").Output()
+func V2_stopLongmynd() bool {
+	_, err := exec.Command("/usr/bin/pkill", "longmynd").Output()
 	if err != nil {
 		mylogger.Error.Printf("failed to stop longmynd: %v", err)
 		return false
 	}
-	return true
+	return false
 }
 
-func latest_startFfplay() bool {
+func V2_startFfplay() bool {
 	mylogger.Info.Printf("ffplay will start...")
 	_, err := exec.Command(fpcfg.StartScript, fpcfg.Volume, fpcfg.TsFifo).Output()
 	if err != nil {
@@ -59,37 +135,26 @@ func latest_startFfplay() bool {
 	return true
 }
 
-func latest_stopFfplay() bool {
-	_, err := exec.Command("/usr/bin/killall", "-SIGINT", "ffplay", "pulseaudio").Output()
+func V2_stopFfplay() bool {
+	_, err := exec.Command("/usr/bin/pkill", "ffplay", "pulseaudio").Output()
 	if err != nil {
-		mylogger.Error.Printf("failed to stop ffplay: %v", err)
+		mylogger.Error.Printf("failed to stop ffplay and/or pulseaudio: %v", err)
 		return false
 	}
-	return true
+	return false
 }
 
-/******** END LATEST ******************************************************************/
+/****************************************************
+*****************************************************
+*** V 3 *********************************************
+*****************************************************
+*****************************************************/
 
-func killAll() {
-	cmd := exec.Command("/usr/bin/killall", "-SIGINT", "longmynd", "ffplay", "pulseaudio")
-	_, _ = cmd.Output()
-	//cmd.Process.Release()
-	// if err != nil {
-	// 	// if there was any error, print it here
-	// 	fmt.Println("could not run command: ", err)
-	// }
-	// // otherwise, print the output from running the command
-	// fmt.Println("------------------Output: ", string(out))
-	// // mylogger.Info.Printf("cmd: %v", out)
+func V3_killAll() {
+	//
 }
 
-/*****************************************************************************************************************************************
-******************************************************************************************************************************************
-*********************** LOOK - NO SCRIPTS HERE *******************************************************************************************
-******************************************************************************************************************************************
-*****************************************************************************************************************************************/
-
-func NEWstartLongmynd() { // TODO: return isTuned etc.
+func V3_startLongmynd() { // TODO: return isTuned etc.
 	mylogger.Info.Printf("longmynd will start...")
 
 	// trim "10491.50 / 00" to "10491.50"
@@ -119,7 +184,7 @@ func NEWstartLongmynd() { // TODO: return isTuned etc.
 	mylogger.Info.Printf("longmynd has started with PID: %v", lmPid)
 }
 
-func NEWstopLongmynd() {
+func V3_stopLongmynd() {
 	if lmPid == 0 {
 		return
 	}
@@ -134,9 +199,7 @@ func NEWstopLongmynd() {
 	mylogger.Info.Printf("longmynd has stopped")
 }
 
-/****************************************************************************************************************************************/
-
-func NEWstartFfplay() {
+func V3_startFfplay() {
 	// if ffPlayPid != 0 {
 	// 	return
 	// }
@@ -183,7 +246,7 @@ func NEWstartFfplay() {
 	mylogger.Info.Printf("ffplay has started with PID: %v ARGS: %v", ffPlayPid, args)
 }
 
-func NEWstopFfplay() {
+func V3_stopFfplay() {
 	mylogger.Info.Printf("ffplay will stop...")
 
 	cmd := exec.Command("/usr/bin/killall", "-SIGINT", "ffplay", "pulseaudio")
@@ -202,68 +265,8 @@ func NEWstopFfplay() {
 	mylogger.Info.Printf("ffplay has stopped")
 }
 
-/*****************************************************************************************************************************************
-******************************************************************************************************************************************
-*********************** USING EXTERNAL SCRIPTS *******************************************************************************************
-******************************************************************************************************************************************
-*****************************************************************************************************************************************/
-
-func startLongmynd(frequency, symbolRate string) bool {
-	// trim "10491.50 / 00" to "10491.50"
-	frequencySplit := strings.SplitN(frequency, " ", 2)[0]
-	requestedFrequency, err := strconv.ParseFloat(frequencySplit, 64)
-	if err != nil {
-		mylogger.Fatal.Fatalf("bad lmFrequency: %v", err)
-	}
-	requestKHz := (requestedFrequency * 1000) - lmcfg.Offset
-	requestKHzStr := strconv.FormatFloat(requestKHz, 'f', 0, 64)
-	mylogger.Info.Printf("longmynd will start...")
-	cmd := exec.Command(lmcfg.StartScript, lmcfg.Folder, lmcfg.Binary, requestKHzStr, symbolRate)
-	mylogger.Info.Printf("exec: %v", cmd)
-	_, err = cmd.Output()
-	if err != nil {
-		mylogger.Fatal.Fatalf("unable to start longmynd: %v", err)
-		return false
-	}
-	mylogger.Info.Printf("longmynd has started")
-	return true
-}
-
-func stopLongmynd() bool {
-	mylogger.Info.Printf("longmynd will stop...")
-	cmd := exec.Command(lmcfg.StopScript)
-	mylogger.Info.Printf("exec: %v", cmd.Args)
-	_, err := cmd.Output()
-	if err != nil {
-		mylogger.Warn.Printf("unable to kill longmynd: %v", err)
-		return false
-	}
-	mylogger.Info.Printf("longmynd has stopped")
-	return false
-}
-
-func startFfplay() bool {
-	mylogger.Info.Printf("ffplay will start...")
-	cmd := exec.Command(fpcfg.StartScript, fpcfg.Volume, fpcfg.TsFifo)
-	mylogger.Info.Printf("exec: %v", cmd.Args)
-	_, err := cmd.Output()
-	if err != nil {
-		mylogger.Fatal.Fatalf("unable to start ffplay: %v", err)
-		return false
-	}
-	mylogger.Info.Printf("ffplay has started")
-	return true
-}
-
-func stopFfplay() bool {
-	mylogger.Info.Printf("ffplay will stop...")
-	cmd := exec.Command(fpcfg.StopScript)
-	mylogger.Info.Printf("exec: %v", cmd)
-	_, err := cmd.Output()
-	if err != nil {
-		mylogger.Warn.Printf("unable to stop ffplay: %v", err)
-		return false
-	}
-	mylogger.Info.Printf("ffplay has stopped")
-	return false
-}
+/****************************************************
+*****************************************************
+*** V 4 *********************************************
+*****************************************************
+*****************************************************/
