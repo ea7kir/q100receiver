@@ -10,20 +10,25 @@
 #
 # sudo systemctl stop q100receiver
 # sudo systemctl disable q100receiver
-#
+
 [Unit]
 Description=Q-100 Receiver for the Es'Hail-2 satellite
 After=multi-user.target
 
 [Service]
-User=pi
+Type=Simple
 
-#WorkingDirectory=/home/pi/Q100/q100receiver
+User=pi
+#Group=audio
+
+WorkingDirectory=/home/pi/Q100/q100receiver
 
 ExecStart=/home/pi/Q100/q100receiver/q100receiver
 
+#Type=simple
 #SuccessExitStatus=143
 #TimeoutStopSec=10
+#Restart=on-failure
 #Restart=on-failure
 #RestartSec=5
 
