@@ -131,6 +131,32 @@ func V2_stopLongmynd() {
 	isTuned = false
 }
 
+// export DISPLAY=:0
+// /usr/bin/ffplay -left 800 -fs -volume "$1" -i "$2" > /dev/null 2>&1 &
+var ffPlayPID int
+
+func V2bad_startFfplay() {
+	if !isPlaying {
+		func() {
+			mylogger.Info.Printf("ffplay will start...")
+			cmd := exec.Command("/usr/bin/ffplay", "-left", "800", "-fs", "-i", fpcfg.TsFifo)
+			err := cmd.Start()
+			if err != nil {
+				mylogger.Error.Printf("failed to start ffplay: %v", err)
+				return
+			}
+			ffPlayPID = cmd.Process.Pid
+			mylogger.Info.Printf("ffplay has started %v", ffPlayPID)
+			isPlaying = true
+			_, err = cmd.Process.Wait()
+			if err != nil {
+				mylogger.Error.Printf("failed to wait ffplay: %v", err)
+			}
+			isPlaying = false
+		}()
+	}
+}
+
 func V2_startFfplay() {
 	if !isPlaying {
 		mylogger.Info.Printf("ffplay will start...")
@@ -147,16 +173,18 @@ func V2_startFfplay() {
 func V2_stopFfplay() {
 	if isPlaying {
 		mylogger.Info.Printf("ffplay will stop...")
+		// err := syscall.Kill(ffPlayPID, syscall.SIGINT) /// syscall.SIGINT, syscall.SIGTERM
 		_, err := exec.Command("/usr/bin/pkill", "ffplay").Output()
 		if err != nil {
 			mylogger.Error.Printf("failed to stop ffplay: %v", err)
 			return
 		}
-		_, err = exec.Command("/usr/bin/pkill", "pulseaudio").Output()
-		if err != nil {
-			mylogger.Error.Printf("failed to stop pulseaudio: %v", err)
-			return
-		}
+		// apparently pulseaudio is allreaady running
+		// _, err = exec.Command("/usr/bin/pkill", "pulseaudio").Output()
+		// if err != nil {
+		// 	mylogger.Error.Printf("failed to stop pulseaudio: %v", err)
+		// 	return
+		// }
 	}
 	mylogger.Info.Printf("ffplay has stppoed")
 	isPlaying = false
