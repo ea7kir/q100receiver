@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"q100receiver/mylogger"
 	"strconv"
 	"strings"
@@ -110,8 +111,7 @@ func (p *LongmyndData) resetPartial() {
 }
 
 var (
-	lmChannel                      chan LongmyndData
-	withFrequency, withSysmbolRate string
+	lmChannel chan LongmyndData
 )
 
 type (
@@ -320,8 +320,6 @@ var (
 	liveData  = new(LongmyndData)
 	cacheData = new(LongmyndData)
 
-	lmPid     int // used in V3
-	ffPlayPid int // used in V3
 	isTuned   bool
 	isPlaying bool
 )
@@ -741,4 +739,83 @@ func id27_setDbmPower(agc2Str string) {
 
 	liveData.DbmPower = fmt.Sprint(p)
 	agcPair.reset()
+}
+
+/***********************************************************************
+*
+*	START AND STOP FUNCTIONS
+*
+************************************************************************/
+
+func V2_killAll() {
+	if isPlaying {
+		V2_stopFfplay()
+	}
+	if isTuned {
+		V2_stopLongmynd()
+	}
+}
+
+func V2_startLongmynd(frequency, symbolRate string) {
+	// trim "10491.50 / 00" to "10491.50"
+	frequencySplit := strings.SplitN(frequency, " ", 2)[0]
+	requestedFrequency, err := strconv.ParseFloat(frequencySplit, 64)
+	if err != nil {
+		mylogger.Fatal.Fatalf("bad lmFrequency: %v", err)
+		return
+	}
+	requestKHz := (requestedFrequency * 1000) - lmcfg.Offset
+	requestKHzStr := strconv.FormatFloat(requestKHz, 'f', 0, 64)
+	mylogger.Info.Printf("longmynd will start...")
+	_, err = exec.Command(lmcfg.StartScript, lmcfg.Folder, lmcfg.Binary, requestKHzStr, symbolRate).Output()
+	if err != nil {
+		mylogger.Error.Printf("failed to start longmynd: %v", err)
+		return
+	}
+	mylogger.Info.Printf("longmynd has started")
+	isTuned = true
+}
+
+func V2_stopLongmynd() {
+	if isTuned {
+		mylogger.Info.Printf("longmynd will stop...")
+		_, err := exec.Command("/usr/bin/pkill", "longmynd").Output()
+		if err != nil {
+			mylogger.Error.Printf("failed to stop longmynd: %v", err)
+			return
+		}
+		mylogger.Info.Printf("longmynd has stopped")
+	}
+	isTuned = false
+}
+
+var ffPlayIsACtive bool // TODO: temp fix to prevent more than one ffplay instance
+
+// /usr/bin/ffplay -left 800 -fs -volume "$1" -i "$2" > /dev/null 2>&1 &
+func V2_startFfplay() {
+	if !isPlaying && !ffPlayIsACtive {
+		ffPlayIsACtive = true
+		mylogger.Info.Printf("ffplay will start...")
+		_, err := exec.Command(fpcfg.StartScript, fpcfg.Volume, fpcfg.TsFifo).Output()
+		if err != nil {
+			mylogger.Error.Printf("failed to start ffplay: %v", err)
+			return
+		}
+		mylogger.Info.Printf("ffplay has started")
+	}
+	isPlaying = true
+}
+
+func V2_stopFfplay() {
+	if isPlaying {
+		mylogger.Info.Printf("ffplay will stop...")
+		_, err := exec.Command("/usr/bin/pkill", "ffplay").Output()
+		if err != nil {
+			mylogger.Error.Printf("failed to stop ffplay: %v", err)
+			return
+		}
+	}
+	mylogger.Info.Printf("ffplay has stppoed")
+	isPlaying = false
+	ffPlayIsACtive = false
 }
