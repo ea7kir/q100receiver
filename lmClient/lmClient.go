@@ -61,25 +61,25 @@ func Intitialize(lmc *LmConfig, fpc *FpConfig, ch chan LongmyndData) {
 	lmcfg = lmc
 	fpcfg = fpc
 	lmChannel = ch
-	V2_killAll()
+	stopFfPlayAndLongmynd()
 	go readLongmynd(lmcfg.StatusFifo, lmcfg.Offset, lmChannel)
 }
 
 func Stop() {
 	mylogger.Info.Printf("LmReader will stop... - NOT IMPLEMENTED")
 	// TODO: implement a better way to stop longmynd and ffplay
-	V2_killAll()
+	stopFfPlayAndLongmynd()
 	mylogger.Info.Printf("LmReader has stopped")
 }
 
 func Tune(frequency, sysmbolRate string) {
 	mylogger.Info.Printf("------ WILL TUNE")
-	V2_startLongmynd(frequency, sysmbolRate) // TODO: pass arguments
+	startLongmynd(frequency, sysmbolRate) // TODO: pass arguments
 }
 
 func UnTune() {
 	mylogger.Info.Printf("------ WILL UNTUNE")
-	V2_killAll()
+	stopFfPlayAndLongmynd()
 
 }
 
@@ -333,7 +333,6 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 	esPair.reset()
 
 	isLocked := false
-	// isPlaying = false
 
 	lonymyndChannel <- *liveData
 
@@ -420,14 +419,14 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 		} // switch
 
 		if isTuned && isLocked && !isPlaying {
-			V2_startFfplay()
+			startFfplay()
 		}
 		if isTuned && !isLocked && isPlaying {
-			V2_stopFfplay()
+			stopFfplay()
 		}
 		if !isTuned && isPlaying {
 			isLocked = false
-			V2_killAll()
+			stopFfPlayAndLongmynd()
 		}
 
 		if isLocked {
@@ -747,16 +746,16 @@ func id27_setDbmPower(agc2Str string) {
 *
 ************************************************************************/
 
-func V2_killAll() {
+func stopFfPlayAndLongmynd() {
 	if isPlaying {
-		V2_stopFfplay()
+		stopFfplay()
 	}
 	if isTuned {
-		V2_stopLongmynd()
+		stopLongmynd()
 	}
 }
 
-func V2_startLongmynd(frequency, symbolRate string) {
+func startLongmynd(frequency, symbolRate string) {
 	// trim "10491.50 / 00" to "10491.50"
 	frequencySplit := strings.SplitN(frequency, " ", 2)[0]
 	requestedFrequency, err := strconv.ParseFloat(frequencySplit, 64)
@@ -776,7 +775,7 @@ func V2_startLongmynd(frequency, symbolRate string) {
 	isTuned = true
 }
 
-func V2_stopLongmynd() {
+func stopLongmynd() {
 	if isTuned {
 		mylogger.Info.Printf("longmynd will stop...")
 		_, err := exec.Command("/usr/bin/pkill", "longmynd").Output()
@@ -792,7 +791,7 @@ func V2_stopLongmynd() {
 var ffPlayIsACtive bool // TODO: temp fix to prevent more than one ffplay instance
 
 // /usr/bin/ffplay -left 800 -fs -volume "$1" -i "$2" > /dev/null 2>&1 &
-func V2_startFfplay() {
+func startFfplay() {
 	if !isPlaying && !ffPlayIsACtive {
 		ffPlayIsACtive = true
 		mylogger.Info.Printf("ffplay will start...")
@@ -806,7 +805,7 @@ func V2_startFfplay() {
 	isPlaying = true
 }
 
-func V2_stopFfplay() {
+func stopFfplay() {
 	if isPlaying {
 		mylogger.Info.Printf("ffplay will stop...")
 		_, err := exec.Command("/usr/bin/pkill", "ffplay").Output()
