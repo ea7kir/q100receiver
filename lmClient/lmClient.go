@@ -756,6 +756,7 @@ func stopFfPlayAndLongmynd() {
 	}
 }
 
+// working with script
 func startLongmynd(frequency, symbolRate string) {
 	// trim "10491.50 / 00" to "10491.50"
 	frequencySplit := strings.SplitN(frequency, " ", 2)[0]
@@ -776,6 +777,7 @@ func startLongmynd(frequency, symbolRate string) {
 	isTuned = true
 }
 
+// working with pkill
 func stopLongmynd() {
 	if isTuned {
 		mylogger.Info.Printf("longmynd will stop...")
@@ -794,37 +796,42 @@ var ffPlayIsACtive bool // TODO: temp fix to prevent more than one ffplay instan
 // /usr/bin/ffplay -left 800 -fs -volume "$1" -i "$2" > /dev/null 2>&1 &
 var ffPlayCmd *exec.Cmd
 
-func N_startFfplay() {
+// working direct
+func startFfplay() {
 	if !isPlaying && !ffPlayIsACtive {
-		ffPlayIsACtive = true
 		mylogger.Info.Printf("ffplay will start...")
 		ffPlayCmd = exec.Command("/usr/bin/ffplay", "-left", "800", "-fs", "-volume", fpcfg.Volume, "-i", fpcfg.TsFifo)
-		ffPlayCmd.Dir = "/home/pi/Q100/q100receiver/"
 		if err := ffPlayCmd.Start(); err != nil {
 			mylogger.Error.Printf("failed to start ffplay: %v", err)
 			return
 		}
+		// cmd.Wait()
 		mylogger.Info.Printf("ffplay has started")
-		// ffPlayPid = ffPlayCmd.Process.Pid
 	}
+	ffPlayIsACtive = true
 	isPlaying = true
 }
 
-func N_stopFfplay() {
+// working pkill
+func stopFfplay() {
 	if isPlaying {
 		mylogger.Info.Printf("ffplay will stop...")
-		_, err := exec.Command("/usr/bin/pkill", "ffplay").Output()
-		if err != nil {
+		ffPlayCmd.Process.Kill()
+		ffPlayCmd.Process.Wait()
+		cmd := exec.Command("/usr/bin/pkill", "ffplay")
+		if err := cmd.Start(); err != nil {
 			mylogger.Error.Printf("failed to stop ffplay: %v", err)
 			return
 		}
+		cmd.Wait()
 	}
 	mylogger.Info.Printf("ffplay has stppoed")
-	isPlaying = false
 	ffPlayIsACtive = false
+	isPlaying = false
 }
 
-func startFfplay() {
+// working with script
+func OK_startFfplay() {
 	if !isPlaying && !ffPlayIsACtive {
 		mylogger.Info.Printf("ffplay will start...")
 		ffPlayCmd = exec.Command(fpcfg.StartScript, fpcfg.Volume, fpcfg.TsFifo)
@@ -839,7 +846,8 @@ func startFfplay() {
 	isPlaying = true
 }
 
-func stopFfplay() {
+// working with script
+func OK_stopFfplay() {
 	if isPlaying {
 		mylogger.Info.Printf("ffplay will stop...")
 		ffPlayCmd.Process.Kill()
