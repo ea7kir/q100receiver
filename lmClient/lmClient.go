@@ -756,8 +756,61 @@ func stopFfPlayAndLongmynd() {
 	}
 }
 
-// working with script
+var lmCmd *exec.Cmd
+
+/*
+# $1 = folder
+# $2 = binary
+# $3 = frequency
+# $4 = symbolrate
+cd "$1"
+"$2" -S 0.6 "$3" "$4" > /dev/null 2>&1 &
+*/
+
+// /home/pi/q100receiver/_longmynd/longmynd -S 0.6 requestKHzStr symbolRate
+
+// working direct
 func startLongmynd(frequency, symbolRate string) {
+	// trim "10491.50 / 00" to "10491.50"
+	frequencySplit := strings.SplitN(frequency, " ", 2)[0]
+	requestedFrequency, err := strconv.ParseFloat(frequencySplit, 64)
+	if err != nil {
+		mylogger.Fatal.Fatalf("bad lmFrequency: %v", err)
+		return
+	}
+	requestKHz := (requestedFrequency * 1000) - lmcfg.Offset
+	requestKHzStr := strconv.FormatFloat(requestKHz, 'f', 0, 64)
+	mylogger.Info.Printf("longmynd will start...")
+	lmCmd = exec.Command("./longmynd", "-S", "0.6", requestKHzStr, symbolRate)
+	lmCmd.Dir = lmcfg.Folder //"/home/pi/Q100/q100receiver/_longmynd/"
+	if err = lmCmd.Start(); err != nil {
+		mylogger.Error.Printf("failed to start longmynd: %v", err)
+		return
+	}
+	mylogger.Info.Printf("longmynd has started")
+	isTuned = true
+}
+
+// working with pkill
+func stopLongmynd() {
+	if isTuned {
+		mylogger.Info.Printf("longmynd will stop...")
+		lmCmd.Process.Kill()
+		lmCmd.Process.Wait()
+		cmd := exec.Command("/usr/bin/pkill", "longmynd")
+		if err := cmd.Start(); err != nil {
+			mylogger.Error.Printf("failed to stop longmynd: %v", err)
+			return
+		}
+		cmd.Wait()
+	}
+	mylogger.Info.Printf("longmynd has stopped")
+	isTuned = false
+}
+
+/*
+// working with script
+func OK_startLongmynd(frequency, symbolRate string) {
 	// trim "10491.50 / 00" to "10491.50"
 	frequencySplit := strings.SplitN(frequency, " ", 2)[0]
 	requestedFrequency, err := strconv.ParseFloat(frequencySplit, 64)
@@ -778,7 +831,7 @@ func startLongmynd(frequency, symbolRate string) {
 }
 
 // working with pkill
-func stopLongmynd() {
+func OK_stopLongmynd() {
 	if isTuned {
 		mylogger.Info.Printf("longmynd will stop...")
 		_, err := exec.Command("/usr/bin/pkill", "longmynd").Output()
@@ -790,6 +843,7 @@ func stopLongmynd() {
 	}
 	isTuned = false
 }
+*/
 
 var ffPlayIsACtive bool // TODO: temp fix to prevent more than one ffplay instance
 
@@ -830,6 +884,7 @@ func stopFfplay() {
 	isPlaying = false
 }
 
+/*
 // working with script
 func OK_startFfplay() {
 	if !isPlaying && !ffPlayIsACtive {
@@ -863,3 +918,4 @@ func OK_stopFfplay() {
 	ffPlayIsACtive = false
 	isPlaying = false
 }
+*/
