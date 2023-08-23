@@ -61,7 +61,7 @@ func Intitialize(lmc *LmConfig, fpc *FpConfig, ch chan LongmyndData) {
 	lmcfg = lmc
 	fpcfg = fpc
 	lmChannel = ch
-	stopFfPlayAndLongmynd()
+	// stopFfPlayAndLongmynd()
 	go readLongmynd(lmcfg.StatusFifo, lmcfg.Offset, lmChannel)
 }
 
@@ -336,6 +336,7 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 
 	lonymyndChannel <- *liveData
 
+	// will hang here until longmynd starts for the fiesrt time
 	file, err := os.OpenFile(fifoPath, os.O_CREATE, os.ModeNamedPipe)
 	if err != nil {
 		mylogger.Warn.Printf("Failed to open '%v' fifo %v: ", fifoPath, err)
@@ -791,21 +792,25 @@ func stopLongmynd() {
 var ffPlayIsACtive bool // TODO: temp fix to prevent more than one ffplay instance
 
 // /usr/bin/ffplay -left 800 -fs -volume "$1" -i "$2" > /dev/null 2>&1 &
-func startFfplay() {
+var ffPlayCmd *exec.Cmd
+
+func N_startFfplay() {
 	if !isPlaying && !ffPlayIsACtive {
 		ffPlayIsACtive = true
 		mylogger.Info.Printf("ffplay will start...")
-		_, err := exec.Command(fpcfg.StartScript, fpcfg.Volume, fpcfg.TsFifo).Output()
-		if err != nil {
+		ffPlayCmd = exec.Command("/usr/bin/ffplay", "-left", "800", "-fs", "-volume", fpcfg.Volume, "-i", fpcfg.TsFifo)
+		ffPlayCmd.Dir = "/home/pi/Q100/q100receiver/"
+		if err := ffPlayCmd.Start(); err != nil {
 			mylogger.Error.Printf("failed to start ffplay: %v", err)
 			return
 		}
 		mylogger.Info.Printf("ffplay has started")
+		// ffPlayPid = ffPlayCmd.Process.Pid
 	}
 	isPlaying = true
 }
 
-func stopFfplay() {
+func N_stopFfplay() {
 	if isPlaying {
 		mylogger.Info.Printf("ffplay will stop...")
 		_, err := exec.Command("/usr/bin/pkill", "ffplay").Output()
@@ -817,4 +822,36 @@ func stopFfplay() {
 	mylogger.Info.Printf("ffplay has stppoed")
 	isPlaying = false
 	ffPlayIsACtive = false
+}
+
+func startFfplay() {
+	if !isPlaying && !ffPlayIsACtive {
+		mylogger.Info.Printf("ffplay will start...")
+		ffPlayCmd = exec.Command(fpcfg.StartScript, fpcfg.Volume, fpcfg.TsFifo)
+		if err := ffPlayCmd.Start(); err != nil {
+			mylogger.Error.Printf("failed to start ffplay: %v", err)
+			return
+		}
+		// cmd.Wait()
+		mylogger.Info.Printf("ffplay has started")
+	}
+	ffPlayIsACtive = true
+	isPlaying = true
+}
+
+func stopFfplay() {
+	if isPlaying {
+		mylogger.Info.Printf("ffplay will stop...")
+		ffPlayCmd.Process.Kill()
+		ffPlayCmd.Process.Wait()
+		cmd := exec.Command(fpcfg.StopScript)
+		if err := cmd.Start(); err != nil {
+			mylogger.Error.Printf("failed to stop ffplay: %v", err)
+			return
+		}
+		cmd.Wait()
+	}
+	mylogger.Info.Printf("ffplay has stppoed")
+	ffPlayIsACtive = false
+	isPlaying = false
 }

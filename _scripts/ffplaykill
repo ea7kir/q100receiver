@@ -1,2 +1,2 @@
 #!/bin/bash
-killall -w ffplay pulseaudio > /dev/null 2>&1
+killall -w ffplay > /dev/null 2>&1
