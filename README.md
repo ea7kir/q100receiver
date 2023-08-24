@@ -8,11 +8,11 @@ Control and monitor a DATV receiver with a touch screen.
 
 - Raspberry Pi 4B with 4GB RAM (minimum)
 - Raspberry Pi Official 7" Touch Screen
-- Bult BATC MiniTiouner v2.0
+- BATC MiniTiouner v2.0
 
 **A keyboard and mouse are not required.**
 
-## Coonections
+## Connections
 
 TODO: add schematic
 

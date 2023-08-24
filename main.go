@@ -56,19 +56,15 @@ var (
 		Origin: "http://eshail.batc.org.uk/wb",
 	}
 	lmConfig = lmClient.LmConfig{
-		Folder:      appFolder + "_longmynd/",
-		Binary:      appFolder + "_longmynd/longmynd",
-		Offset:      float64(9750000),
-		StatusFifo:  appFolder + "_longmynd/longmynd_main_status",
-		StartScript: appFolder + "_scripts/longmyndrun",
-		StopScript:  appFolder + "_scripts/longmyndkill",
+		Folder:     appFolder + "_longmynd/",
+		Binary:     appFolder + "_longmynd/longmynd",
+		Offset:     float64(9750000),
+		StatusFifo: appFolder + "_longmynd/longmynd_main_status",
 	}
 	fpConfig = lmClient.FpConfig{
-		Binary:      "/usr/bin/ffplay",
-		TsFifo:      appFolder + "_longmynd/longmynd_main_ts",
-		Volume:      "70",
-		StartScript: appFolder + "_scripts/ffplayrun",
-		StopScript:  appFolder + "_scripts/ffplaykill",
+		Binary: "/usr/bin/ffplay",
+		TsFifo: appFolder + "_longmynd/longmynd_main_ts",
+		Volume: "70",
 	}
 	tuConfig = rxControl.TuConfig{
 		Band:                 "Narrow",

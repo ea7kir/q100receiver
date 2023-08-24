@@ -1,3 +1,0 @@
-#!/bin/bash
-export DISPLAY=:0
-/usr/bin/ffplay -left 800 -fs -volume "$1" -i "$2" > /dev/null 2>&1 &
