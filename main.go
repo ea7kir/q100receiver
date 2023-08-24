@@ -1,5 +1,5 @@
 /*
- *  Q-100 Receiver
+ *  Q-100 Receiver & Transmitter
  *  Copyright (c) 2023 Michael Naylor EA7KIR (https://michaelnaylor.es)
  */
 
