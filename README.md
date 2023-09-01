@@ -8,7 +8,7 @@ $${\color{red}THIS\space PROJECT\space IS\space IN\space EARLY\space DEVELOPMENT
 - Raspberry Pi Official 7" Touch Screen
 - BATC MiniTiouner v2.0
 
-**A keyboard and mouse are not required.**
+**A keyboard and mouse are not required at any time**
 ## Connections
 TODO: add schematics
 ## Installing
