@@ -6,8 +6,9 @@
 package spectrumClient
 
 import (
-	"q100receiver/mylogger"
+	"os"
 
+	"github.com/ea7kir/qLog"
 	"golang.org/x/net/websocket"
 )
 
@@ -40,7 +41,7 @@ func Intitialize(cfg *SpConfig, ch chan SpData) {
 }
 
 func Stop() {
-	mylogger.Warn.Printf("Spectrum will stop... - NOT IMPLELENTED")
+	qLog.Warn("Spectrum will stop... - NOT IMPLELENTED")
 }
 
 // Sets the spData Marker values
@@ -70,7 +71,8 @@ var (
 func readAndDecode(cfg *SpConfig, ch chan SpData) {
 	ws, err := websocket.Dial(cfg.Url, "", cfg.Origin)
 	if err != nil {
-		mylogger.Fatal.Fatalf("Dial failed: %v", err)
+		qLog.Fatal("Dial failed: %v", err)
+		os.Exit(1)
 	}
 	defer ws.Close()
 
@@ -79,11 +81,11 @@ func readAndDecode(cfg *SpConfig, ch chan SpData) {
 
 	for {
 		if n, err = ws.Read(bytes); err != nil {
-			mylogger.Warn.Printf("Read failed: %v", err)
+			qLog.Warn("Read failed: %v", err)
 			continue
 		}
 		if n != 1844 {
-			mylogger.Warn.Printf("reading : bytes != 1844\n")
+			qLog.Warn("reading : bytes != 1844\n")
 			continue
 		}
 
@@ -92,7 +94,7 @@ func readAndDecode(cfg *SpConfig, ch chan SpData) {
 		for i := 0; i < 1836; {
 			word := uint16(bytes[i]) + uint16(bytes[i+1])<<8
 			// count++
-			// mylogger.Info.Printf("count = %v\n", count)
+			// qLog.Info("count = %v\n", count)
 			if word < 8192 {
 				word = 8192
 			}
@@ -101,7 +103,7 @@ func readAndDecode(cfg *SpConfig, ch chan SpData) {
 			// spData.Yp[i/2] = 50.0
 			i += 2
 		}
-		// mylogger.Info.Printf("count = %v\n", count)
+		// qLog.Info("count = %v\n", count)
 		spData.Yp[0] = 0
 		spData.Yp[numPoints-1] = 0
 
@@ -110,7 +112,7 @@ func readAndDecode(cfg *SpConfig, ch chan SpData) {
 			spData.BeaconLevel += spData.Yp[i]
 		}
 		spData.BeaconLevel = spData.BeaconLevel / 103
-		// mylogger.Info.Printf("beacon level %v : Yp[i] %v", spData.BeaconLevel, spData.Yp[103])
+		// qLog.Info("beacon level %v : Yp[i] %v", spData.BeaconLevel, spData.Yp[103])
 
 		ch <- spData
 	}
@@ -182,11 +184,11 @@ func CalibratetionPoints() {
 
 	for _, v := range CalibrationMarkerWidth {
 		// yp[v] = 100
-		mylogger.Info.Printf("CalibratetionPoints %v", v)
+		qLog.Info("CalibratetionPoints %v", v)
 	}
 
 	for i, v := range yp {
-		mylogger.Info.Printf("CalibratetionPoints %v  %v", i, v)
+		qLog.Info("CalibratetionPoints %v  %v", i, v)
 	}
 
 }
@@ -194,7 +196,7 @@ func CalibratetionPoints() {
 
 /*
 func readCalibrationData(ch chan SpData) {
-	mylogger.Info.Printf("Spectrun calibration running...")
+	qLog.Info("Spectrun calibration running...")
 	for {
 		spData.Yp[0] = 0
 		for i := 1; i < numPoints-2; i++ {

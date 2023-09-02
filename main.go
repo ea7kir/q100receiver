@@ -22,14 +22,16 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"image"
 	"image/color"
 	"os"
 	"os/signal"
 	"q100receiver/lmClient"
-	"q100receiver/mylogger"
 	"q100receiver/rxControl"
 	"q100receiver/spectrumClient"
+
+	"github.com/ea7kir/qLog"
 
 	"github.com/ajstarks/giocanvas"
 
@@ -87,10 +89,19 @@ var (
 
 // main - with some help from Chris Waldon who got me started
 func main() {
-	mylogger.Open("/home/pi/Q100/receiver.log")
-	defer mylogger.Close()
+	// qLog.Open("mylog.txt")
 
-	mylogger.Info.Printf("----- q100receiver Opened -----")
+	logFile, err := os.OpenFile("/home/pi/Q100/receiver.log", os.O_APPEND|os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		fmt.Println("failed to open log file:", err)
+		os.Exit(1)
+	}
+
+	// qLog.SetOutput(os.Stderr)
+	qLog.SetOutput(logFile)
+	defer qLog.Close()
+
+	qLog.Info("----- q100receiver Opened -----")
 
 	os.Setenv("DISPLAY", ":0") // required for X11
 
@@ -104,14 +115,15 @@ func main() {
 		w := app.NewWindow(app.Fullscreen.Option())
 		app.Size(800, 480) // I don't know if this is help in any way
 		if err := loop(w); err != nil {
-			mylogger.Fatal.Fatalf("failed to start loop: %v", err)
+			qLog.Fatal("failed to start loop: %v", err)
+			os.Exit(1)
 		}
 
 		rxControl.Stop()
 		lmClient.Stop()
 		spectrumClient.Stop()
 
-		mylogger.Info.Printf("----- q100receiver Closed -----")
+		qLog.Info("----- q100receiver Closed -----")
 		os.Exit(0)
 	}()
 
@@ -146,7 +158,7 @@ func loop(w *app.Window) error {
 			// prevent it from firing over and over.
 			done = nil
 			// Log something to make it obvious this happened.
-			// mylogger.Info.Printf("context cancelled")
+			// qLog.Info("context cancelled")
 			// Initiate window shutdown.
 			rxControl.Stop()      // TODO: does nothing yet
 			lmClient.Stop()       // TODO: does nothing yet
