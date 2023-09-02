@@ -23,7 +23,7 @@ After=multi-user.target
 [Service]
 Type=Simple
 User=pi
-group=pi
+Group=pi
 WorkingDirectory=/home/pi/Q100/q100receiver
 ExecStart=/home/pi/Q100/q100receiver/q100receiver
 
