@@ -5,10 +5,12 @@ go 1.21.0
 require (
 	gioui.org v0.2.0
 	github.com/ajstarks/giocanvas v0.0.0-20230804022017-219e8249ee1f
-	github.com/ea7kir/qLog v0.0.0-20230902183800-144c2afa4d5c
+	//github.com/ea7kir/qLog v0.0.0-20230902183800-144c2afa4d5c
 	golang.org/x/image v0.6.0
 	golang.org/x/net v0.14.0
 )
+
+require github.com/ea7kir/qLog v1.0.0
 
 require (
 	gioui.org/cpu v0.0.0-20210817075930-8d6a761490d2 // indirect
