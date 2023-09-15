@@ -2,6 +2,61 @@
 
 echo
 echo "-------------------------------"
+echo "-- Updateing the OS"
+echo "-------------------------------"
+echo
+
+sudo apt update
+sudo apt full-upgrade -y
+sudo apt autoremove -y
+sudo apt clean
+
+echo
+echo "-------------------------------"
+echo "-- Updating eeprom firmware"
+echo "-------------------------------"
+echo
+
+sudo rpi-eeprom-update -a
+
+echo
+echo "-------------------------------"
+echo "-- Updating eeprom firmware"
+echo "-------------------------------"
+echo
+
+# NOTE: only if advised to do so
+# sudo rpi-update
+
+echo
+echo "-------------------------------"
+echo "-- running rfkill"
+echo "-------------------------------"
+echo
+
+rfkill block 0
+rfkill block 1
+
+echo
+echo "-------------------------------"
+echo "-- Setting .profile"
+echo "-------------------------------"
+echo
+
+echo -e '\n\nexport PATH=$PATH:/usr/local/go/bin\n\n' >> /home/pi/.profile
+
+echo
+echo "-------------------------------"
+echo "-- Updating eeprom firmware"
+echo "-------------------------------"
+echo
+
+sudo rpi-update
+
+#!/bin/bash
+
+echo
+echo "-------------------------------"
 echo "-- Installing GIT"
 echo "-------------------------------"
 echo
@@ -33,6 +88,21 @@ go get gioui.org@latest
 
 echo
 echo "-------------------------------"
+echo "-- Install longmynd"
+echo "-------------------------------"
+echo
+
+mkdir /home/pi/Q100
+cd /home/pi/Q100
+git clone https://github.com/ea7kir/longmynd.git
+cd longmynd
+sudo apt install make gcc libusb-1.0-0-dev libasound2-dev
+Make
+mkfifo longmynd_main_status
+mkfifo longmynd_main_ts
+
+echo
+echo "-------------------------------"
 echo "-- Install No Video"
 echo "-------------------------------"
 echo
@@ -58,15 +128,9 @@ echo "sudo systemctl disable q100receiver"
 echo
 echo "-------------------------------"
 echo "-- Done"
+echo
+echo "     connect an HDMI monitor"
+echo "     and reboot"
+echo 
 echo "-------------------------------"
 echo
-
-echo "Clone q100receiver from within VSCODE"
-echo "using: https://github.com/ea7kir/q100receiver.git"
-echo
-echo "To run q100receiver, type: ./q100receiver"
-
-sleep 5
-
-sudo reboot
-
