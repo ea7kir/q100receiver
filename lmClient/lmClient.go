@@ -759,7 +759,7 @@ func stopFfPlayAndLongmynd() {
 
 // Start Longmynd with frequency and symbolrate
 //
-//	ie. /home/pi/q100receiver/_longmynd/longmynd -S 0.6 requestKHzStr symbolRate
+//	ie. /home/pi/q100/longmynd/longmynd -S 0.6 requestKHzStr symbolRate
 func startLongmynd(frequency, symbolRate string) {
 	// trim "10491.50 / 00" to "10491.50"
 	frequencySplit := strings.SplitN(frequency, " ", 2)[0]
@@ -772,7 +772,7 @@ func startLongmynd(frequency, symbolRate string) {
 	requestKHzStr := strconv.FormatFloat(requestKHz, 'f', 0, 64)
 	qLog.Info("longmynd will start...")
 	lmCmd = exec.Command("./longmynd", "-S", "0.6", requestKHzStr, symbolRate)
-	lmCmd.Dir = lmcfg.Folder //"/home/pi/Q100/q100receiver/_longmynd/"
+	lmCmd.Dir = lmcfg.Folder // ie. /home/pi/Q100/longmynd/
 	if err = lmCmd.Start(); err != nil {
 		qLog.Error("failed to start longmynd: %v", err)
 		return

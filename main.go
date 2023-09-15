@@ -49,7 +49,7 @@ import (
 )
 
 // application directory for the configuration data
-const appFolder = "/home/pi/Q100/q100receiver/"
+const lmFolder = "/home/pi/Q100/"
 
 // configuration data
 var (
@@ -58,14 +58,14 @@ var (
 		Origin: "http://eshail.batc.org.uk/wb",
 	}
 	lmConfig = lmClient.LmConfig{
-		Folder:     appFolder + "_longmynd/",
-		Binary:     appFolder + "_longmynd/longmynd",
+		Folder:     lmFolder + "longmynd/",
+		Binary:     lmFolder + "longmynd/longmynd",
 		Offset:     float64(9750000),
-		StatusFifo: appFolder + "_longmynd/longmynd_main_status",
+		StatusFifo: lmFolder + "longmynd/longmynd_main_status",
 	}
 	fpConfig = lmClient.FpConfig{
 		Binary: "/usr/bin/ffplay",
-		TsFifo: appFolder + "_longmynd/longmynd_main_ts",
+		TsFifo: lmFolder + "longmynd/longmynd_main_ts",
 		Volume: "70",
 	}
 	tuConfig = rxControl.TuConfig{
