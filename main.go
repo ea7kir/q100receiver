@@ -82,9 +82,9 @@ var (
 // local data
 var (
 	spData    spectrumClient.SpData
-	spChannel = make(chan spectrumClient.SpData, 5)
+	spChannel = make(chan spectrumClient.SpData) //, 5)
 	lmData    lmClient.LongmyndData
-	lmChannel = make(chan lmClient.LongmyndData, 5)
+	lmChannel = make(chan lmClient.LongmyndData) //, 5)
 )
 
 // main - with some help from Chris Waldon who got me started
@@ -105,7 +105,7 @@ func main() {
 
 	os.Setenv("DISPLAY", ":0") // required for X11
 
-	spectrumClient.Intitialize(&spConfig, spChannel)
+	spectrumClient.Intitialize(spConfig, spChannel)
 
 	rxControl.Intitialize(&tuConfig)
 

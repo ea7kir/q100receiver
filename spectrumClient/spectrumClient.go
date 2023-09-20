@@ -29,15 +29,15 @@ var (
 	Xp = make([]float32, numPoints) // x coordinates from 0.0 to 100.0
 )
 
-func Intitialize(cfg *SpConfig, ch chan SpData) {
-	spChannel = ch
+func Intitialize(cfg SpConfig, ch chan SpData) {
+	// spChannel = ch
 	Xp[0] = 0
 	for i := 1; i < numPoints-1; i++ {
 		Xp[i] = 100.0 * (float32(i) / float32(numPoints))
 	}
 	Xp[numPoints-1] = 100
 
-	go readAndDecode(cfg, spChannel)
+	go readAndDecode(cfg, ch)
 }
 
 func Stop() {
@@ -65,10 +65,13 @@ var (
 		MarkerCentre: 0.5,
 		MarkerWidth:  0.5,
 	}
-	spChannel chan SpData
 )
 
-func readAndDecode(cfg *SpConfig, ch chan SpData) {
+// TODO: needs a timeout. see https://pkg.go.dev/nhooyr.io/websocket
+//	which uses: ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+
+// forever go routine called from Intitialize
+func readAndDecode(cfg SpConfig, ch chan SpData) {
 	ws, err := websocket.Dial(cfg.Url, "", cfg.Origin)
 	if err != nil {
 		qLog.Fatal("Dial failed: %v", err)
@@ -119,6 +122,7 @@ func readAndDecode(cfg *SpConfig, ch chan SpData) {
 
 }
 
+// TODO: move to rxControl.go
 /*****************************************************************
 * SPECTRUM & CALIBRARTION MARKERS
 *****************************************************************/
