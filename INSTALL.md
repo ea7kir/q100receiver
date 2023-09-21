@@ -26,15 +26,14 @@ Insert the card into the Raspberry Pi and switch on
 WARNING: the Pi may reboot during the install, so please allow it to complete
 
 ## Remote login from a Mac, PC or Linux host
+
 ```
 ssh pi@q100receiver.local
+
+wget https://raw.githubusercontent.com/ea7kir/q100receiver/main/etc/install.sh
+
+chmod +x install.sh
+
+./install.sh
 ```
-and execute the following commands:
-```
-mkdir /home/pi/Q100
-cd /home/pi/Q100
-git clone https://github.com/ea7kir/q100receiver.git
-cd /home/pi/Q100/q100receiver/_INSTALL
-./install_q100receiver.sh
-```
-When DONE, reboot the Pi.
+## OLD NOTES ----------------------------------------------------------
