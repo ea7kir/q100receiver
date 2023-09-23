@@ -1,3 +1,0 @@
-#!/bin/bash
-export DISPLAY=:0
-/usr/bin/ffplay -fs -autoexit /home/pi/Q100/BigBuckBunny.mp4

@@ -1,7 +1,7 @@
 # Q-100 Receiver
 Control and monitor a DATV receiver with a touch screen.
 
-$${\color{red}THIS\space PROJECT\space IS\space IN\space EARLY\space DEVELOPMENT\space AND\space MAY\space BE\space UNSTABLE}$$
+$${\color{red}WARNING:\space ALL\space DEVELOPMENT\space TAKES\space PLACE\space ON\space THE\space MAIN\space BRANCH}$$
 
 ## Hardware
 - Raspberry Pi 4B with 4GB RAM (minimum)
@@ -10,9 +10,10 @@ $${\color{red}THIS\space PROJECT\space IS\space IN\space EARLY\space DEVELOPMENT
 
 **A keyboard and mouse are not required at any time**
 ## Connections
-TODO: add schematics
+TODO: add more details and photos
 ## Installing
-TODO: install script is incomplete
+TODO: install script has not been tested
+TODO: add instructions
 ## Maybe One Day
 - [Kiosk #1](https://raspberrypi.stackexchange.com/questions/120345/starting-rpi-gui-application-at-boot-without-desktop-gui-and-other-functionaliti)
 - [Kiosk #2](https://medium.com/@daddycat/setting-up-raspberry-pi-to-launch-python-gui-app-without-raspbian-desktop-5022a90e5b63)
