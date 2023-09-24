@@ -28,6 +28,8 @@ while true; do
     esac
 done
 
+mkdir /home/pi/Q100
+
 echo Updateing Pi OS
 sudo apt update
 sudo apt -y full-upgrade
@@ -64,9 +66,7 @@ echo Installing gioui dependencies
 sudo apt install gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
 
 echo Cloning q100receiver to /home/pi/Q100
-cd
-mkdir Q100
-cd Q100
+cd /home/pi/Q100
 git clone https://github.com/ea7kir/q100receiverr.git
 cd
 
