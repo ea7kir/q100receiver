@@ -12,11 +12,40 @@ $${\color{red}WARNING:\space ALL\space DEVELOPMENT\space TAKES\space PLACE\space
 ## Connections
 TODO: add more details and photos
 ## Installing
-TODO: install script has not been tested
-TODO: add instructions
-## Maybe One Day
-- [Kiosk #1](https://raspberrypi.stackexchange.com/questions/120345/starting-rpi-gui-application-at-boot-without-desktop-gui-and-other-functionaliti)
-- [Kiosk #2](https://medium.com/@daddycat/setting-up-raspberry-pi-to-launch-python-gui-app-without-raspbian-desktop-5022a90e5b63)
+NOTE: CURRENTLY REQUIRES PI OS BULLSEYE 64-BIT (FULL DESKTOP VERSION)
+
+### Using Raspberry Pi Imager:
+```
+CHOOSE OS: Raspberry Pi OS (other) -> Raspberry Pi OS (64-bit)
+
+CONFIGURE:
+	Set hostname:			q100receiver
+	Enable SSH
+		Use password authentication
+	Set username and password
+		Username:			pi
+		Password: 			<password>
+	Set locale settings
+		Time zone:			<Europe/Madrid>
+		Keyboard layout:	<us>
+	Eject media when finished
+SAVE and WRITE
+```
+
+Insert the card into the Raspberry Pi and switch on
+
+WARNING: the Pi may reboot during the install, so please allow it to complete
+
+### Remote login from a Mac, PC or Linux host
+```
+ssh pi@q100receiver.local
+
+wget https://raw.githubusercontent.com/ea7kir/q100receiver/main/etc/install.sh
+
+chmod +x install.sh
+
+./install.sh # TODO: install script has not been tested
+```
 ## License
 Copyright (c) 2023 Michael Naylor EA7KIR (https://michaelnaylor.es)
 
