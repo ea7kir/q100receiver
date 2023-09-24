@@ -1,5 +1,5 @@
 /*
- *  Q-100 Receiver & Transmitter
+ *  Q-100 Receiver
  *  Copyright (c) 2023 Michael Naylor EA7KIR (https://michaelnaylor.es)
  */
 
@@ -107,9 +107,9 @@ func main() {
 
 	spectrumClient.Intitialize(spConfig, spChannel)
 
-	rxControl.Intitialize(&tuConfig)
+	rxControl.Intitialize(tuConfig)
 
-	lmClient.Intitialize(&lmConfig, &fpConfig, lmChannel)
+	lmClient.Intitialize(lmConfig, fpConfig, lmChannel)
 
 	go func() {
 		w := app.NewWindow(app.Fullscreen.Option())

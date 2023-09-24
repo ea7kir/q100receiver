@@ -35,7 +35,7 @@ var (
 	IsMuted = false
 )
 
-func Intitialize(tuc *TuConfig) {
+func Intitialize(tuc TuConfig) {
 	Band = newSelector(const_BAND_LIST, tuc.Band)
 	beaconSymbolRate = newSelector(const_BEACON_SYMBOLRATE_LIST, const_BEACON_SYMBOLRATE_LIST[0])
 	beaconFrequency = newSelector(const_BEACON_FREQUENCY_LIST, const_BEACON_FREQUENCY_LIST[0])

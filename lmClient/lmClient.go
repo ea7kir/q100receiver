@@ -58,7 +58,7 @@ type (
 	}
 )
 
-func Intitialize(lmc *LmConfig, fpc *FpConfig, ch chan LongmyndData) {
+func Intitialize(lmc LmConfig, fpc FpConfig, ch chan LongmyndData) {
 	lmcfg = lmc
 	fpcfg = fpc
 	lmChannel = ch
@@ -112,8 +112,8 @@ func (p *LongmyndData) resetPartial() {
 }
 
 var (
-	lmcfg          *LmConfig
-	fpcfg          *FpConfig
+	lmcfg          LmConfig
+	fpcfg          FpConfig
 	lmChannel      chan LongmyndData
 	lmCmd          *exec.Cmd
 	ffPlayCmd      *exec.Cmd
