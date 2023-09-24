@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Q100 PA Server for Raspberry Pi 4
+# Install Q100 Receiver on Raspberry Pi 4
 # Orignal design by Michael, EA7KIR
 
 GOVERSION=1.21.0
@@ -59,6 +59,9 @@ sudo wget https://go.dev/dl/$GOFILE
 # sudo rm -rf /usr/local/go
 sudo tar -C /usr/local -xzf $GOFILE
 cd
+
+echo Installing gioui dependencies
+sudo apt install gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
 
 echo Cloning q100receiver to /home/pi/Q100
 cd

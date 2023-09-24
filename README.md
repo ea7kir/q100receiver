@@ -19,7 +19,7 @@ NOTE: CURRENTLY REQUIRES PI OS BULLSEYE 64-BIT (FULL DESKTOP VERSION)
 CHOOSE OS: Raspberry Pi OS (other) -> Raspberry Pi OS (64-bit)
 
 CONFIGURE:
-	Set hostname:			q100receiver
+	Set hostname:			rxtouch
 	Enable SSH
 		Use password authentication
 	Set username and password
@@ -38,13 +38,13 @@ WARNING: the Pi may reboot during the install, so please allow it to complete
 
 ### Remote login from a Mac, PC or Linux host
 ```
-ssh pi@q100receiver.local
+ssh pi@rxtouch.local
 
 wget https://raw.githubusercontent.com/ea7kir/q100receiver/main/etc/install.sh
 
 chmod +x install.sh
 
-./install.sh # TODO: install script has not been tested
+./install.sh # WARNING: install script has not been tested
 ```
 ## License
 Copyright (c) 2023 Michael Naylor EA7KIR (https://michaelnaylor.es)
