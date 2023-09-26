@@ -119,6 +119,7 @@ func main() {
 			os.Exit(1)
 		}
 
+		// TODO: implement with a d/on channel
 		rxControl.Stop()
 		lmClient.Stop()
 		spectrumClient.Stop()
@@ -160,9 +161,9 @@ func loop(w *app.Window) error {
 			// Log something to make it obvious this happened.
 			// qLog.Info("context cancelled")
 			// Initiate window shutdown.
-			rxControl.Stop()      // TODO: does nothing yet
-			lmClient.Stop()       // TODO: does nothing yet
-			spectrumClient.Stop() // TODO: does nothing yet - bombs with Control=C
+			// rxControl.Stop()      // TODO: does nothing yet
+			// lmClient.Stop()       // TODO: does nothing yet
+			// spectrumClient.Stop() // TODO: does nothing yet
 			w.Perform(system.ActionClose)
 		case lmData = <-lmChannel:
 			w.Invalidate()

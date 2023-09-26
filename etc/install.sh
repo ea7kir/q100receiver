@@ -48,6 +48,9 @@ echo -e "\ndtoverlay=disable-wifi" >> /boot/config.txt
 echo Disbaling Bluetooth
 echo -e "\ndtoverlay=disable-bt" >> /boot/config.txt
 
+echo EXPERIMENTAL: raspi-config, select System / Audio, choose 1
+echo -e "\ndtparam=audio=off" >> /boot/config.txt
+
 echo Installing GIT
 sudo apt -y install git
 
