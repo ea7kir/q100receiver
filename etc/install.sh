@@ -127,8 +127,15 @@ INSTALL HAS COMPLETED
    sudo systemctl enable q100receiver
    sudo systemctl start q100receiver
 
-   now type sudo reboot
 "
 
-sleep 10
+while true; do
+    read -p "I have read to above, so continue (y/n)? " answer
+    case ${answer:0:1} in
+        y|Y ) break;;
+        n|N ) exit;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
 sudo reboot
