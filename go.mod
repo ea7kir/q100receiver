@@ -9,7 +9,7 @@ require (
 	golang.org/x/net v0.14.0
 )
 
-require github.com/ea7kir/qLog v1.0.0
+require github.com/ea7kir/qLog v1.0.1
 
 require (
 	gioui.org/cpu v0.0.0-20210817075930-8d6a761490d2 // indirect
