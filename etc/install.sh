@@ -117,6 +117,7 @@ cd
 
 echo "\n###################################################\n"
 
+echo "
 INSTALL HAS COMPLETED
    after rebooting, build and auto exec...
 
@@ -128,3 +129,6 @@ INSTALL HAS COMPLETED
 
    now type sudo reboot
 "
+
+sleep 10
+sudo reboot
