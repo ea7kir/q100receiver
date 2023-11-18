@@ -201,8 +201,8 @@ func loop(w *app.Window) error {
 				if ui.tune.Clicked() {
 					rxControl.Tune()
 				}
-				if ui.mute.Clicked() {
-					rxControl.Mute()
+				if ui.stream.Clicked() {
+					rxControl.Stream()
 				}
 
 				gtx := layout.NewContext(&ops, event)
@@ -245,7 +245,7 @@ type UI struct {
 	decBand, incBand             widget.Clickable
 	decSymbolRate, incSymbolRate widget.Clickable
 	decFrequency, incFrequency   widget.Clickable
-	tune, mute                   widget.Clickable
+	tune, stream                 widget.Clickable
 	th                           *material.Theme
 }
 
@@ -513,7 +513,7 @@ func (ui *UI) q100_Column2Buttons(gtx C) D {
 			return inset.Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Dp(btnWidth)
 				gtx.Constraints.Min.Y = gtx.Dp(btnHeight)
-				return ui.q100_Button(gtx, &ui.mute, "MUTE", rxControl.IsMuted, q100color.buttonRed)
+				return ui.q100_Button(gtx, &ui.stream, "STREAM", rxControl.IsStreaming, q100color.buttonRed)
 			})
 		}),
 	)

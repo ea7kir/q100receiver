@@ -13,7 +13,7 @@ if [ $? != 0 ]; then
   exit
 fi
 
-hostname | grep -q pi4 #rxtouch
+hostname | grep -q rxtouch
 if [ $? != 0 ]; then
   echo Install must be performed on host rxtouch
   exit
@@ -130,7 +130,7 @@ INSTALL HAS COMPLETED
 "
 
 while true; do
-    read -p "I have read to above, so continue (y/n)? " answer
+    read -p "I have read the above, so continue (y/n)? " answer
     case ${answer:0:1} in
         y|Y ) break;;
         n|N ) exit;;

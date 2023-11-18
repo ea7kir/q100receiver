@@ -1,7 +1,7 @@
 ## TODO:
 
 - add wiring schematic
-- implement mute function
+- implement stream function
 - remove unused files and folders
 - test install.sh
 - revise what data to monitor

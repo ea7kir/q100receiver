@@ -31,8 +31,8 @@ var (
 	SymbolRate Selector
 	Frequency  Selector
 
-	IsTuned = false
-	IsMuted = false
+	IsTuned     = false
+	IsStreaming = false
 )
 
 func Intitialize(cfg TuConfig) {
@@ -72,11 +72,11 @@ func Tune() {
 	}
 }
 
-func Mute() {
-	if IsMuted {
-		IsMuted = false
+func Stream() {
+	if IsStreaming {
+		IsStreaming = false
 	} else {
-		IsMuted = true
+		IsStreaming = true
 	}
 }
 
