@@ -3,7 +3,7 @@
 # Install Q100 Receiver on Raspberry Pi 4
 # Orignal design by Michael, EA7KIR
 
-GOVERSION=1.21.0
+GOVERSION=1.21.4
 
 echo WARNING: THIS INSTALL SCRIPT HAS NOT BEEN TESTED
 
@@ -19,16 +19,16 @@ if [ $? != 0 ]; then
   exit
 fi
 
-#while true; do
-#    read -p "Install q100receiver using Go version $GOVERSION (y/n)? " answer
-#    case ${answer:0:1} in
-#        y|Y ) break;;
-#        n|N ) exit;;
-#        * ) echo "Please answer yes or no.";;
-#    esac
-#done
+while true; do
+   read -p "Install q100receiver using Go version $GOVERSION (y/n)? " answer
+   case ${answer:0:1} in
+       y|Y ) break;;
+       n|N ) exit;;
+       * ) echo "Please answer yes or no.";;
+   esac
+done
 
-#mkdir /home/pi/Q100
+mkdir /home/pi/Q100
 
 echo "\n###################################################\n"
 
@@ -65,8 +65,6 @@ echo "\n###################################################\n"
 echo Adding go path to .profile
 echo -e '\n\nexport PATH=$PATH:/usr/local/go/bin\n\n' >> /home/pi/.profile
 
-echo "\n###################################################\n"
-
 echo Installing Go $GOVERSION
 GOFILE=go$GOVERSION.linux-arm64.tar.gz
 cd /usr/local
@@ -80,10 +78,8 @@ echo "\n###################################################\n"
 echo Installing gioui dependencies
 sudo apt install gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
 
-#echo Cloning q100receiver to /home/pi/Q100
-#cd /home/pi/Q100
-#git clone https://github.com/ea7kir/q100receiverr.git
-#cd
+echo Installing gioui tools
+go install gioui.org/cmd/gogio@latest
 
 echo "\n###################################################\n"
 
