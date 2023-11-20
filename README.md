@@ -48,6 +48,9 @@ cd q100receiver/etc
 chmod +x install.sh
 ./install
 ```
+
+TODO: ADD INSTRUCTIONS TO CONFIGURE THE DESKTOP
+
 ## License
 Copyright (c) 2023 Michael Naylor EA7KIR (https://michaelnaylor.es)
 
