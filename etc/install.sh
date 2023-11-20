@@ -40,22 +40,22 @@ sudo apt clean
 
 echo "\n###################################################\n"
 
-echo Running rfkill # not sure if this dupicates config.txt
-rfkill block 0
-rfkill block 1
+# echo Running rfkill # not sure if this dupicates config.txt
+# rfkill block 0
+# rfkill block 1
 
 echo "\n###################################################\n"
 
 echo Making changes to config.txt
 
 echo Disbaling Wifi
-echo -e '\ndtoverlay=disable-wifi' >> /boot/config.txt
+sudo echo -e '\ndtoverlay=disable-wifi' >> /boot/config.txt
 
 echo Disbaling Bluetooth
-echo -e '\ndtoverlay=disable-bt' >> /boot/config.txt
+sudo echo -e '\ndtoverlay=disable-bt' >> /boot/config.txt
 
 echo EXPERIMENTAL: raspi-config, select System / Audio, choose 1
-echo -e '\ndtparam=audio=off' >> /boot/config.txt
+sudo echo -e '\ndtparam=audio=off' >> /boot/config.txt
 
 echo Disbale Screen Blanking in .profile
 echo -e '\n\nexport DISPLAY=:0;xset s noblank; xset s off; xset -dpms' >> /home/pi/.profile
@@ -75,7 +75,8 @@ cd
 echo "\n###################################################\n"
 
 echo Installing gioui dependencies
-sudo apt install gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
+# sudo apt install gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
+sudo apt -y install pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
 
 echo Installing gioui tools
 go install gioui.org/cmd/gogio@latest
@@ -88,7 +89,8 @@ sudo cp /home/pi/Q100/q100receiver/etc/NoVideo.jpg /usr/share/rpd-wallpaper
 echo "\n###################################################\n"
 
 echo Install longmynd dependencies
-sudo apt install make gcc libusb-1.0-0-dev libasound2-dev
+#sudo apt install make gcc libusb-1.0-0-dev libasound2-dev
+sudo apt -y install libusb-1.0-0-dev libasound2-dev
 
 echo "\n###################################################\n"
 
