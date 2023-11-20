@@ -116,13 +116,28 @@ echo "\n###################################################\n"
 
 echo "
 INSTALL HAS COMPLETED
-   after rebooting, build and auto exec...
+    after rebooting...
 
-   cd Q100/q100receiver
-   go mod tidy
-   go build .
-   sudo systemctl enable q100receiver
-   sudo systemctl start q100receiver
+    Connect a mouse to configure some Desktop settings:
+
+    SCreen Layout Editor
+	    move DSI-1 to the left of HDMI-1
+	    Layout/Screens set DSI-1 to Active, Primary
+	    Layout/Screens set HDMI-1 to ACtive, 1920x1080, 50Hz
+    Appearance Settings
+	    DSI-1 Layout No Image
+	    HDMI-1 Layout NoVideo.jpg
+	    Disable Wastebasket & External Disks
+    Raspberry Pi Configuration
+	    System set Network at Boot to ON
+
+    Then execute to following commands
+    
+    cd Q100/q100receiver
+    go mod tidy
+    go build .
+    sudo systemctl enable q100receiver
+    sudo systemctl start q100receiver
 
 "
 
