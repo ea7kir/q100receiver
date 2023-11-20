@@ -43,7 +43,6 @@ ssh pi@rxtouch.local
 mkdir Q100
 cd Q100
 git clone https://github.com/ea7kir/q100receiver.git
-rm q100receiver.git
 
 cd q100receiver/etc
 chmod +x install.sh
