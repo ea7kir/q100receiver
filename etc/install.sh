@@ -49,13 +49,16 @@ echo "\n###################################################\n"
 echo Making changes to config.txt
 
 echo Disbaling Wifi
-echo -e "\ndtoverlay=disable-wifi" >> /boot/config.txt
+echo -e '\ndtoverlay=disable-wifi' >> /boot/config.txt
 
 echo Disbaling Bluetooth
-echo -e "\ndtoverlay=disable-bt" >> /boot/config.txt
+echo -e '\ndtoverlay=disable-bt' >> /boot/config.txt
 
 echo EXPERIMENTAL: raspi-config, select System / Audio, choose 1
-echo -e "\ndtparam=audio=off" >> /boot/config.txt
+echo -e '\ndtparam=audio=off' >> /boot/config.txt
+
+echo Disbale Screen Blanking in .profile
+echo -e '\n\nexport DISPLAY=:0;xset s noblank; xset s off; xset -dpms' >> /home/pi/.profile
 
 echo "\n###################################################\n"
 
