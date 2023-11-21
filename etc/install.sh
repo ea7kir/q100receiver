@@ -28,36 +28,36 @@ while true; do
    esac
 done
 
-echo "\n###################################################\n"
+###################################################
 
-echo Updateing Pi OS
+echo Update Pi OS
 sudo apt update
 sudo apt -y full-upgrade
 sudo apt -y autoremove
 sudo apt clean
 
-echo "\n###################################################\n"
+###################################################
 
 # echo Running rfkill # not sure if this dupicates config.txt
 # rfkill block 0
 # rfkill block 1
 
-echo "\n###################################################\n"
+###################################################
 
 echo Making changes to config.txt
 
 sudo sh -c "echo '\n# EA7KIR Additions' >> /boot/config.txt"
 
-echo Disbaling Wifi
+echo Disable Wifi
 sudo sh -c "echo 'dtoverlay=disable-wifi' >> /boot/config.txt"
 
-echo Disbaling Bluetooth
+echo Disable Bluetooth
 sudo sh -c "echo 'dtoverlay=disable-bt' >> /boot/config.txt"
 
 echo EXPERIMENTAL: raspi-config, select System / Audio, choose 1
 sudo sh -c "echo 'dtparam=audio=off' >> /boot/config.txt"
 
-echo "\n###################################################\n"
+###################################################
 
 echo Making changes to .profile
 
@@ -69,7 +69,7 @@ echo -e 'export DISPLAY=:0;xset s noblank; xset s off; xset -dpms' >> /home/pi/.
 echo Adding go path to .profile
 echo -e 'export PATH=$PATH:/usr/local/go/bin' >> /home/pi/.profile
 
-echo "\n###################################################\n"
+###################################################
 
 echo Installing Go $GOVERSION
 GOFILE=go$GOVERSION.linux-arm64.tar.gz
@@ -78,8 +78,6 @@ sudo wget https://go.dev/dl/$GOFILE
 sudo tar -C /usr/local -xzf $GOFILE
 cd
 
-echo "\n###################################################\n"
-
 echo Installing gioui dependencies
 # sudo apt install gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
 sudo apt -y install pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
@@ -87,18 +85,18 @@ sudo apt -y install pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbco
 echo Installing gioui tools
 go install gioui.org/cmd/gogio@latest
 
-echo "\n###################################################\n"
+###################################################
 
 echo Install the No Video caption
 sudo cp /home/pi/Q100/q100receiver/etc/NoVideo.jpg /usr/share/rpd-wallpaper
 
-echo "\n###################################################\n"
+###################################################
 
 echo Install longmynd dependencies
 #sudo apt install make gcc libusb-1.0-0-dev libasound2-dev
 sudo apt -y install libusb-1.0-0-dev libasound2-dev
 
-echo "\n###################################################\n"
+###################################################
 
 echo Cloning longmynd to /home/pi/Q100
 cd /home/pi/Q100
@@ -109,7 +107,7 @@ mkfifo longmynd_main_status
 mkfifo longmynd_main_ts
 cd
 
-echo "\n###################################################\n"
+###################################################
 
 echo Copying q100receiver.service
 cd /home/pi/Q100/q100receiver/etc
@@ -118,7 +116,7 @@ sudo chmod 644 /etc/systemd/system/q100receiver.service
 sudo systemctl daemon-reload
 cd
 
-echo "\n###################################################\n"
+###################################################
 
 echo "
 INSTALL HAS COMPLETED
