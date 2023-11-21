@@ -124,10 +124,10 @@ INSTALL HAS COMPLETED
 
     Connect a mouse to configure some Desktop settings:
 
-    SCreen Layout Editor
+    Screen Layout Editor
 	    move DSI-1 to the left of HDMI-1
 	    Layout/Screens set DSI-1 to Active, Primary
-	    Layout/Screens set HDMI-1 to ACtive, 1920x1080, 50Hz
+	    Layout/Screens set HDMI-1 to Active, 1920x1080, 50Hz
     Appearance Settings
 	    DSI-1 Layout No Image
 	    HDMI-1 Layout NoVideo.jpg
@@ -135,7 +135,7 @@ INSTALL HAS COMPLETED
     Raspberry Pi Configuration
 	    System set Network at Boot to ON
 
-    Then execute to following commands
+    Then execute the following commands
     
     cd Q100/q100receiver
     go mod tidy
