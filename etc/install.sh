@@ -28,8 +28,6 @@ while true; do
    esac
 done
 
-mkdir /home/pi/Q100
-
 echo "\n###################################################\n"
 
 echo Updateing Pi OS
@@ -48,22 +46,30 @@ echo "\n###################################################\n"
 
 echo Making changes to config.txt
 
+sudo sh -c "echo '\n# EA7KIR Additions' >> /boot/config.txt"
+
 echo Disbaling Wifi
-sudo sh -c "echo '\ndtoverlay=disable-wifi' >> /boot/config.txt"
+sudo sh -c "echo 'dtoverlay=disable-wifi' >> /boot/config.txt"
 
 echo Disbaling Bluetooth
-sudo sh -c "echo '\ndtoverlay=disable-bt' >> /boot/config.txt"
+sudo sh -c "echo 'dtoverlay=disable-bt' >> /boot/config.txt"
 
 echo EXPERIMENTAL: raspi-config, select System / Audio, choose 1
-sudo sh -c "echo '\ndtparam=audio=off' >> /boot/config.txt"
-
-echo Disbale Screen Blanking in .profile
-echo -e '\n\nexport DISPLAY=:0;xset s noblank; xset s off; xset -dpms' >> /home/pi/.profile
+sudo sh -c "echo 'dtparam=audio=off' >> /boot/config.txt"
 
 echo "\n###################################################\n"
 
+echo Making changes to .profile
+
+sudo sh -c "echo '\n# EA7KIR Additions' >> /home/pi/.profile"
+
+echo Disbale Screen Blanking in .profile
+echo -e 'export DISPLAY=:0;xset s noblank; xset s off; xset -dpms' >> /home/pi/.profile
+
 echo Adding go path to .profile
-echo -e '\n\nexport PATH=$PATH:/usr/local/go/bin\n\n' >> /home/pi/.profile
+echo -e 'export PATH=$PATH:/usr/local/go/bin' >> /home/pi/.profile
+
+echo "\n###################################################\n"
 
 echo Installing Go $GOVERSION
 GOFILE=go$GOVERSION.linux-arm64.tar.gz

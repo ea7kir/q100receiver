@@ -26,7 +26,7 @@ CONFIGURE:
 		Username:			pi
 		Password: 			<password>
 	Set locale settings
-		Time zone:			<Europe/Madrid>
+		Time zone:			<Europe/Madrid> # or wherever you are
 		Keyboard layout:	<us>
 	Eject media when finished
 SAVE and WRITE
@@ -46,7 +46,7 @@ git clone https://github.com/ea7kir/q100receiver.git
 
 cd q100receiver/etc
 chmod +x install.sh
-./install
+./install.sh
 ```
 
 TODO: ADD INSTRUCTIONS TO CONFIGURE THE DESKTOP
