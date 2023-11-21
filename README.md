@@ -49,7 +49,7 @@ chmod +x install.sh
 ./install.sh
 ```
 
-TODO: ADD INSTRUCTIONS TO CONFIGURE THE DESKTOP
+THEN FOLLOW THE INSTRUCTIONS TO CONFIGURE THE DESKTOP
 
 ## License
 Copyright (c) 2023 Michael Naylor EA7KIR (https://michaelnaylor.es)
