@@ -12,11 +12,11 @@ $${\color{red}WARNING:\space ALL\space DEVELOPMENT\space TAKES\space PLACE\space
 ## Connections
 TODO: add more details and photos
 ## Installing
-NOTE: CURRENTLY REQUIRES PI OS BULLSEYE 64-BIT (FULL DESKTOP VERSION)
+NOTE: CURRENTLY REQUIRES PI OS BULLSEYE 64-BIT
 
-### Using Raspberry Pi Imager:
+### Using Raspberry Pi Imager v1.8.1:
 ```
-CHOOSE OS: Raspberry Pi OS (other) -> Raspberry Pi OS (64-bit)
+CHOOSE OS: Raspberry Pi OS (other) -> Raspberry Pi OS (Legacy 64-bit)
 
 CONFIGURE:
 	Set hostname:			rxtouch
