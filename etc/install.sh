@@ -116,11 +116,13 @@ cd
 
 ###################################################
 
+chmod -x /home/pi/Q100/etc/install.sh # to prevent it from being run a second time
+
 echo "
 INSTALL HAS COMPLETED
     after rebooting...
 
-    Connect a mouse to configure some Desktop settings:
+    Ues your finger to configure some Desktop settings:
 
     Screen Layout Editor
 	    move DSI-1 to the left of HDMI-1
@@ -133,7 +135,11 @@ INSTALL HAS COMPLETED
     Raspberry Pi Configuration
 	    System set Network at Boot to ON
 
-    Then execute the following commands
+    Then login from your PC, Mc, or Linux computer
+
+    ssh pi@txtouch.local
+
+    and execute the following commands
     
     cd Q100/q100receiver
     go mod tidy
