@@ -16,9 +16,12 @@
 # OR append to [All] dtparam=audio=off
 
 [Unit]
-Description=Q-100 Receiver for the Es'Hail-2 satellite
-Wants=graphical.target
-After=multi-user.target
+#Wants=graphical.target
+After=mult-user.target
+#After=network.target
+
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=Simple
