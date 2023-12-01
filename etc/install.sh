@@ -139,7 +139,7 @@ INSTALL HAS COMPLETED
 
     ssh pi@txtouch.local
 
-    and execute the following commands
+    Now execute the following commands
     
     cd Q100/q100receiver
     go mod tidy

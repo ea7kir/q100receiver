@@ -40,16 +40,16 @@ WARNING: the Pi may reboot during the install, so please allow it to complete
 ```
 ssh pi@rxtouch.local
 
-mkdir Q100
-cd Q100
+mkdir /home/pi/Q100
+cd /home/pi/Q100
 git clone https://github.com/ea7kir/q100receiver.git
 
-cd q100receiver/etc
-chmod +x install.sh
-./install.sh
+chmod +x /home/pi/q100/q100receiver/etc/install.sh
+/home/pi/q100receiver/etc/install.sh
+chmod -x /home/pi/q100/q100receiver/etc/install.sh
 ```
 
-THEN FOLLOW THE INSTRUCTIONS TO CONFIGURE THE DESKTOP
+THEN FOLLOW THE INSTRUCTIONS AND CONFIGURE THE DESKTOP
 
 ## License
 Copyright (c) 2023 Michael Naylor EA7KIR (https://michaelnaylor.es)
