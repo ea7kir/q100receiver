@@ -68,7 +68,7 @@ var (
 	fpConfig = lmClient.FpConfig{
 		Binary: "/usr/bin/ffplay",
 		TsFifo: lmFolder + "longmynd/longmynd_main_ts",
-		Volume: "70",
+		Volume: "100",
 	}
 	tuConfig = rxControl.TuConfig{
 		Band:                 "Narrow",
