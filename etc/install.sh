@@ -3,7 +3,7 @@
 # Install Q100 Receiver on Raspberry Pi 4
 # Orignal design by Michael, EA7KIR
 
-# updated t GO 1.22 on March 2 2024
+# updated to GO 1.22 on March 2 2024
 
 GOVERSION=1.22.0
 
