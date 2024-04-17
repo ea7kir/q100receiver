@@ -2,7 +2,7 @@
 
 # updated to GO 1.22 on March 2 2024
 
-GOVERSION=1.22.0
+GOVERSION=1.22.2
 
 echo Update Pi OS
 sudo apt update
@@ -21,4 +21,3 @@ sudo tar -C /usr/local -xzf $GOFILE
 cd /home/pi/Q100/q100receiver
 go mod tidy
 go version
-
