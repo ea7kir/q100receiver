@@ -2,7 +2,7 @@
 
 Control and monitor a DATV receiver with a touch screen.
 
-![rx][def]
+![tx](doc/rx.jpeg)
 
 $${\color{red}WARNING:\space ALL\space DEVELOPMENT\space TAKES\space PLACE\space ON\space THE\space MAIN\space BRANCH}$$
 
