@@ -36,12 +36,10 @@ import (
 	"github.com/ajstarks/giocanvas"
 
 	"gioui.org/app"
-	"gioui.org/font/gofont"
 	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/paint"
-	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -145,9 +143,9 @@ func loop(w *app.Window) error {
 	//
 	// ui.th.Face = "Times New Roman" // ok
 	// ui.th.Face = "NimbusRoman Italic" // no
-
+	// ui.th.Face = "NimbusRoman-Italic" // no
 	// Chris says keep using the original font
-	ui.th.Shaper = text.NewShaper(text.NoSystemFonts(), text.WithCollection(gofont.Collection()))
+	// ui.th.Shaper = text.NewShaper(text.NoSystemFonts(), text.WithCollection(gofont.Collection()))
 
 	var ops op.Ops
 	// Capture the context done channel in a variable so that we can nil it
@@ -157,15 +155,9 @@ func loop(w *app.Window) error {
 	for {
 		select {
 		case <-done:
-			// When the context cancels, assign the done channel to nil to
-			// prevent it from firing over and over.
+			// When the context cancels, assign the done channel to nil
+			// to prevent it from firing over and over.
 			done = nil
-			// Log something to make it obvious this happened.
-			// qLog.Info("context cancelled")
-			// Initiate window shutdown.
-			// rxControl.Stop()      // TODO: does nothing yet
-			// lmClient.Stop()       // TODO: does nothing yet
-			// spectrumClient.Stop() // TODO: does nothing yet
 			w.Perform(system.ActionClose)
 		case lmData = <-lmChannel:
 			w.Invalidate()

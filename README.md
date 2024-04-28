@@ -1,5 +1,8 @@
 # Q-100 Receiver
+
 Control and monitor a DATV receiver with a touch screen.
+
+![rx][def]
 
 $${\color{red}WARNING:\space ALL\space DEVELOPMENT\space TAKES\space PLACE\space ON\space THE\space MAIN\space BRANCH}$$
 
@@ -58,3 +61,6 @@ This program is free software: you can redistribute it and/or modify it under th
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
+
+
+[def]: doc/rx.jpeg
