@@ -36,10 +36,12 @@ import (
 	"github.com/ajstarks/giocanvas"
 
 	"gioui.org/app"
+	"gioui.org/font/gofont"
 	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/paint"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -112,9 +114,12 @@ func main() {
 	lmClient.Intitialize(lmConfig, fpConfig, lmChannel)
 
 	go func() {
-		w := app.NewWindow(app.Fullscreen.Option())
-		app.Size(800, 480) // I don't know if this is help in any way
-		if err := loop(w); err != nil {
+		// w := app.NewWindow(app.Fullscreen.Option())
+		// app.Size(800, 480) // I don't know if this is help in any way
+		var w app.Window
+		w.Option(app.Fullscreen.Option())
+
+		if err := loop(&w); err != nil {
 			qLog.Fatal("failed to start loop: %v", err)
 			os.Exit(1)
 		}
@@ -138,14 +143,8 @@ func loop(w *app.Window) error {
 		// th: material.NewTheme(gofont.Collection()),
 		th: material.NewTheme(),
 	}
-	// fails to pickup the system font
-	// $ fc-list
-	//
-	// ui.th.Face = "Times New Roman" // ok
-	// ui.th.Face = "NimbusRoman Italic" // no
-	// ui.th.Face = "NimbusRoman-Italic" // no
 	// Chris says keep using the original font
-	// ui.th.Shaper = text.NewShaper(text.NoSystemFonts(), text.WithCollection(gofont.Collection()))
+	ui.th.Shaper = text.NewShaper(text.NoSystemFonts(), text.WithCollection(gofont.Collection()))
 
 	var ops op.Ops
 	// Capture the context done channel in a variable so that we can nil it
@@ -153,59 +152,62 @@ func loop(w *app.Window) error {
 	done := ctx.Done()
 
 	for {
+
 		select {
 		case <-done:
-			// When the context cancels, assign the done channel to nil
-			// to prevent it from firing over and over.
+			// When the context cancels, assign the done channel to nil to
+			// prevent it from firing over and over.
 			done = nil
 			w.Perform(system.ActionClose)
 		case lmData = <-lmChannel:
 			w.Invalidate()
 		case spData = <-spChannel:
 			w.Invalidate()
-		case event := <-w.Events():
-			switch event := event.(type) {
-			case system.DestroyEvent:
-				return event.Err
-			case system.FrameEvent:
-				if ui.about.Clicked() {
-					showAboutBox()
-				}
-				if ui.shutdown.Clicked() {
-					w.Perform(system.ActionClose)
-				}
-				if ui.decBand.Clicked() {
-					rxControl.DecBandSelector(&rxControl.Band)
-				}
-				if ui.incBand.Clicked() {
-					rxControl.IncBandSelector(&rxControl.Band)
-				}
-				if ui.decSymbolRate.Clicked() {
-					rxControl.DecSelector(&rxControl.SymbolRate)
-				}
-				if ui.incSymbolRate.Clicked() {
-					rxControl.IncSelector(&rxControl.SymbolRate)
-				}
-				if ui.decFrequency.Clicked() {
-					rxControl.DecSelector(&rxControl.Frequency)
-				}
-				if ui.incFrequency.Clicked() {
-					rxControl.IncSelector(&rxControl.Frequency)
-				}
-				if ui.tune.Clicked() {
-					rxControl.Tune()
-				}
-				if ui.stream.Clicked() {
-					rxControl.Stream()
-				}
-
-				gtx := layout.NewContext(&ops, event)
-				// set the screen background to dark grey
-				paint.Fill(gtx.Ops, q100color.screenGrey)
-				ui.layoutFlexes(gtx)
-				event.Frame(gtx.Ops)
-			}
 		}
+
+		switch event := w.Event().(type) {
+		case app.DestroyEvent:
+			return event.Err
+		case app.FrameEvent:
+			gtx := app.NewContext(&ops, event)
+			if ui.about.Clicked(gtx) {
+				showAboutBox()
+			}
+			if ui.shutdown.Clicked(gtx) {
+				w.Perform(system.ActionClose)
+			}
+			if ui.decBand.Clicked(gtx) {
+				rxControl.DecBandSelector(&rxControl.Band)
+			}
+			if ui.incBand.Clicked(gtx) {
+				rxControl.IncBandSelector(&rxControl.Band)
+			}
+			if ui.decSymbolRate.Clicked(gtx) {
+				rxControl.DecSelector(&rxControl.SymbolRate)
+			}
+			if ui.incSymbolRate.Clicked(gtx) {
+				rxControl.IncSelector(&rxControl.SymbolRate)
+			}
+			if ui.decFrequency.Clicked(gtx) {
+				rxControl.DecSelector(&rxControl.Frequency)
+			}
+			if ui.incFrequency.Clicked(gtx) {
+				rxControl.IncSelector(&rxControl.Frequency)
+			}
+			if ui.tune.Clicked(gtx) {
+				rxControl.Tune()
+			}
+			if ui.stream.Clicked(gtx) {
+				rxControl.Stream()
+			}
+
+			// gtx := layout.NewContext(&ops, event)
+			// set the screen background to dark grey
+			paint.Fill(gtx.Ops, q100color.screenGrey)
+			ui.layoutFlexes(gtx)
+			event.Frame(gtx.Ops)
+		}
+
 	}
 }
 
@@ -388,6 +390,7 @@ func (ui *UI) q100_SpectrumDisplay(gtx C) D {
 					Width:   float32(788), //gtx.Constraints.Max.X), //float32(width),  //float32(gtx.Constraints.Max.X),
 					Height:  float32(250), //float32(hieght), //float32(500),
 					Context: gtx,
+					Theme:   ui.th,
 				}
 				// fmt("  Canvas: %#v\n", canvas.Context.Constraints)
 
