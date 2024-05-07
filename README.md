@@ -48,7 +48,7 @@ cd /home/pi/Q100
 git clone https://github.com/ea7kir/q100receiver.git
 
 chmod +x /home/pi/q100/q100receiver/etc/install.sh
-/home/pi/q100/q100receiver/etc/install.sh
+/home/pi/Q100/q100receiver/etc/install.sh
 ```
 
 THEN FOLLOW THE INSTRUCTIONS AND CONFIGURE THE DESKTOP
