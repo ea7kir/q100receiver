@@ -47,7 +47,7 @@ mkdir /home/pi/Q100
 cd /home/pi/Q100
 git clone https://github.com/ea7kir/q100receiver.git
 
-chmod +x /home/pi/q100/q100receiver/etc/install.sh
+chmod +x /home/pi/Q100/q100receiver/etc/install.sh
 /home/pi/Q100/q100receiver/etc/install.sh
 ```
 
