@@ -26,10 +26,12 @@ import (
 	"image"
 	"image/color"
 	"os"
+	"os/exec"
 	"os/signal"
 	"q100receiver/lmClient"
 	"q100receiver/rxControl"
 	"q100receiver/spectrumClient"
+	"time"
 
 	"github.com/ea7kir/qLog"
 
@@ -37,7 +39,6 @@ import (
 
 	"gioui.org/app"
 	"gioui.org/font/gofont"
-	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/paint"
@@ -129,6 +130,17 @@ func main() {
 		lmClient.Stop()
 		spectrumClient.Stop()
 
+		if !true { // change to true for powerdown
+			qLog.Info("----- q100receiver will poweroff -----")
+			time.Sleep(1 * time.Second)
+			cmd := exec.Command("sudo", "poweroff")
+			if err := cmd.Start(); err != nil {
+				qLog.Error("failed to poweroff: %v", err)
+				os.Exit(1)
+			}
+			cmd.Wait()
+		}
+
 		qLog.Info("----- q100receiver Closed -----")
 		os.Exit(0)
 	}()
@@ -158,7 +170,8 @@ func loop(w *app.Window) error {
 			// When the context cancels, assign the done channel to nil to
 			// prevent it from firing over and over.
 			done = nil
-			w.Perform(system.ActionClose)
+			return nil
+			// w.Perform(system.ActionClose)
 		case lmData = <-lmChannel:
 			w.Invalidate()
 		case spData = <-spChannel:
@@ -174,7 +187,8 @@ func loop(w *app.Window) error {
 				showAboutBox()
 			}
 			if ui.shutdown.Clicked(gtx) {
-				w.Perform(system.ActionClose)
+				return nil
+				// w.Perform(system.ActionClose)
 			}
 			if ui.decBand.Clicked(gtx) {
 				rxControl.DecBandSelector(&rxControl.Band)

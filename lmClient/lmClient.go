@@ -605,7 +605,7 @@ func id17_setEsType(esType string) {
 	case 2:
 		liveData.AudioCodec = "MPEG2"
 	case 3:
-		liveData.AudioCodec = "MP3"
+		liveData.AudioCodec = "MPA" // was "MP3"
 	case 4:
 		liveData.AudioCodec = "MP3"
 	case 15:
