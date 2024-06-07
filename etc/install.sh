@@ -64,7 +64,7 @@ echo Making changes to .profile
 sudo sh -c "echo '\n# EA7KIR Additions' >> /home/pi/.profile"
 
 echo Disbale Screen Blanking in .profile
-echo -e 'export DISPLAY=:0;xset s noblank; xset s off; xset -dpms' >> /home/pi/.profile
+echo -e 'export DISPLAY=:0; xset s noblank; xset s off; xset -dpms' >> /home/pi/.profile
 
 echo Adding go path to .profile
 echo -e 'export PATH=$PATH:/usr/local/go/bin' >> /home/pi/.profile
