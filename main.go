@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -90,10 +91,26 @@ var (
 	lmChannel = make(chan lmClient.LongmyndData) //, 5)
 )
 
-// main - with some help from Chris Waldon who got me started
-func main() {
-	// qLog.Open("mylog.txt")
+func waitForNetwork() {
+	var maxTries = 20
+	for {
+		client := http.Client{}
+		_, err := client.Get("https://google.com")
+		if err == nil {
+			return
+		}
+		qLog.Warn("Waiting for network %v", maxTries)
+		time.Sleep(time.Second)
+		maxTries--
+		if maxTries == 0 {
+			qLog.Fatal("Unable to conect to network")
+			qLog.Close()
+			os.Exit(1)
+		}
+	}
+}
 
+func main() {
 	logFile, err := os.OpenFile("/home/pi/Q100/receiver.log", os.O_APPEND|os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		fmt.Println("failed to open log file:", err)
@@ -108,6 +125,8 @@ func main() {
 
 	os.Setenv("DISPLAY", ":0") // required for X11
 
+	waitForNetwork()
+
 	spectrumClient.Intitialize(spConfig, spChannel)
 
 	rxControl.Intitialize(tuConfig)
@@ -115,7 +134,6 @@ func main() {
 	lmClient.Intitialize(lmConfig, fpConfig, lmChannel)
 
 	go func() {
-		// w := app.NewWindow(app.Fullscreen.Option())
 		// app.Size(800, 480) // I don't know if this is help in any way
 		var w app.Window
 		w.Option(app.Fullscreen.Option())
