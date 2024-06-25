@@ -108,8 +108,6 @@ func main() {
 
 	os.Setenv("DISPLAY", ":0") // required for X11
 
-	time.Sleep(5 * time.Second) // this is a sledgehammer solution !
-
 	spectrumClient.Intitialize(spConfig, spChannel)
 
 	rxControl.Intitialize(tuConfig)
