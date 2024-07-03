@@ -7,7 +7,7 @@ package rxControl
 
 import (
 	"q100receiver/lmClient"
-	"q100receiver/spectrumClient"
+	"q100receiver/spClient"
 
 	"github.com/ea7kir/qLog"
 )
@@ -31,11 +31,11 @@ var (
 	SymbolRate Selector
 	Frequency  Selector
 
-	IsTuned     = false
-	IsStreaming = false
+	IsTuned  = false
+	IsOffset = false
 )
 
-func Intitialize(cfg TuConfig) {
+func Start(cfg TuConfig) {
 	Band = newSelector(const_BAND_LIST, cfg.Band)
 
 	beaconSymbolRate = newSelector(const_BEACON_SYMBOLRATE_LIST, const_BEACON_SYMBOLRATE_LIST[0])
@@ -72,11 +72,11 @@ func Tune() {
 	}
 }
 
-func Stream() {
-	if IsStreaming {
-		IsStreaming = false
+func SetOffset() {
+	if IsOffset {
+		IsOffset = false
 	} else {
-		IsStreaming = true
+		IsOffset = true
 	}
 }
 
@@ -251,5 +251,5 @@ func switchBand() { // TODO: should switch back to previosly use settings
 func somethingChanged() {
 	lmClient.UnTune()
 	IsTuned = false
-	spectrumClient.SetMarker(Frequency.Value, SymbolRate.Value)
+	spClient.SetMarker(Frequency.Value, SymbolRate.Value)
 }

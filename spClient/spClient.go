@@ -3,9 +3,10 @@
  *  Copyright (c) 2023 Michael Naylor EA7KIR (https://michaelnaylor.es)
  */
 
-package spectrumClient
+package spClient
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/ea7kir/qLog"
@@ -29,7 +30,7 @@ var (
 	Xp = make([]float32, numPoints) // x coordinates from 0.0 to 100.0
 )
 
-func Intitialize(cfg SpConfig, ch chan SpData) {
+func Start(cfg SpConfig, ch chan SpData) {
 	// spChannel = ch
 	Xp[0] = 0
 	for i := 1; i < numPoints-1; i++ {
@@ -41,7 +42,7 @@ func Intitialize(cfg SpConfig, ch chan SpData) {
 }
 
 func Stop() {
-	qLog.Warn("Spectrum will stop... - NOT IMPLELENTED")
+	qLog.Warn("Spectrum will stop... - NOT IMPLEMENTED")
 }
 
 // Sets the spData Marker values
@@ -51,6 +52,13 @@ func SetMarker(frequency string, symbolRate string) {
 	spData.MarkerCentre, spData.MarkerWidth = getMarkers(frequency, symbolRate)
 	// spData.MarkerCentre = const_frequencyCentre[frequency]
 	// spData.MarkerWidth = const_symbolRateWidth[symbolRate]
+}
+
+// Returns frequency and bandWidth Markers as float32
+func getMarkers(frequency, symbolRate string) (float32, float32) {
+	centre := const_frequencyCentre[frequency] / 9.18 // 9.18 is a temporary kludge
+	width := const_symbolRateWidth[symbolRate]
+	return centre, width
 }
 
 // END API *******************************************************
@@ -70,7 +78,7 @@ var (
 // TODO: needs a timeout. see https://pkg.go.dev/nhooyr.io/websocket
 //	which uses: ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 
-// forever go routine called from Intitialize
+// forever go routine called from Start
 func readAndDecode(cfg SpConfig, ch chan SpData) {
 	ws, err := websocket.Dial(cfg.Url, "", cfg.Origin)
 	if err != nil {
@@ -78,6 +86,7 @@ func readAndDecode(cfg SpConfig, ch chan SpData) {
 		os.Exit(1)
 	}
 	defer ws.Close()
+	defer fmt.Println("END OF readAndDecode()")
 
 	var bytes = make([]byte, 2048) // larger than 1844
 	var n int
@@ -173,43 +182,3 @@ var (
 		"33":   1.5,
 	}
 )
-
-// Returns frequency and bandWidth Markers as float32
-func getMarkers(frequency, symbolRate string) (float32, float32) {
-	centre := const_frequencyCentre[frequency] / 9.18 // 9.18 is a temporary kludge
-	width := const_symbolRateWidth[symbolRate]
-	return centre, width
-}
-
-// TODO: implement CalibratetionPoints()
-/*
-func CalibratetionPoints() {
-	var yp [918]float32
-
-	for _, v := range CalibrationMarkerWidth {
-		// yp[v] = 100
-		qLog.Info("CalibratetionPoints %v", v)
-	}
-
-	for i, v := range yp {
-		qLog.Info("CalibratetionPoints %v  %v", i, v)
-	}
-
-}
-*/
-
-/*
-func readCalibrationData(ch chan SpData) {
-	qLog.Info("Spectrun calibration running...")
-	for {
-		spData.Yp[0] = 0
-		for i := 1; i < numPoints-2; i++ {
-			spData.Yp[i] = rand.Float32() * 50.0
-		}
-		spData.Yp[numPoints-1] = 0
-		spData.BeaconLevel = rand.Float32() * 100
-		ch <- spData
-		time.Sleep(3 * time.Millisecond)
-	}
-}
-*/

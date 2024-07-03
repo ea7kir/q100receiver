@@ -31,7 +31,7 @@ import (
 	"os/signal"
 	"q100receiver/lmClient"
 	"q100receiver/rxControl"
-	"q100receiver/spectrumClient"
+	"q100receiver/spClient"
 	"time"
 
 	"github.com/ea7kir/qLog"
@@ -55,7 +55,7 @@ const lmFolder = "/home/pi/Q100/"
 
 // configuration data
 var (
-	spConfig = spectrumClient.SpConfig{
+	spConfig = spClient.SpConfig{
 		// Url:    "wss://eshail.batc.org.uk/wb/fft/fft_ea7kirsatcontroller:443/",
 		// Origin: "http://eshail.batc.org.uk/wb",
 		Origin: "https://eshail.batc.org.uk/",
@@ -85,8 +85,8 @@ var (
 
 // local data
 var (
-	spData    spectrumClient.SpData
-	spChannel = make(chan spectrumClient.SpData) //, 5)
+	spData    spClient.SpData
+	spChannel = make(chan spClient.SpData) //, 5)
 	lmData    lmClient.LongmyndData
 	lmChannel = make(chan lmClient.LongmyndData) //, 5)
 )
@@ -127,11 +127,9 @@ func main() {
 
 	waitForNetwork()
 
-	spectrumClient.Intitialize(spConfig, spChannel)
-
-	rxControl.Intitialize(tuConfig)
-
-	lmClient.Intitialize(lmConfig, fpConfig, lmChannel)
+	spClient.Start(spConfig, spChannel)
+	rxControl.Start(tuConfig)
+	lmClient.Start(lmConfig, fpConfig, lmChannel)
 
 	go func() {
 		// app.Size(800, 480) // I don't know if this is help in any way
@@ -146,7 +144,7 @@ func main() {
 		// TODO: implement with a d/on channel
 		rxControl.Stop()
 		lmClient.Stop()
-		spectrumClient.Stop()
+		spClient.Stop()
 
 		if !true { // change to true for powerdown
 			qLog.Info("----- q100receiver will poweroff -----")
@@ -229,8 +227,8 @@ func loop(w *app.Window) error {
 			if ui.tune.Clicked(gtx) {
 				rxControl.Tune()
 			}
-			if ui.stream.Clicked(gtx) {
-				rxControl.Stream()
+			if ui.freqOffset.Clicked(gtx) {
+				rxControl.SetOffset()
 			}
 
 			// gtx := layout.NewContext(&ops, event)
@@ -273,7 +271,7 @@ type UI struct {
 	decBand, incBand             widget.Clickable
 	decSymbolRate, incSymbolRate widget.Clickable
 	decFrequency, incFrequency   widget.Clickable
-	tune, stream                 widget.Clickable
+	tune, freqOffset             widget.Clickable
 	th                           *material.Theme
 }
 
@@ -430,7 +428,7 @@ func (ui *UI) q100_SpectrumDisplay(gtx C) D {
 				// tuning marker
 				canvas.Rect(spData.MarkerCentre, 50, spData.MarkerWidth, 100, q100color.gfxMarker)
 				// polygon
-				canvas.Polygon(spectrumClient.Xp, spData.Yp, q100color.gfxGreen)
+				canvas.Polygon(spClient.Xp, spData.Yp, q100color.gfxGreen)
 				// graticule
 				const fyBase float32 = 3
 				const fyInc float32 = 5.88235
@@ -542,7 +540,7 @@ func (ui *UI) q100_Column2Buttons(gtx C) D {
 			return inset.Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Dp(btnWidth)
 				gtx.Constraints.Min.Y = gtx.Dp(btnHeight)
-				return ui.q100_Button(gtx, &ui.stream, "STREAM", rxControl.IsStreaming, q100color.buttonRed)
+				return ui.q100_Button(gtx, &ui.freqOffset, lmData.FreqOffset, rxControl.IsOffset, q100color.buttonRed)
 			})
 		}),
 	)
