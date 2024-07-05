@@ -54,7 +54,7 @@ func Start(cfg TuConfig) {
 }
 
 func Stop() {
-	qLog.Info("Tuner will stop...")
+	qLog.Info("Tuner will stop... - NOT IMPLEMENTED")
 	if IsTuned {
 		lmClient.UnTune()
 		IsTuned = false

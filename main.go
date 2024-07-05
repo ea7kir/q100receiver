@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -91,24 +90,41 @@ var (
 	lmChannel = make(chan lmClient.LongmyndData) //, 5)
 )
 
-func waitForNetwork() {
-	var maxTries = 20
-	for {
-		client := http.Client{}
-		_, err := client.Get("https://google.com")
-		if err == nil {
-			return
-		}
-		qLog.Warn("Waiting for network %v", maxTries)
-		time.Sleep(time.Second)
-		maxTries--
-		if maxTries == 0 {
-			qLog.Fatal("Unable to conect to network")
-			qLog.Close()
-			os.Exit(1)
-		}
-	}
-}
+// // go routine for spClient
+// func runSpClient(ctx context.Context) {
+// 	spClient.Start(ctx, spConfig, spChannel)
+// 	for {
+// 		if ctx.Err() != nil {
+// 			fmt.Println("Cancelled spClient")
+// 			spClient.Stop()
+// 			return
+// 		}
+// 	}
+// }
+
+// // go routine for rxControl
+// func runRxControl(ctx context.Context, cfg rxControl.TuConfig) {
+// 	rxControl.Start(cfg)
+// 	for {
+// 		if ctx.Err() != nil {
+// 			fmt.Println("Cancelled rxControl")
+// 			rxControl.Stop()
+// 			return
+// 		}
+// 	}
+// }
+
+// // go routine for lmClient
+// func runLmClient(ctx context.Context, lmc lmClient.LmConfig, fpc lmClient.FpConfig, ch chan lmClient.LongmyndData) {
+// 	lmClient.Start(lmc, fpc, ch)
+// 	for {
+// 		if ctx.Err() != nil {
+// 			fmt.Println("Cancelled lmClient")
+// 			lmClient.Stop()
+// 			return
+// 		}
+// 	}
+// }
 
 func main() {
 	logFile, err := os.OpenFile("/home/pi/Q100/receiver.log", os.O_APPEND|os.O_RDWR|os.O_CREATE, 0644)
@@ -116,22 +132,25 @@ func main() {
 		fmt.Println("failed to open log file:", err)
 		os.Exit(1)
 	}
-
 	// qLog.SetOutput(os.Stderr)
 	qLog.SetOutput(logFile)
 	defer qLog.Close()
 
 	qLog.Info("----- q100receiver Opened -----")
 
-	os.Setenv("DISPLAY", ":0") // required for X11
+	ctx, cancel := context.WithCancel(context.Background())
+	spClient.Start(ctx, spConfig, spChannel)
+	//  runSpClient(ctx)
+	//  runRxControl(ctx, tuConfig)
+	//  runLmClient(ctx, lmConfig, fpConfig, lmChannel)
 
-	waitForNetwork()
-
-	spClient.Start(spConfig, spChannel)
+	// spClient.Start(spConfig, spChannel)
 	rxControl.Start(tuConfig)
 	lmClient.Start(lmConfig, fpConfig, lmChannel)
 
 	go func() {
+		os.Setenv("DISPLAY", ":0") // required for X11
+
 		// app.Size(800, 480) // I don't know if this is help in any way
 		var w app.Window
 		w.Option(app.Fullscreen.Option())
@@ -141,10 +160,15 @@ func main() {
 			os.Exit(1)
 		}
 
-		// TODO: implement with a d/on channel
+		cancel()
+		fmt.Println("cancel() called")
+		// allow time to cancel all functions
+		time.Sleep(time.Second * 2)
+
+		// TODO: implement with a done channel or a context.Cancel
 		rxControl.Stop()
 		lmClient.Stop()
-		spClient.Stop()
+		// spClient.Stop()
 
 		if !true { // change to true for powerdown
 			qLog.Info("----- q100receiver will poweroff -----")

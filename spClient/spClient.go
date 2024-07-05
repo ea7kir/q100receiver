@@ -6,8 +6,9 @@
 package spClient
 
 import (
+	"context"
 	"fmt"
-	"os"
+	"time"
 
 	"github.com/ea7kir/qLog"
 	"golang.org/x/net/websocket"
@@ -30,7 +31,7 @@ var (
 	Xp = make([]float32, numPoints) // x coordinates from 0.0 to 100.0
 )
 
-func Start(cfg SpConfig, ch chan SpData) {
+func Start(ctx context.Context, cfg SpConfig, ch chan SpData) {
 	// spChannel = ch
 	Xp[0] = 0
 	for i := 1; i < numPoints-1; i++ {
@@ -38,11 +39,13 @@ func Start(cfg SpConfig, ch chan SpData) {
 	}
 	Xp[numPoints-1] = 100
 
-	go readAndDecode(cfg, ch)
+	go readAndDecode(ctx, cfg, ch)
 }
 
 func Stop() {
 	qLog.Warn("Spectrum will stop... - NOT IMPLEMENTED")
+
+	qLog.Warn("Spectrum has stopped... - NOT IMPLEMENTED")
 }
 
 // Sets the spData Marker values
@@ -79,19 +82,43 @@ var (
 //	which uses: ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 
 // forever go routine called from Start
-func readAndDecode(cfg SpConfig, ch chan SpData) {
-	ws, err := websocket.Dial(cfg.Url, "", cfg.Origin)
-	if err != nil {
-		qLog.Fatal("Dial Aborted: %v", err)
-		os.Exit(1)
+func readAndDecode(ctx context.Context, cfg SpConfig, ch chan SpData) {
+	const MAXTRIES = 10
+	var ws *websocket.Conn
+
+	for i := 1; i <= MAXTRIES; i++ {
+		qLog.Info("Dial attempt %v", i)
+		new_ws, err := websocket.Dial(cfg.Url, "", cfg.Origin)
+		if err == nil {
+			ws = new_ws
+			break
+		}
+		if i == MAXTRIES {
+			qLog.Fatal("Dial Aborted after %v attemps\n", i)
+		}
+		time.Sleep(time.Millisecond * 500)
 	}
-	defer ws.Close()
-	defer fmt.Println("END OF readAndDecode()")
+
+	// ws, err := websocket.Dial(cfg.Url, "", cfg.Origin)
+	// if err != nil {
+	// 	log.Fatalf("Dial Aborted: %v\n", err)
+	// }
+
+	// defer ws.Close()
+	// defer fmt.Println("END OF readAndDecode()")
 
 	var bytes = make([]byte, 2048) // larger than 1844
 	var n int
+	var err error
 
 	for {
+		if ctx.Err() != nil {
+			fmt.Println("----- 1 Cancelled readAndDecode and ws closed")
+			time.Sleep(time.Duration(time.Second))
+			ws.Close()
+			fmt.Println("----- 2 Cancelled readAndDecode and ws closed")
+			return
+		}
 		if n, err = ws.Read(bytes); err != nil {
 			qLog.Warn("Read failed: %v", err)
 			continue

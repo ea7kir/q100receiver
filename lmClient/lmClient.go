@@ -47,15 +47,11 @@ type (
 		Binary     string
 		Offset     float64
 		StatusFifo string
-		// StartScript string
-		// StopScript  string
 	}
 	FpConfig struct {
 		Binary string
 		TsFifo string
 		Volume string
-		// StartScript string
-		// StopScript  string
 	}
 )
 
@@ -481,7 +477,7 @@ func id6_setFrequency(carrierFrequencyStr string, offset float64) {
 	}
 	frequency := (kHzFloat + offset) / 1000
 	liveData.Frequency = fmt.Sprintf("%.2f", frequency)
-	liveData.FreqOffset = "+50"
+	liveData.FreqOffset = "+500"
 }
 
 // Symbol Rate - During a search this is the symbol rate being trialled.  When locked this is the symbol rate detected in the stream
