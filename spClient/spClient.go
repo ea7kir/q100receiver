@@ -1,5 +1,5 @@
 /*
- *  Q-100 Receiver
+ *  Q-100 Receiver & Transmitter
  *  Copyright (c) 2023 Michael Naylor EA7KIR (https://michaelnaylor.es)
  */
 
@@ -32,7 +32,6 @@ var (
 )
 
 func Start(ctx context.Context, cfg SpConfig, ch chan SpData) {
-	// spChannel = ch
 	Xp[0] = 0
 	for i := 1; i < numPoints-1; i++ {
 		Xp[i] = 100.0 * (float32(i) / float32(numPoints))
@@ -40,28 +39,6 @@ func Start(ctx context.Context, cfg SpConfig, ch chan SpData) {
 	Xp[numPoints-1] = 100
 
 	go readAndDecode(ctx, cfg, ch)
-}
-
-func Stop() {
-	qLog.Warn("Spectrum will stop... - NOT IMPLEMENTED")
-
-	qLog.Warn("Spectrum has stopped... - NOT IMPLEMENTED")
-}
-
-// Sets the spData Marker values
-//
-//	called from rxControl or tx Control
-func SetMarker(frequency string, symbolRate string) {
-	spData.MarkerCentre, spData.MarkerWidth = getMarkers(frequency, symbolRate)
-	// spData.MarkerCentre = const_frequencyCentre[frequency]
-	// spData.MarkerWidth = const_symbolRateWidth[symbolRate]
-}
-
-// Returns frequency and bandWidth Markers as float32
-func getMarkers(frequency, symbolRate string) (float32, float32) {
-	centre := const_frequencyCentre[frequency] / 9.18 // 9.18 is a temporary kludge
-	width := const_symbolRateWidth[symbolRate]
-	return centre, width
 }
 
 // END API *******************************************************
@@ -99,14 +76,6 @@ func readAndDecode(ctx context.Context, cfg SpConfig, ch chan SpData) {
 		time.Sleep(time.Millisecond * 500)
 	}
 
-	// ws, err := websocket.Dial(cfg.Url, "", cfg.Origin)
-	// if err != nil {
-	// 	log.Fatalf("Dial Aborted: %v\n", err)
-	// }
-
-	// defer ws.Close()
-	// defer fmt.Println("END OF readAndDecode()")
-
 	var bytes = make([]byte, 2048) // larger than 1844
 	var n int
 	var err error
@@ -129,7 +98,7 @@ func readAndDecode(ctx context.Context, cfg SpConfig, ch chan SpData) {
 		}
 
 		// begin processing the bytes
-		// count = 0
+		// var count = 0
 		for i := 0; i < 1836; {
 			word := uint16(bytes[i]) + uint16(bytes[i+1])<<8
 			// count++
@@ -137,9 +106,7 @@ func readAndDecode(ctx context.Context, cfg SpConfig, ch chan SpData) {
 			if word < 8192 {
 				word = 8192
 			}
-			// spData.Yp[i/2] = float32(word-uint16(8192)) / float32(52000)
 			spData.Yp[i/2] = float32(word-uint16(8192)) / float32(520) // normalize to 0 to 100
-			// spData.Yp[i/2] = 50.0
 			i += 2
 		}
 		// qLog.Info("count = %v\n", count)
@@ -209,3 +176,15 @@ var (
 		"33":   1.5,
 	}
 )
+
+// Returns frequency and bandWidth Markers as float32
+func getMarkers(frequency, symbolRate string) (float32, float32) {
+	centre := const_frequencyCentre[frequency] / 9.18 // NOTE: 9.18 is a temporary kludge
+	width := const_symbolRateWidth[symbolRate]
+	return centre, width
+}
+
+// Sets the spData Marker values
+func SetMarker(frequency string, symbolRate string) {
+	spData.MarkerCentre, spData.MarkerWidth = getMarkers(frequency, symbolRate)
+}
