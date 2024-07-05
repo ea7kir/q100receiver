@@ -764,7 +764,8 @@ func startLongmynd(frequency, symbolRate string) {
 	frequencySplit := strings.SplitN(frequency, " ", 2)[0]
 	requestedFrequency, err := strconv.ParseFloat(frequencySplit, 64)
 	if err != nil {
-		qLog.Fatal("bad lmFrequency: %v", err)
+		qLog.Error("bad lmFrequency: %v", err)
+		qLog.Close()
 		os.Exit(1)
 	}
 	requestKHz := (requestedFrequency * 1000) - lmcfg.Offset

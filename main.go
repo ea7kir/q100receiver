@@ -105,6 +105,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	spClient.Start(ctx, spConfig, spChannel)
 
+	// TODO: implement with a done channel or a context.Cancel
 	rxControl.Start(tuConfig)
 	lmClient.Start(lmConfig, fpConfig, lmChannel)
 
@@ -115,12 +116,13 @@ func main() {
 		w.Option(app.Fullscreen.Option())
 
 		if err := loop(&w); err != nil {
-			qLog.Fatal("failed to start loop: %v", err)
+			qLog.Error("failed to start loop: %v", err)
+			qLog.Close()
 			os.Exit(1)
 		}
 
 		cancel()
-		qLog.Info("cancel() called")
+		qLog.Info("----- cancel() called")
 		// allow time to cancel all functions
 		time.Sleep(time.Second * 2)
 
@@ -134,12 +136,15 @@ func main() {
 			time.Sleep(1 * time.Second)
 			cmd := exec.Command("sudo", "poweroff")
 			if err := cmd.Start(); err != nil {
-				qLog.Fatal("failed to poweroff: %v", err)
+				qLog.Error("failed to poweroff: %v", err)
+				qLog.Close()
+				os.Exit(1)
 			}
 			cmd.Wait()
 		}
 
 		qLog.Info("----- q100receiver Closed -----")
+		qLog.Close()
 		os.Exit(0)
 	}()
 

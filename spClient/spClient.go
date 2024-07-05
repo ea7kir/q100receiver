@@ -7,6 +7,7 @@ package spClient
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/ea7kir/qLog"
@@ -70,7 +71,9 @@ func readAndDecode(ctx context.Context, cfg SpConfig, ch chan SpData) {
 			break
 		}
 		if i == MAXTRIES {
-			qLog.Fatal("Dial Aborted after %v attemps\n", i)
+			qLog.Error("Dial Aborted after %v attemps\n", i)
+			qLog.Close()
+			os.Exit(1)
 		}
 		time.Sleep(time.Millisecond * 500)
 	}
@@ -81,10 +84,9 @@ func readAndDecode(ctx context.Context, cfg SpConfig, ch chan SpData) {
 
 	for {
 		if ctx.Err() != nil {
-			qLog.Info("----- 1 Cancelled readAndDecode and ws closed")
 			time.Sleep(time.Duration(time.Second))
 			ws.Close()
-			qLog.Info("----- 2 Cancelled readAndDecode and ws closed")
+			qLog.Info("----- Cancelled readAndDecode and ws closed")
 			return
 		}
 		if n, err = ws.Read(bytes); err != nil {
@@ -96,7 +98,7 @@ func readAndDecode(ctx context.Context, cfg SpConfig, ch chan SpData) {
 			continue
 		}
 
-		// begin processing the bytes
+		// process the bytes
 		// var count = 0
 		for i := 0; i < 1836; {
 			word := uint16(bytes[i]) + uint16(bytes[i+1])<<8

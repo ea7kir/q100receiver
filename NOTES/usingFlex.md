@@ -1,6 +1,23 @@
 # From Chris Waldon
 
-layout.Flex has an Axis field. The purpose of layout.Flex is to lay out a sequence of child widgets along that axis. To create columns of content, you use the Horizontal axis, and to create rows you use the Vertical.The two kinds of layout.FlexChild have two different strategies for acquiring space along the configured axis.layout.Rigid children are offered all available space and "use up" however much screen space they used in their returned layout.Dimensions.After all layout.Rigid children have been laid out, leftover space is divided among layout.Flexed children according to their configured weights.Note that you do not have to configure any rigid children, in which case you can use layout.Flexed to divide space according to some kind of ratio.I've tried to throw together a simple example of some of these features here.
+layout.Flex has an Axis field. The purpose of layout.
+
+Flex is to lay out a sequence of child widgets along that axis. 
+
+To create columns of content, you use the Horizontal axis, and to create rows you use the Vertical.The two kinds of layout.
+
+FlexChild have two different strategies for acquiring space along the configured axis.
+
+layout.Rigid children are offered all available space and "use up" however much screen space they used in their returned layout.Dimensions.
+
+After all layout.Rigid children have been laid out, leftover space is divided among layout.Flexed children according to their configured weights.
+
+Note that you do not have to configure any rigid children, in which case you can use layout.
+
+Flexed to divide space according to some kind of ratio.
+
+I've tried to throw together a simple example of some of these features here.
+
 
 ```
 package main
