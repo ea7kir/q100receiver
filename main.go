@@ -120,7 +120,7 @@ func main() {
 		}
 
 		cancel()
-		fmt.Println("cancel() called")
+		qLog.Info("cancel() called")
 		// allow time to cancel all functions
 		time.Sleep(time.Second * 2)
 
@@ -134,8 +134,7 @@ func main() {
 			time.Sleep(1 * time.Second)
 			cmd := exec.Command("sudo", "poweroff")
 			if err := cmd.Start(); err != nil {
-				qLog.Error("failed to poweroff: %v", err)
-				os.Exit(1)
+				qLog.Fatal("failed to poweroff: %v", err)
 			}
 			cmd.Wait()
 		}

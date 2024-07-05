@@ -7,7 +7,6 @@ package spClient
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/ea7kir/qLog"
@@ -82,10 +81,10 @@ func readAndDecode(ctx context.Context, cfg SpConfig, ch chan SpData) {
 
 	for {
 		if ctx.Err() != nil {
-			fmt.Println("----- 1 Cancelled readAndDecode and ws closed")
+			qLog.Info("----- 1 Cancelled readAndDecode and ws closed")
 			time.Sleep(time.Duration(time.Second))
 			ws.Close()
-			fmt.Println("----- 2 Cancelled readAndDecode and ws closed")
+			qLog.Info("----- 2 Cancelled readAndDecode and ws closed")
 			return
 		}
 		if n, err = ws.Read(bytes); err != nil {
