@@ -7,10 +7,10 @@ package spClient
 
 import (
 	"context"
+	"log"
 	"os"
 	"time"
 
-	"github.com/ea7kir/qLog"
 	"golang.org/x/net/websocket"
 )
 
@@ -64,15 +64,15 @@ func readAndDecode(ctx context.Context, cfg SpConfig, ch chan SpData) {
 	var ws *websocket.Conn
 
 	for i := 1; i <= MAXTRIES; i++ {
-		qLog.Info("Dial attempt %v", i)
+		log.Printf("INFO Dial attempt %v", i)
 		new_ws, err := websocket.Dial(cfg.Url, "", cfg.Origin)
 		if err == nil {
 			ws = new_ws
 			break
 		}
 		if i == MAXTRIES {
-			qLog.Error("Dial Aborted after %v attemps\n", i)
-			qLog.Close()
+			log.Printf("ERROR Dial Aborted after %v attemps\n", i)
+			// log.Close()
 			os.Exit(1)
 		}
 		time.Sleep(time.Millisecond * 500)
@@ -86,15 +86,15 @@ func readAndDecode(ctx context.Context, cfg SpConfig, ch chan SpData) {
 		if ctx.Err() != nil {
 			time.Sleep(time.Duration(time.Second))
 			ws.Close()
-			qLog.Info("----- Cancelled readAndDecode and ws closed")
+			log.Printf("INFO ----- Cancelled readAndDecode and ws closed")
 			return
 		}
 		if n, err = ws.Read(bytes); err != nil {
-			qLog.Warn("Read failed: %v", err)
+			log.Printf("WARN Read failed: %v", err)
 			continue
 		}
 		if n != 1844 {
-			qLog.Warn("reading : bytes != 1844\n")
+			log.Printf("WARN reading : bytes != 1844\n")
 			continue
 		}
 
@@ -103,14 +103,14 @@ func readAndDecode(ctx context.Context, cfg SpConfig, ch chan SpData) {
 		for i := 0; i < 1836; {
 			word := uint16(bytes[i]) + uint16(bytes[i+1])<<8
 			// count++
-			// qLog.Info("count = %v\n", count)
+			// log.Printf("INFO count = %v\n", count)
 			if word < 8192 {
 				word = 8192
 			}
 			spData.Yp[i/2] = float32(word-uint16(8192)) / float32(520) // normalize to 0 to 100
 			i += 2
 		}
-		// qLog.Info("count = %v\n", count)
+		// log.Printf("INFO count = %v\n", count)
 		spData.Yp[0] = 0
 		spData.Yp[numPoints-1] = 0
 
@@ -119,7 +119,7 @@ func readAndDecode(ctx context.Context, cfg SpConfig, ch chan SpData) {
 			spData.BeaconLevel += spData.Yp[i]
 		}
 		spData.BeaconLevel = spData.BeaconLevel / 103
-		// qLog.Info("beacon level %v : Yp[i] %v", spData.BeaconLevel, spData.Yp[103])
+		// log.Printf("INFO beacon level %v : Yp[i] %v", spData.BeaconLevel, spData.Yp[103])
 
 		ch <- spData
 	}

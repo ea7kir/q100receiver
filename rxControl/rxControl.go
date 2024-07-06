@@ -6,10 +6,9 @@
 package rxControl
 
 import (
+	"log"
 	"q100receiver/lmClient"
 	"q100receiver/spClient"
-
-	"github.com/ea7kir/qLog"
 )
 
 // BEGIN API ****************************************************
@@ -54,12 +53,12 @@ func Start(cfg TuConfig) {
 }
 
 func Stop() {
-	qLog.Info("Tuner will stop... - NOT IMPLEMENTED")
+	log.Printf("INFO Tuner will stop... - NOT IMPLEMENTED")
 	if IsTuned {
 		lmClient.UnTune()
 		IsTuned = false
 	}
-	qLog.Info("Tuner has stopped")
+	log.Printf("INFO Tuner has stopped")
 }
 
 func Tune() {

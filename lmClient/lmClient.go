@@ -9,12 +9,11 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
-
-	"github.com/ea7kir/qLog"
 )
 
 // BEGIN API ********************************************************
@@ -64,19 +63,19 @@ func Start(lmc LmConfig, fpc FpConfig, ch chan LongmyndData) {
 }
 
 func Stop() {
-	qLog.Info("LmReader will stop... - NOT IMPLEMENTED")
+	log.Printf("INFO LmReader will stop... - NOT IMPLEMENTED")
 	// TODO: implement a better way to stop longmynd and ffplay
 	stopFfPlayAndLongmynd()
-	qLog.Info("LmReader has stopped")
+	log.Printf("INFO LmReader has stopped")
 }
 
 func Tune(frequency, sysmbolRate string) {
-	qLog.Info("------ WILL TUNE")
+	log.Printf("INFO ------ WILL TUNE")
 	startLongmynd(frequency, sysmbolRate) // TODO: pass arguments
 }
 
 func UnTune() {
-	qLog.Info("------ WILL UNTUNE")
+	log.Printf("INFO ------ WILL UNTUNE")
 	stopFfPlayAndLongmynd()
 
 }
@@ -338,21 +337,21 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 	// will hang here until longmynd starts for the fiesrt time
 	file, err := os.OpenFile(fifoPath, os.O_CREATE, os.ModeNamedPipe)
 	if err != nil {
-		qLog.Warn("Failed to open '%v' fifo %v: ", fifoPath, err)
+		log.Printf("WARN Failed to open '%v' fifo %v: ", fifoPath, err)
 		return
 	}
 	defer file.Close()
 
 	reader := bufio.NewReader(file)
 
-	qLog.Info("Decode forever loop has started")
+	log.Printf("INFO Decode forever loop has started")
 
 	for {
 		// TODO: select to quite goes here ?
 
 		rawStr, err := reader.ReadString(10) // delimited by char(10) == LF
 		if err != nil {
-			//qLog.Error("reading fifo: %v", err)
+			//log.Printf("ERROR reading fifo: %v", err)
 			liveData.reset()
 			cacheData.reset()
 			lonymyndChannel <- *liveData
@@ -362,7 +361,7 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 
 		lmId, lmVal, err := idAndValFromString(rawStr)
 		if err != nil {
-			qLog.Warn("Returned from idAndValFromString: %v", err)
+			log.Printf("WARN Returned from idAndValFromString: %v", err)
 			continue
 		}
 
@@ -440,7 +439,7 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 			*cacheData = *liveData
 		}
 	}
-	// qLog.Info("lmreader has stopped")
+	// log.Printf("INFO lmreader has stopped")
 }
 
 /***********************************************************
@@ -463,7 +462,7 @@ func id1_setState(stateStr string) {
 		liveData.State = kLocked
 		liveData.Mode = kDVB_S2
 	default:
-		qLog.Warn("Undefined status: %v", stateStr)
+		log.Printf("WARN Undefined status: %v", stateStr)
 	}
 }
 
@@ -471,7 +470,7 @@ func id1_setState(stateStr string) {
 func id6_setFrequency(carrierFrequencyStr string, offset float64) {
 	kHzFloat, err := strconv.ParseFloat(carrierFrequencyStr, 64)
 	if err != nil {
-		qLog.Warn("Bad carrierFrequencyStr: %v", err)
+		log.Printf("WARN Bad carrierFrequencyStr: %v", err)
 		liveData.Frequency = kDash
 		return
 	}
@@ -484,7 +483,7 @@ func id6_setFrequency(carrierFrequencyStr string, offset float64) {
 func id9_setSymbolRate(symbolRateStr string) {
 	sysmbolRateFloat, err := strconv.ParseFloat(symbolRateStr, 64)
 	if err != nil {
-		qLog.Warn("Bad symbolRateStr: %v", err)
+		log.Printf("WARN Bad symbolRateStr: %v", err)
 		liveData.SymbolRate = kDash
 		return
 	}
@@ -496,7 +495,7 @@ func id9_setSymbolRate(symbolRateStr string) {
 func id12_setDbMer(merStr string) {
 	dbMerFloat, err := strconv.ParseFloat(merStr, 64)
 	if err != nil {
-		qLog.Warn("Bad merStr: %v", err)
+		log.Printf("WARN Bad merStr: %v", err)
 		liveData.DbMer = kDash
 		return
 	}
@@ -525,7 +524,7 @@ func id14_setService(serviceStr string) {
 // Null Ratio - Ratio of Nulls in TS as percentage
 func id15_setNullRatio(nullRatioStr string) {
 	if nullRatioStr == "" {
-		qLog.Warn("Missing nullRatioStr")
+		log.Printf("WARN Missing nullRatioStr")
 		liveData.NullRatio = kDash
 		return
 	}
@@ -580,7 +579,7 @@ func id17_setEsType(esType string) {
 
 	typ, err := strconv.Atoi(esType)
 	if err != nil {
-		qLog.Warn("Failed to convert esType %v", err)
+		log.Printf("WARN Failed to convert esType %v", err)
 		return
 	}
 	switch typ {
@@ -624,7 +623,7 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 	// set Constellation and Fec
 	modcodInt, err := strconv.Atoi(modcodStr) // wiil panic panic if modcodInt is > 28
 	if err != nil {
-		qLog.Warn("Failed to convert modcodStr %v", err)
+		log.Printf("WARN Failed to convert modcodStr %v", err)
 		return
 	}
 	// liveData.Constellation = kDash
@@ -632,7 +631,7 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 	switch liveData.Mode {
 	case kDVB_S:
 		if modcodInt > len(kModcodeDvdS)-1 {
-			qLog.Warn("DVB-S modcodInt (%v) > (%v)", modcodInt, len(kModcodeDvdS)-1) // to avoid panic
+			log.Printf("WARN DVB-S modcodInt (%v) > (%v)", modcodInt, len(kModcodeDvdS)-1) // to avoid panic
 			liveData.Constellation = kDash
 			return
 		}
@@ -640,19 +639,19 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 		liveData.Fec = kModcodeDvdS[modcodInt].fec
 	case kDVB_S2:
 		if modcodInt > len(kModcodeDvdS2)-1 {
-			qLog.Warn("DVB-S2 modcodInt (%v) > (%v)", modcodInt, len(kModcodeDvdS2)-1) // to avoid panic
+			log.Printf("WARN DVB-S2 modcodInt (%v) > (%v)", modcodInt, len(kModcodeDvdS2)-1) // to avoid panic
 			liveData.Constellation = kDash
 			return
 		}
 		liveData.Constellation = kModcodeDvdS2[modcodInt].constellation // TODO: throws panic: runtime error: index out of range [31] with length 29
 		liveData.Fec = kModcodeDvdS2[modcodInt].fec
 	default:
-		// qLog.Warn("Unknkown longmyndData.mode %v", mode) // TODO: why here, when no signal received ?
+		// log.Printf("WARN Unknkown longmyndData.mode %v", mode) // TODO: why here, when no signal received ?
 		return
 	}
 	// set Margin
 	if liveData.DbMer == kDash || liveData.Fec == kDash || liveData.Constellation == kDash {
-		qLog.Warn("Failed to set Margin at this time")
+		log.Printf("WARN Failed to set Margin at this time")
 		liveData.DbMargin = kDash
 		return
 	}
@@ -669,20 +668,20 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 		}
 		key = kDVB_S2 + " " + liveData.Constellation + " " + liveData.Fec
 	default:
-		qLog.Warn("Unknown liveData.Mode: %v", liveData.Mode)
+		log.Printf("WARN Unknown liveData.Mode: %v", liveData.Mode)
 		return
 	}
 
 	// float_threshold := kModeFecThreshold[key]
 	float_threshold, ok := kModeFecThreshold[key]
 	if !ok {
-		qLog.Warn("kModeFecThreshold key not foundr")
+		log.Printf("WARN kModeFecThreshold key not foundr")
 		liveData.DbMargin = kDash
 		return
 	}
 	float_mer, err := strconv.ParseFloat(liveData.DbMer, 64)
 	if err != nil {
-		qLog.Warn("Bad longmyndData.dbMer: %v", err)
+		log.Printf("WARN Bad longmyndData.dbMer: %v", err)
 		liveData.DbMargin = kDash
 		return
 	}
@@ -696,7 +695,7 @@ func id26_setDbmPower(agc1Str string) {
 	}
 	agc1, err := strconv.Atoi(agc1Str)
 	if err != nil {
-		qLog.Warn("Failed to convert agc1Str %v", err)
+		log.Printf("WARN Failed to convert agc1Str %v", err)
 		return
 	}
 	agcPair.the1stAgcValue = agc1
@@ -710,7 +709,7 @@ func id27_setDbmPower(agc2Str string) {
 	}
 	agc2, err := strconv.Atoi(agc2Str)
 	if err != nil {
-		qLog.Warn("Failed to convert agc2Str %v", err)
+		log.Printf("WARN Failed to convert agc2Str %v", err)
 		liveData.DbmPower = kDash
 		return
 	}
@@ -735,7 +734,7 @@ func id27_setDbmPower(agc2Str string) {
 		}
 
 	}
-	// qLog.Info("----------------------- agc1 %v agc2 %v", agcPair.the1stAgcValue, agcPair.the2ndAgcValue)
+	// log.Printf("INFO ----------------------- agc1 %v agc2 %v", agcPair.the1stAgcValue, agcPair.the2ndAgcValue)
 
 	liveData.DbmPower = fmt.Sprint(p)
 	agcPair.reset()
@@ -764,37 +763,37 @@ func startLongmynd(frequency, symbolRate string) {
 	frequencySplit := strings.SplitN(frequency, " ", 2)[0]
 	requestedFrequency, err := strconv.ParseFloat(frequencySplit, 64)
 	if err != nil {
-		qLog.Error("bad lmFrequency: %v", err)
-		qLog.Close()
+		log.Printf("ERROR bad lmFrequency: %v", err)
+		// log.Close()
 		os.Exit(1)
 	}
 	requestKHz := (requestedFrequency * 1000) - lmcfg.Offset
 	requestKHzStr := strconv.FormatFloat(requestKHz, 'f', 0, 64)
-	qLog.Info("longmynd will start...")
+	log.Printf("INFO longmynd will start...")
 	lmCmd = exec.Command("./longmynd", "-S", "0.6", requestKHzStr, symbolRate)
 	lmCmd.Dir = lmcfg.Folder // ie. /home/pi/Q100/longmynd/
 	if err = lmCmd.Start(); err != nil {
-		qLog.Error("failed to start longmynd: %v", err)
+		log.Printf("ERROR failed to start longmynd: %v", err)
 		return
 	}
-	qLog.Info("longmynd has started")
+	log.Printf("INFO longmynd has started")
 	isTuned = true
 }
 
 // Stop Longmynd
 func stopLongmynd() {
 	if isTuned {
-		qLog.Info("longmynd will stop...")
+		log.Printf("INFO longmynd will stop...")
 		lmCmd.Process.Kill()
 		lmCmd.Process.Wait()
 		cmd := exec.Command("/usr/bin/pkill", "longmynd")
 		if err := cmd.Start(); err != nil {
-			qLog.Error("failed to stop longmynd: %v", err)
+			log.Printf("ERROR failed to stop longmynd: %v", err)
 			return
 		}
 		cmd.Wait()
 	}
-	qLog.Info("longmynd has stopped")
+	log.Printf("INFO longmynd has stopped")
 	isTuned = false
 }
 
@@ -803,14 +802,14 @@ func stopLongmynd() {
 //	ie. with position in frame buffer, fullscreen and volume
 func startFfplay() {
 	if !isPlaying && !ffPlayIsACtive {
-		qLog.Info("ffplay will start...")
+		log.Printf("INFO ffplay will start...")
 		ffPlayCmd = exec.Command("/usr/bin/ffplay", "-left", "800", "-fs", "-volume", fpcfg.Volume, "-i", fpcfg.TsFifo)
 		if err := ffPlayCmd.Start(); err != nil {
-			qLog.Error("failed to start ffplay: %v", err)
+			log.Printf("ERROR failed to start ffplay: %v", err)
 			return
 		}
 		// cmd.Wait()
-		qLog.Info("ffplay has started")
+		log.Printf("INFO ffplay has started")
 	}
 	ffPlayIsACtive = true
 	isPlaying = true
@@ -819,17 +818,17 @@ func startFfplay() {
 // Stop ffplay
 func stopFfplay() {
 	if isPlaying {
-		qLog.Info("ffplay will stop...")
+		log.Printf("INFO ffplay will stop...")
 		ffPlayCmd.Process.Kill()
 		ffPlayCmd.Process.Wait()
 		cmd := exec.Command("/usr/bin/pkill", "ffplay")
 		if err := cmd.Start(); err != nil {
-			qLog.Error("failed to stop ffplay: %v", err)
+			log.Printf("ERROR failed to stop ffplay: %v", err)
 			return
 		}
 		cmd.Wait()
 	}
-	qLog.Info("ffplay has stppoed")
+	log.Printf("INFO ffplay has stppoed")
 	ffPlayIsACtive = false
 	isPlaying = false
 }

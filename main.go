@@ -22,9 +22,9 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"image"
 	"image/color"
+	"log"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -32,8 +32,6 @@ import (
 	"q100receiver/rxControl"
 	"q100receiver/spClient"
 	"time"
-
-	"github.com/ea7kir/qLog"
 
 	"github.com/ajstarks/giocanvas"
 
@@ -91,16 +89,17 @@ var (
 )
 
 func main() {
-	logFile, err := os.OpenFile("/home/pi/Q100/receiver.log", os.O_APPEND|os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		fmt.Println("failed to open log file:", err)
-		os.Exit(1)
-	}
-	// qLog.SetOutput(os.Stderr)
-	qLog.SetOutput(logFile)
-	defer qLog.Close()
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	// logFile, err := os.OpenFile("/home/pi/Q100/receiver.log", os.O_APPEND|os.O_RDWR|os.O_CREATE, 0644)
+	// if err != nil {
+	// 	fmt.Println("failed to open log file:", err)
+	// 	os.Exit(1)
+	// }
+	// // qLog.SetOutput(os.Stderr)
+	// qLog.SetOutput(logFile)
+	// defer // log.Close()
 
-	qLog.Info("----- q100receiver Opened -----")
+	log.Printf("INFO ----- q100receiver Opened -----")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	spClient.Start(ctx, spConfig, spChannel)
@@ -116,13 +115,13 @@ func main() {
 		w.Option(app.Fullscreen.Option())
 
 		if err := loop(&w); err != nil {
-			qLog.Error("failed to start loop: %v", err)
-			qLog.Close()
+			log.Printf("ERROR failed to start loop: %v", err)
+			// log.Close()
 			os.Exit(1)
 		}
 
 		cancel()
-		qLog.Info("----- cancel() called")
+		log.Printf("INFO ----- cancel() called")
 		// allow time to cancel all functions
 		time.Sleep(time.Second * 2)
 
@@ -132,19 +131,19 @@ func main() {
 		// spClient.Stop()
 
 		if !true { // change to true for powerdown
-			qLog.Info("----- q100receiver will poweroff -----")
+			log.Printf("INFO ----- q100receiver will poweroff -----")
 			time.Sleep(1 * time.Second)
 			cmd := exec.Command("sudo", "poweroff")
 			if err := cmd.Start(); err != nil {
-				qLog.Error("failed to poweroff: %v", err)
-				qLog.Close()
+				log.Printf("ERROR failed to poweroff: %v", err)
+				// log.Close()
 				os.Exit(1)
 			}
 			cmd.Wait()
 		}
 
-		qLog.Info("----- q100receiver Closed -----")
-		qLog.Close()
+		log.Printf("INFO ----- q100receiver Closed -----")
+		// log.Close()
 		os.Exit(0)
 	}()
 
