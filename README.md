@@ -4,8 +4,6 @@ Control and monitor a DATV receiver with a touch screen.
 
 ![tx](doc/rx.jpeg)
 
-$${\color{red}WARNING:\space ALL\space DEVELOPMENT\space TAKES\space PLACE\space ON\space THE\space MAIN\space BRANCH}$$
-
 ## Hardware
 - Raspberry Pi 4B with 4GB RAM (minimum)
 - Raspberry Pi Official 7" Touch Screen
@@ -17,7 +15,7 @@ TODO: add more details and photos
 ## Installing
 NOTE: CURRENTLY REQUIRES PI OS BULLSEYE 64-BIT
 
-### Using Raspberry Pi Imager v1.8.1:
+### Using Raspberry Pi Imager v1.8.5:
 ```
 CHOOSE OS: Raspberry Pi OS (other) -> Raspberry Pi OS (Legacy 64-bit)
 
