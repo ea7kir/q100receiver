@@ -115,9 +115,7 @@ func main() {
 		w.Option(app.Fullscreen.Option())
 
 		if err := loop(&w); err != nil {
-			log.Printf("ERROR failed to start loop: %v", err)
-			// log.Close()
-			os.Exit(1)
+			log.Fatalf("FATAL failed to start loop: %v", err)
 		}
 
 		cancel()
@@ -135,9 +133,7 @@ func main() {
 			time.Sleep(1 * time.Second)
 			cmd := exec.Command("sudo", "poweroff")
 			if err := cmd.Start(); err != nil {
-				log.Printf("ERROR failed to poweroff: %v", err)
-				// log.Close()
-				os.Exit(1)
+				log.Fatalf("FATAL failed to poweroff: %v", err)
 			}
 			cmd.Wait()
 		}

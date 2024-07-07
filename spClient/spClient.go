@@ -8,7 +8,6 @@ package spClient
 import (
 	"context"
 	"log"
-	"os"
 	"time"
 
 	"golang.org/x/net/websocket"
@@ -71,9 +70,7 @@ func readAndDecode(ctx context.Context, cfg SpConfig, ch chan SpData) {
 			break
 		}
 		if i == MAXTRIES {
-			log.Printf("ERROR Dial Aborted after %v attemps\n", i)
-			// log.Close()
-			os.Exit(1)
+			log.Fatalf("FATAL Dial Aborted after %v attemps\n", i)
 		}
 		time.Sleep(time.Millisecond * 500)
 	}
