@@ -162,7 +162,6 @@ func loop(w *app.Window) error {
 	done := ctx.Done()
 
 	for {
-
 		select {
 		case <-done:
 			// When the context cancels, assign the done channel to nil to
@@ -219,7 +218,6 @@ func loop(w *app.Window) error {
 			ui.layoutFlexes(gtx)
 			event.Frame(gtx.Ops)
 		}
-
 	}
 }
 
