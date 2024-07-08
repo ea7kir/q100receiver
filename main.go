@@ -120,7 +120,7 @@ func main() {
 			log.Fatalf("FATAL failed to start loop: %v", err)
 		}
 
-		cancel()
+		cancel() // TODO: this NOT WORKING !!!!!!!!!!!!!!!!!!!!!!
 		log.Printf("INFO ----- cancel() called")
 		// allow time to cancel all functions
 		time.Sleep(time.Second * 2)
