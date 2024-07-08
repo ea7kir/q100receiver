@@ -82,6 +82,8 @@ var (
 
 // local data
 var (
+	tuData    rxControl.TuData_t
+	tuChannel = make(chan rxControl.TuData_t, 1)
 	spData    spClient.SpData
 	spChannel = make(chan spClient.SpData) //, 5)
 	lmData    lmClient.LongmyndData
@@ -105,7 +107,7 @@ func main() {
 	spClient.Start(ctx, spConfig, spChannel)
 
 	// TODO: implement with a done channel or a context.Cancel
-	rxControl.Start(tuConfig)
+	rxControl.Start(tuConfig, tuChannel)
 	lmClient.Start(lmConfig, fpConfig, lmChannel)
 
 	go func() {
@@ -128,6 +130,7 @@ func main() {
 		lmClient.Stop()
 		// spClient.Stop()
 
+		// TODO: control this with a flag
 		if !true { // change to true for powerdown
 			log.Printf("INFO ----- q100receiver will poweroff -----")
 			time.Sleep(1 * time.Second)
@@ -169,6 +172,8 @@ func loop(w *app.Window) error {
 			done = nil
 			return nil
 			// w.Perform(system.ActionClose)
+		case tuData = <-tuChannel:
+			w.Invalidate()
 		case lmData = <-lmChannel:
 			w.Invalidate()
 		case spData = <-spChannel:
@@ -212,8 +217,6 @@ func loop(w *app.Window) error {
 				rxControl.SetOffset()
 			}
 
-			// gtx := layout.NewContext(&ops, event)
-			// set the screen background to dark grey
 			paint.Fill(gtx.Ops, q100color.screenGrey)
 			ui.layoutFlexes(gtx)
 			event.Frame(gtx.Ops)
@@ -406,7 +409,7 @@ func (ui *UI) q100_SpectrumDisplay(gtx C) D {
 
 				canvas.Background(q100color.gfxBgd)
 				// tuning marker
-				canvas.Rect(spData.MarkerCentre, 50, spData.MarkerWidth, 100, q100color.gfxMarker)
+				canvas.Rect(tuData.MarkerCentre, 50, tuData.MarkerWidth, 100, q100color.gfxMarker)
 				// polygon
 				canvas.Polygon(spClient.Xp, spData.Yp, q100color.gfxGreen)
 				// graticule

@@ -8,7 +8,6 @@ package rxControl
 import (
 	"log"
 	"q100receiver/lmClient"
-	"q100receiver/spClient"
 )
 
 // BEGIN API ****************************************************
@@ -23,9 +22,15 @@ type (
 		VeryNarrowFrequency  string
 		VeryNarrowSymbolRate string
 	}
+	TuData_t struct {
+		MarkerCentre float32
+		MarkerWidth  float32
+	}
 )
 
 var (
+	TuData_v   TuData_t
+	dataChan   *chan TuData_t
 	Band       Selector
 	SymbolRate Selector
 	Frequency  Selector
@@ -34,7 +39,9 @@ var (
 	IsOffset = false
 )
 
-func Start(cfg TuConfig) {
+func Start(cfg TuConfig, ch chan TuData_t) {
+	dataChan = &ch
+
 	Band = newSelector(const_BAND_LIST, cfg.Band)
 
 	beaconSymbolRate = newSelector(const_BEACON_SYMBOLRATE_LIST, const_BEACON_SYMBOLRATE_LIST[0])
@@ -250,5 +257,7 @@ func switchBand() { // TODO: should switch back to previosly use settings
 func somethingChanged() {
 	lmClient.UnTune()
 	IsTuned = false
-	spClient.SetMarker(Frequency.Value, SymbolRate.Value)
+	TuData_v.MarkerCentre = const_frequencyCentre[Frequency.Value] / 9.18 // NOTE: 9.18 is a temporary kludge
+	TuData_v.MarkerWidth = const_symbolRateWidth[SymbolRate.Value]
+	*dataChan <- TuData_v
 }

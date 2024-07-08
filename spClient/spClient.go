@@ -19,10 +19,8 @@ type (
 		Origin string
 	}
 	SpData struct {
-		Yp           []float32
-		BeaconLevel  float32
-		MarkerCentre float32
-		MarkerWidth  float32
+		Yp          []float32
+		BeaconLevel float32
 	}
 )
 
@@ -47,10 +45,8 @@ const numPoints = 918
 
 var (
 	spData = SpData{
-		Yp:           make([]float32, numPoints),
-		BeaconLevel:  0.5,
-		MarkerCentre: 0.5,
-		MarkerWidth:  0.5,
+		Yp:          make([]float32, numPoints),
+		BeaconLevel: 0.5,
 	}
 )
 
