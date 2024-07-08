@@ -13,6 +13,8 @@ import (
 	"golang.org/x/net/websocket"
 )
 
+const numPoints = 918
+
 type (
 	SpConfig struct {
 		Url    string
@@ -35,34 +37,18 @@ func Start(ctx context.Context, cfg SpConfig, ch chan SpData) {
 	}
 	Xp[numPoints-1] = 100
 
-	go readAndDecode(ctx, cfg, ch)
-}
+	// TODO: needs a timeout. see https://pkg.go.dev/nhooyr.io/websocket
+	//	which uses: ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 
-// END API *******************************************************
-
-// room for 916 datapoints + start and end zero points to close the polygon
-const numPoints = 918
-
-var (
-	spData = SpData{
-		Yp:          make([]float32, numPoints),
-		BeaconLevel: 0.5,
-	}
-)
-
-// TODO: needs a timeout. see https://pkg.go.dev/nhooyr.io/websocket
-//	which uses: ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-
-// forever go routine called from Start
-func readAndDecode(ctx context.Context, cfg SpConfig, ch chan SpData) {
 	const MAXTRIES = 10
 	var ws *websocket.Conn
+	var err error
 
 	for i := 1; i <= MAXTRIES; i++ {
 		log.Printf("INFO Dial attempt %v", i)
-		new_ws, err := websocket.Dial(cfg.Url, "", cfg.Origin)
+		ws, err = websocket.Dial(cfg.Url, "", cfg.Origin)
 		if err == nil {
-			ws = new_ws
+			// ws = new_ws
 			break
 		}
 		if i == MAXTRIES {
@@ -71,17 +57,30 @@ func readAndDecode(ctx context.Context, cfg SpConfig, ch chan SpData) {
 		time.Sleep(time.Millisecond * 500)
 	}
 
+	var spData = SpData{
+		Yp:          make([]float32, numPoints),
+		BeaconLevel: 0.5,
+	}
+
 	var bytes = make([]byte, 2048) // larger than 1844
 	var n int
-	var err error
+	done := ctx.Done()
 
 	for {
-		if ctx.Err() != nil {
-			time.Sleep(time.Duration(time.Second))
+		select {
+		case <-done:
+			log.Printf("INFO ----- SlCline will stop")
 			ws.Close()
-			log.Printf("INFO ----- Cancelled readAndDecode and ws closed")
+			log.Printf("INFO ----- SlCline as stopped")
 			return
+		default:
 		}
+		// if ctx.Err() != nil {
+		// 	time.Sleep(time.Duration(time.Second))
+		// 	ws.Close()
+		// 	log.Printf("INFO ----- Cancelled readAndDecode and ws closed")
+		// 	return
+		// }
 		if n, err = ws.Read(bytes); err != nil {
 			log.Printf("WARN Read failed: %v", err)
 			continue

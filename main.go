@@ -104,7 +104,7 @@ func main() {
 	log.Printf("INFO ----- q100receiver Opened -----")
 
 	ctx, cancel := context.WithCancel(context.Background())
-	spClient.Start(ctx, spConfig, spChannel)
+	go spClient.Start(ctx, spConfig, spChannel)
 
 	// TODO: implement with a done channel or a context.Cancel
 	rxControl.Start(tuConfig, tuChannel)
