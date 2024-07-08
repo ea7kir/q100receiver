@@ -16,7 +16,7 @@ import (
 const numPoints = 918
 
 type (
-	SpConfig struct {
+	SpConfig_t struct {
 		Url    string
 		Origin string
 	}
@@ -30,7 +30,7 @@ var (
 	Xp = make([]float32, numPoints) // x coordinates from 0.0 to 100.0
 )
 
-func Start(ctx context.Context, cfg SpConfig, ch chan SpData) {
+func Start(ctx context.Context, cfg SpConfig_t, ch chan SpData) {
 	Xp[0] = 0
 	for i := 1; i < numPoints-1; i++ {
 		Xp[i] = 100.0 * (float32(i) / float32(numPoints))
@@ -69,9 +69,9 @@ func Start(ctx context.Context, cfg SpConfig, ch chan SpData) {
 	for {
 		select {
 		case <-done:
-			log.Printf("INFO ----- SlCline will stop")
+			log.Printf("INFO ----- SpClient will stop")
 			ws.Close()
-			log.Printf("INFO ----- SlCline as stopped")
+			log.Printf("INFO ----- SpClient has stopped")
 			return
 		default:
 		}

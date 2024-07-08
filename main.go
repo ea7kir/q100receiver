@@ -52,24 +52,24 @@ const lmFolder = "/home/pi/Q100/"
 
 // configuration data
 var (
-	spConfig = spClient.SpConfig{
+	spConfig = spClient.SpConfig_t{
 		// Url:    "wss://eshail.batc.org.uk/wb/fft/fft_ea7kirsatcontroller:443/",
 		// Origin: "http://eshail.batc.org.uk/wb",
 		Origin: "https://eshail.batc.org.uk/",
 		Url:    "wss://eshail.batc.org.uk/wb/fft/fft_ea7kirsatcontroller:443/wss",
 	}
-	lmConfig = lmClient.LmConfig{
+	lmConfig = lmClient.LmConfig_t{
 		Folder:     lmFolder + "longmynd/",
 		Binary:     lmFolder + "longmynd/longmynd",
 		Offset:     float64(9750000),
 		StatusFifo: lmFolder + "longmynd/longmynd_main_status",
 	}
-	fpConfig = lmClient.FpConfig{
+	fpConfig = lmClient.FpConfig_t{
 		Binary: "/usr/bin/ffplay",
 		TsFifo: lmFolder + "longmynd/longmynd_main_ts",
 		Volume: "100",
 	}
-	tuConfig = rxControl.TuConfig{
+	tuConfig = rxControl.TuConfig_t{
 		Band:                 "Narrow",
 		WideSymbolrate:       "1000",
 		NarrowSymbolrate:     "333",
@@ -92,14 +92,6 @@ var (
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	// logFile, err := os.OpenFile("/home/pi/Q100/receiver.log", os.O_APPEND|os.O_RDWR|os.O_CREATE, 0644)
-	// if err != nil {
-	// 	fmt.Println("failed to open log file:", err)
-	// 	os.Exit(1)
-	// }
-	// // qLog.SetOutput(os.Stderr)
-	// qLog.SetOutput(logFile)
-	// defer // log.Close()
 
 	log.Printf("INFO ----- q100receiver Opened -----")
 
@@ -107,8 +99,8 @@ func main() {
 	go spClient.Start(ctx, spConfig, spChannel)
 
 	// TODO: implement with a done channel or a context.Cancel
-	rxControl.Start(tuConfig, tuChannel)
 	lmClient.Start(lmConfig, fpConfig, lmChannel)
+	rxControl.Start(tuConfig, tuChannel)
 
 	go func() {
 		os.Setenv("DISPLAY", ":0") // required for X11
@@ -333,7 +325,7 @@ func (ui *UI) q100_TopStatusRow(gtx C) D {
 	)
 }
 
-// Returns a single Selector as [ button label button ]
+// Returns a single Selector_t as [ button label button ]
 func (ui *UI) q100_Selector(gtx C, dec, inc *widget.Clickable, value string, btnWidth, lblWidth unit.Dp) D {
 	inset := layout.Inset{
 		Top:    2,

@@ -41,20 +41,20 @@ type LongmyndData struct {
 }
 
 type (
-	LmConfig struct {
+	LmConfig_t struct {
 		Folder     string
 		Binary     string
 		Offset     float64
 		StatusFifo string
 	}
-	FpConfig struct {
+	FpConfig_t struct {
 		Binary string
 		TsFifo string
 		Volume string
 	}
 )
 
-func Start(lmc LmConfig, fpc FpConfig, ch chan LongmyndData) {
+func Start(lmc LmConfig_t, fpc FpConfig_t, ch chan LongmyndData) {
 	lmcfg = lmc
 	fpcfg = fpc
 	lmChannel = ch
@@ -109,8 +109,8 @@ func (p *LongmyndData) resetPartial() {
 }
 
 var (
-	lmcfg          LmConfig
-	fpcfg          FpConfig
+	lmcfg          LmConfig_t
+	fpcfg          FpConfig_t
 	lmChannel      chan LongmyndData
 	lmCmd          *exec.Cmd
 	ffPlayCmd      *exec.Cmd

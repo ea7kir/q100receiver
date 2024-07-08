@@ -13,7 +13,7 @@ import (
 // BEGIN API ****************************************************
 
 type (
-	TuConfig struct {
+	TuConfig_t struct {
 		Band                 string
 		WideFrequency        string
 		WideSymbolrate       string
@@ -29,17 +29,17 @@ type (
 )
 
 var (
-	TuData_v   TuData_t
+	tuData     TuData_t
 	dataChan   *chan TuData_t
-	Band       Selector
-	SymbolRate Selector
-	Frequency  Selector
+	Band       Selector_t
+	SymbolRate Selector_t
+	Frequency  Selector_t
 
 	IsTuned  = false
 	IsOffset = false
 )
 
-func Start(cfg TuConfig, ch chan TuData_t) {
+func Start(cfg TuConfig_t, ch chan TuData_t) {
 	dataChan = &ch
 
 	Band = newSelector(const_BAND_LIST, cfg.Band)
@@ -86,14 +86,14 @@ func SetOffset() {
 	}
 }
 
-type Selector struct {
+type Selector_t struct {
 	currIndex int
 	lastIndex int
 	list      []string
 	Value     string
 }
 
-func IncBandSelector(st *Selector) {
+func IncBandSelector(st *Selector_t) {
 	if st.currIndex < st.lastIndex {
 		st.currIndex++
 		st.Value = st.list[st.currIndex]
@@ -101,7 +101,7 @@ func IncBandSelector(st *Selector) {
 	}
 }
 
-func DecBandSelector(st *Selector) {
+func DecBandSelector(st *Selector_t) {
 	if st.currIndex > 0 {
 		st.currIndex--
 		st.Value = st.list[st.currIndex]
@@ -109,7 +109,7 @@ func DecBandSelector(st *Selector) {
 	}
 }
 
-func IncSelector(st *Selector) {
+func IncSelector(st *Selector_t) {
 	if st.currIndex < st.lastIndex {
 		st.currIndex++
 		st.Value = st.list[st.currIndex]
@@ -117,7 +117,7 @@ func IncSelector(st *Selector) {
 	}
 }
 
-func DecSelector(st *Selector) {
+func DecSelector(st *Selector_t) {
 	if st.currIndex > 0 {
 		st.currIndex--
 		st.Value = st.list[st.currIndex]
@@ -206,14 +206,14 @@ var (
 		"10499.25 / 27",
 	}
 
-	beaconSymbolRate     Selector
-	beaconFrequency      Selector
-	wideSymbolRate       Selector
-	narrowSymbolRate     Selector
-	veryNarrowSymbolRate Selector
-	wideFrequency        Selector
-	narrowFrequency      Selector
-	veryNarrowFrequency  Selector
+	beaconSymbolRate     Selector_t
+	beaconFrequency      Selector_t
+	wideSymbolRate       Selector_t
+	narrowSymbolRate     Selector_t
+	veryNarrowSymbolRate Selector_t
+	wideFrequency        Selector_t
+	narrowFrequency      Selector_t
+	veryNarrowFrequency  Selector_t
 )
 
 func indexInList(list []string, with string) int { // TODO: add error check
@@ -225,9 +225,9 @@ func indexInList(list []string, with string) int { // TODO: add error check
 	return 0
 }
 
-func newSelector(values []string, with string) Selector {
+func newSelector(values []string, with string) Selector_t {
 	index := indexInList(values, with)
-	st := Selector{
+	st := Selector_t{
 		currIndex: index,
 		lastIndex: len(values) - 1,
 		list:      values,
@@ -257,7 +257,7 @@ func switchBand() { // TODO: should switch back to previosly use settings
 func somethingChanged() {
 	lmClient.UnTune()
 	IsTuned = false
-	TuData_v.MarkerCentre = const_frequencyCentre[Frequency.Value] / 9.18 // NOTE: 9.18 is a temporary kludge
-	TuData_v.MarkerWidth = const_symbolRateWidth[SymbolRate.Value]
-	*dataChan <- TuData_v
+	tuData.MarkerCentre = const_frequencyCentre[Frequency.Value] / 9.18 // NOTE: 9.18 is a temporary kludge
+	tuData.MarkerWidth = const_symbolRateWidth[SymbolRate.Value]
+	*dataChan <- tuData
 }
