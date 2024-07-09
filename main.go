@@ -101,7 +101,7 @@ func main() {
 
 	// TODO: implement with a done channel or a context.Cancel
 	// go lmClient.ReadLonmyndStatus(ctx, lmConfig, fpConfig, lmChannel)
-	go lmClient.ReadLonmyndStatus(lmConfig, fpConfig, lmChannel)
+	go lmClient.ReadLonmyndStatus(ctx, lmConfig, fpConfig, lmChannel)
 
 	// go rxControl.HandleUiCommands(ctx, tuConfig, tuChannel) // , tuCmdChan)
 	rxControl.Start(ctx, tuConfig, tuChannel)

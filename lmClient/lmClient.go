@@ -7,6 +7,7 @@ package lmClient
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -54,15 +55,6 @@ type (
 	}
 )
 
-// func ReadLonmyndStatus(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, ch chan LongmyndData) {
-func ReadLonmyndStatus(lmc LmConfig_t, fpc FpConfig_t, ch chan LongmyndData_t) {
-	lmcfg = lmc
-	fpcfg = fpc
-	lmChannel = ch
-	// stopFfPlayAndLongmynd()
-	readLongmynd(lmcfg.StatusFifo, lmcfg.Offset, lmChannel)
-}
-
 func Stop() {
 	log.Printf("INFO LmReader will stop... - NOT IMPLEMENTED")
 	// TODO: implement a better way to stop longmynd and ffplay
@@ -70,13 +62,26 @@ func Stop() {
 	log.Printf("INFO LmReader has stopped")
 }
 
+var (
+	fifoPath string
+	offset   float64
+)
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 // Reads the longmynd status fifo and translates to formated strings.
 //
 //	The results are sent to a channel of type LongmyndData. When no valid signal is being
 //	received, the LongmyndData fileds will be filled with default values - normally a dash.
-func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan LongmyndData_t) {
+//
+// func ReadLonmyndStatus(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, ch chan LongmyndData) {
+func ReadLonmyndStatus(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, lonymyndChannel chan LongmyndData_t) {
+	lmcfg = lmc // TODO: this may cause a problem when implement calibrate using offest
+	fpcfg = fpc
+	// lmChannel = lmChanel
+	offset = lmcfg.Offset // TODO: ditto for calibrate
+	fifoPath = lmcfg.StatusFifo
+
 	liveData.reset()
 	cacheData.reset()
 	esPair.reset()
@@ -189,9 +194,9 @@ func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan Longmynd
 			lonymyndChannel <- *liveData
 			*cacheData = *liveData
 		}
-	}
+	} // for
 	// log.Printf("INFO lmreader has stopped")
-}
+} // func
 
 // /////////////////////////////////////////////////////////////////////////////////////////
 func Tune(frequency, sysmbolRate string) {
@@ -234,9 +239,9 @@ func (p *LongmyndData_t) resetPartial() {
 }
 
 var (
-	lmcfg          LmConfig_t
-	fpcfg          FpConfig_t
-	lmChannel      chan LongmyndData_t
+	lmcfg LmConfig_t
+	fpcfg FpConfig_t
+	// lmChannel      chan LongmyndData_t
 	lmCmd          *exec.Cmd
 	ffPlayCmd      *exec.Cmd
 	ffPlayIsACtive bool // TODO: temp fix to prevent more than one ffplay instance
@@ -266,7 +271,7 @@ var (
 		{"32APSK", "5/6"}, {"32APSK", "8/9"}, {"32APSK", "9/10"},
 	}
 
-	kModeFecThreshold = map[string]float64{
+	const_ModeFecThreshold = map[string]float64{
 		"DVB-S 1/2":          1.7,
 		"DVB-S 2/3":          3.3,
 		"DVB-S 3/4":          4.2,
@@ -303,7 +308,7 @@ var (
 		"DVB-S2 32APSK 9/10": 16.1,
 	}
 
-	kAgc1 = [...][2]int{
+	const_Agc1 = [...][2]int{
 		{1, -70},
 		{10, -69},
 		{21800, -68},
@@ -343,7 +348,7 @@ var (
 		{37700, -35},
 	}
 
-	kAgc2 = [...][2]int{
+	const_Agc2 = [...][2]int{
 		{182, -71},
 		{200, -72},
 		{225, -73},
@@ -676,10 +681,9 @@ func id18_setConstellationAndFecAndMargin(modcodStr string) {
 		return
 	}
 
-	// float_threshold := kModeFecThreshold[key]
-	float_threshold, ok := kModeFecThreshold[key]
+	float_threshold, ok := const_ModeFecThreshold[key]
 	if !ok {
-		log.Printf("WARN kModeFecThreshold key not foundr")
+		log.Printf("WARN const_ModeFecThreshold key not found")
 		liveData.DbMargin = kDash
 		return
 	}
@@ -722,7 +726,7 @@ func id27_setDbmPower(agc2Str string) {
 	p := 0
 	v := agcPair.the1stAgcValue
 	if v > 0 {
-		for _, n := range kAgc1 {
+		for _, n := range const_Agc1 {
 			if n[0] >= v {
 				p = n[1]
 				break
@@ -730,7 +734,7 @@ func id27_setDbmPower(agc2Str string) {
 		}
 	} else {
 		v = agcPair.the2ndAgcValue
-		for _, n := range kAgc2 {
+		for _, n := range const_Agc2 {
 			if n[0] >= v {
 				p = n[1]
 				break
