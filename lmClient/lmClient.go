@@ -7,7 +7,6 @@ package lmClient
 
 import (
 	"bufio"
-	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -20,7 +19,7 @@ import (
 // BEGIN API ********************************************************
 
 // Represenst all the Longmynd status data being receved
-type LongmyndData struct {
+type LongmyndData_t struct {
 	StatusMsg     string
 	State         string
 	Frequency     string
@@ -56,12 +55,12 @@ type (
 )
 
 // func ReadLonmyndStatus(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, ch chan LongmyndData) {
-func Start(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, ch chan LongmyndData) {
+func ReadLonmyndStatus(lmc LmConfig_t, fpc FpConfig_t, ch chan LongmyndData_t) {
 	lmcfg = lmc
 	fpcfg = fpc
 	lmChannel = ch
 	// stopFfPlayAndLongmynd()
-	go readLongmynd(ctx, lmcfg.StatusFifo, lmcfg.Offset, lmChannel)
+	readLongmynd(lmcfg.StatusFifo, lmcfg.Offset, lmChannel)
 }
 
 func Stop() {
@@ -71,6 +70,130 @@ func Stop() {
 	log.Printf("INFO LmReader has stopped")
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////
+
+// Reads the longmynd status fifo and translates to formated strings.
+//
+//	The results are sent to a channel of type LongmyndData. When no valid signal is being
+//	received, the LongmyndData fileds will be filled with default values - normally a dash.
+func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan LongmyndData_t) {
+	liveData.reset()
+	cacheData.reset()
+	esPair.reset()
+
+	isLocked := false
+
+	lonymyndChannel <- *liveData
+
+	// will hang here until longmynd starts for the fiesrt time
+	file, err := os.OpenFile(fifoPath, os.O_CREATE, os.ModeNamedPipe)
+	if err != nil {
+		log.Printf("WARN Failed to open '%v' fifo %v: ", fifoPath, err)
+		return
+	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+
+	log.Printf("INFO Decode forever loop has started")
+
+	for {
+		// TODO: select to quite goes here ?
+
+		rawStr, err := reader.ReadString(10) // delimited by char(10) == LF
+		if err != nil {
+			//log.Printf("ERROR reading fifo: %v", err)
+			liveData.reset()
+			cacheData.reset()
+			lonymyndChannel <- *liveData
+			// time.Sleep(100 * time.Millisecond)
+			continue
+		}
+
+		lmId, lmVal, err := idAndValFromString(rawStr)
+		if err != nil {
+			log.Printf("WARN Returned from idAndValFromString: %v", err)
+			continue
+		}
+
+		switch lmId {
+		case 1: // State
+			id1_setState(lmVal)
+			isLocked = liveData.State == kLocked
+			if !isLocked { // if not locked, reset most status
+				liveData.resetPartial()
+				cacheData.reset()
+				esPair.reset()
+				agcPair.reset()
+				lonymyndChannel <- *liveData
+				// time.Sleep(5 * time.Millisecond)
+				continue
+			}
+		// case 2: // LNA Gain - On devices that have LNA Amplifiers this represents the two gain sent as N, where n = (lna_gain<<5) | lna_vgo. Though not actually linear, n can be usefully treated as a single byte representing the gain of the amplifier
+		// case 3: // Puncture Rate - During a search this is the pucture rate that is being trialled. When locked this is the pucture rate detected in the stream. Sent as a single value, n, where the pucture rate is n/(n+1)
+		// case 4: // I Symbol Power - Measure of the current power being seen in the I symbols
+		// case 5: // Q Symbol Power - Measure of the current power being seen in the Q symbols
+		case 6: // Carrier Frequency - During a search this is the carrier frequency being trialled. When locked this is the Carrier Frequency detected in the stream. Sent in KHz
+			id6_setFrequency(lmVal, offset)
+		// case 7: // I Constellation - Single signed byte representing the voltage of a sampled I point
+		// case 8: // Q Constellation - Single signed byte representing the voltage of a sampled Q point
+		case 9: // Symbol Rate - During a search this is the symbol rate being trialled.  When locked this is the symbol rate detected in the stream
+			id9_setSymbolRate(lmVal)
+		// case 10: // Viterbi Error Rate - Viterbi correction rate as a percentage * 100
+		// case 11: // BER - Bit Error Rate as a Percentage * 100
+		case 12: // MER - Modulation Error Ratio in dB * 10
+			id12_setDbMer(lmVal)
+		case 13: // Service Provider - TS Service Provider Name
+			id13_setProvider(lmVal)
+		case 14: // Service Provider Service - TS Service Name
+			id14_setService(lmVal)
+		case 15: // Null Ratio - Ratio of Nulls in TS as percentage
+			id15_setNullRatio(lmVal)
+		case 16: // The PID numbers themselves are fairly arbitrary, will vary based on the transmitted signal and don't really mean anything in a single program multiplex.
+			id16_setEsPid(lmVal)
+		case 17: // ES TYPE - Elementary Stream Type (repeated as pair with 16 for each ES)
+			id17_setEsType(lmVal)
+		case 18: // MODCOD - Received Modulation & Coding Rate. See MODCOD Lookup Table below
+			id18_setConstellationAndFecAndMargin(lmVal)
+		// case 19: // Short Frames - 1 if received signal is using Short Frames, 0 otherwise (DVB-S2 only)
+		// case 20: // Pilot Symbols - 1 if received signal is using Pilot Symbols, 0 otherwise (DVB-S2 only)
+		// case 21: // LDPC Error Count - LDPC Corrected Errors in last frame (DVB-S2 only)
+		// case 22: // BCH Error Count - BCH Corrected Errors in last frame (DVB-S2 only)
+		// case 23: // BCH Uncorrected - 1 if some BCH-detected errors were not able to be corrected, 0 otherwise (DVB-S2 only)
+		// case 24: // LNB Voltage Enabled - 1 if LNB Voltage Supply is enabled, 0 otherwise (LNB Voltage Supply requires add-on board)
+		// case 25: // LNB H Polarisation - 1 if LNB Voltage Supply is configured for Horizontal Polarisation (18V), 0 otherwise (LNB Voltage Supply requires add-on board)
+		case 26: // AGC1 Gain - Gain value of AGC1 (0: Signal too weak, 65535: Signal too strong)
+			id26_setDbmPower(lmVal)
+		case 27: // AGC2 Gain - Gain value of AGC2 (0: Minimum Gain, 65535: Maximum Gain)
+			id27_setDbmPower(lmVal)
+		} // switch
+
+		if isTuned && isLocked && !isPlaying {
+			startFfplay()
+		}
+		if isTuned && !isLocked && isPlaying {
+			stopFfplay()
+		}
+		if !isTuned && isPlaying {
+			isLocked = false
+			stopFfPlayAndLongmynd()
+		}
+
+		if isLocked {
+			liveData.StatusMsg = fmt.Sprintf("%s : %s : %s", liveData.State, liveData.Provider, liveData.Service)
+		} else {
+			liveData.StatusMsg = liveData.State
+		}
+
+		if *liveData != *cacheData {
+			lonymyndChannel <- *liveData
+			*cacheData = *liveData
+		}
+	}
+	// log.Printf("INFO lmreader has stopped")
+}
+
+// /////////////////////////////////////////////////////////////////////////////////////////
 func Tune(frequency, sysmbolRate string) {
 	log.Printf("INFO ------ WILL TUNE")
 	startLongmynd(frequency, sysmbolRate) // TODO: pass arguments
@@ -84,12 +207,12 @@ func UnTune() {
 
 // END API ********************************************************
 
-func (p *LongmyndData) reset() {
+func (p *LongmyndData_t) reset() {
 	p.resetPartial()
 	p.State = kDash
 }
 
-func (p *LongmyndData) resetPartial() {
+func (p *LongmyndData_t) resetPartial() {
 	p.StatusMsg = "Not tuned"
 	// p.State = kDash
 	p.Frequency = kDash
@@ -113,7 +236,7 @@ func (p *LongmyndData) resetPartial() {
 var (
 	lmcfg          LmConfig_t
 	fpcfg          FpConfig_t
-	lmChannel      chan LongmyndData
+	lmChannel      chan LongmyndData_t
 	lmCmd          *exec.Cmd
 	ffPlayCmd      *exec.Cmd
 	ffPlayIsACtive bool // TODO: temp fix to prevent more than one ffplay instance
@@ -317,132 +440,11 @@ const (
 var (
 	esPair    = esPairStuct{}
 	agcPair   = new(agcPairStuct)
-	liveData  = new(LongmyndData)
-	cacheData = new(LongmyndData)
+	liveData  = new(LongmyndData_t)
+	cacheData = new(LongmyndData_t)
 	isTuned   bool
 	isPlaying bool
 )
-
-// Reads the longmynd status fifo and translates to formated strings.
-//
-//	The results are sent to a channel of type LongmyndData. When no valid signal is being
-//	received, the LongmyndData fileds will be filled with default values - normally a dash.
-func readLongmynd(ctx context.Context, fifoPath string, offset float64, lonymyndChannel chan LongmyndData) {
-	liveData.reset()
-	cacheData.reset()
-	esPair.reset()
-
-	isLocked := false
-
-	lonymyndChannel <- *liveData
-
-	// will hang here until longmynd starts for the fiesrt time
-	file, err := os.OpenFile(fifoPath, os.O_CREATE, os.ModeNamedPipe)
-	if err != nil {
-		log.Printf("WARN Failed to open '%v' fifo %v: ", fifoPath, err)
-		return
-	}
-	defer file.Close()
-
-	reader := bufio.NewReader(file)
-
-	log.Printf("INFO Decode forever loop has started")
-
-	for {
-		// TODO: select to quite goes here ?
-
-		rawStr, err := reader.ReadString(10) // delimited by char(10) == LF
-		if err != nil {
-			//log.Printf("ERROR reading fifo: %v", err)
-			liveData.reset()
-			cacheData.reset()
-			lonymyndChannel <- *liveData
-			// time.Sleep(100 * time.Millisecond)
-			continue
-		}
-
-		lmId, lmVal, err := idAndValFromString(rawStr)
-		if err != nil {
-			log.Printf("WARN Returned from idAndValFromString: %v", err)
-			continue
-		}
-
-		switch lmId {
-		case 1: // State
-			id1_setState(lmVal)
-			isLocked = liveData.State == kLocked
-			if !isLocked { // if not locked, reset most status
-				liveData.resetPartial()
-				cacheData.reset()
-				esPair.reset()
-				agcPair.reset()
-				lonymyndChannel <- *liveData
-				// time.Sleep(5 * time.Millisecond)
-				continue
-			}
-		// case 2: // LNA Gain - On devices that have LNA Amplifiers this represents the two gain sent as N, where n = (lna_gain<<5) | lna_vgo. Though not actually linear, n can be usefully treated as a single byte representing the gain of the amplifier
-		// case 3: // Puncture Rate - During a search this is the pucture rate that is being trialled. When locked this is the pucture rate detected in the stream. Sent as a single value, n, where the pucture rate is n/(n+1)
-		// case 4: // I Symbol Power - Measure of the current power being seen in the I symbols
-		// case 5: // Q Symbol Power - Measure of the current power being seen in the Q symbols
-		case 6: // Carrier Frequency - During a search this is the carrier frequency being trialled. When locked this is the Carrier Frequency detected in the stream. Sent in KHz
-			id6_setFrequency(lmVal, offset)
-		// case 7: // I Constellation - Single signed byte representing the voltage of a sampled I point
-		// case 8: // Q Constellation - Single signed byte representing the voltage of a sampled Q point
-		case 9: // Symbol Rate - During a search this is the symbol rate being trialled.  When locked this is the symbol rate detected in the stream
-			id9_setSymbolRate(lmVal)
-		// case 10: // Viterbi Error Rate - Viterbi correction rate as a percentage * 100
-		// case 11: // BER - Bit Error Rate as a Percentage * 100
-		case 12: // MER - Modulation Error Ratio in dB * 10
-			id12_setDbMer(lmVal)
-		case 13: // Service Provider - TS Service Provider Name
-			id13_setProvider(lmVal)
-		case 14: // Service Provider Service - TS Service Name
-			id14_setService(lmVal)
-		case 15: // Null Ratio - Ratio of Nulls in TS as percentage
-			id15_setNullRatio(lmVal)
-		case 16: // The PID numbers themselves are fairly arbitrary, will vary based on the transmitted signal and don't really mean anything in a single program multiplex.
-			id16_setEsPid(lmVal)
-		case 17: // ES TYPE - Elementary Stream Type (repeated as pair with 16 for each ES)
-			id17_setEsType(lmVal)
-		case 18: // MODCOD - Received Modulation & Coding Rate. See MODCOD Lookup Table below
-			id18_setConstellationAndFecAndMargin(lmVal)
-		// case 19: // Short Frames - 1 if received signal is using Short Frames, 0 otherwise (DVB-S2 only)
-		// case 20: // Pilot Symbols - 1 if received signal is using Pilot Symbols, 0 otherwise (DVB-S2 only)
-		// case 21: // LDPC Error Count - LDPC Corrected Errors in last frame (DVB-S2 only)
-		// case 22: // BCH Error Count - BCH Corrected Errors in last frame (DVB-S2 only)
-		// case 23: // BCH Uncorrected - 1 if some BCH-detected errors were not able to be corrected, 0 otherwise (DVB-S2 only)
-		// case 24: // LNB Voltage Enabled - 1 if LNB Voltage Supply is enabled, 0 otherwise (LNB Voltage Supply requires add-on board)
-		// case 25: // LNB H Polarisation - 1 if LNB Voltage Supply is configured for Horizontal Polarisation (18V), 0 otherwise (LNB Voltage Supply requires add-on board)
-		case 26: // AGC1 Gain - Gain value of AGC1 (0: Signal too weak, 65535: Signal too strong)
-			id26_setDbmPower(lmVal)
-		case 27: // AGC2 Gain - Gain value of AGC2 (0: Minimum Gain, 65535: Maximum Gain)
-			id27_setDbmPower(lmVal)
-		} // switch
-
-		if isTuned && isLocked && !isPlaying {
-			startFfplay()
-		}
-		if isTuned && !isLocked && isPlaying {
-			stopFfplay()
-		}
-		if !isTuned && isPlaying {
-			isLocked = false
-			stopFfPlayAndLongmynd()
-		}
-
-		if isLocked {
-			liveData.StatusMsg = fmt.Sprintf("%s : %s : %s", liveData.State, liveData.Provider, liveData.Service)
-		} else {
-			liveData.StatusMsg = liveData.State
-		}
-
-		if *liveData != *cacheData {
-			lonymyndChannel <- *liveData
-			*cacheData = *liveData
-		}
-	}
-	// log.Printf("INFO lmreader has stopped")
-}
 
 /***********************************************************
 	functions called from the main switch statement

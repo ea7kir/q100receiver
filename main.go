@@ -86,8 +86,8 @@ var (
 	tuChannel = make(chan rxControl.TuData_t, 1)
 	spData    spClient.SpData_t
 	spChannel = make(chan spClient.SpData_t) //, 5)
-	lmData    lmClient.LongmyndData
-	lmChannel = make(chan lmClient.LongmyndData) //, 5)
+	lmData    lmClient.LongmyndData_t
+	lmChannel = make(chan lmClient.LongmyndData_t) //, 5)
 )
 
 func main() {
@@ -101,7 +101,7 @@ func main() {
 
 	// TODO: implement with a done channel or a context.Cancel
 	// go lmClient.ReadLonmyndStatus(ctx, lmConfig, fpConfig, lmChannel)
-	lmClient.Start(ctx, lmConfig, fpConfig, lmChannel)
+	go lmClient.ReadLonmyndStatus(lmConfig, fpConfig, lmChannel)
 
 	// go rxControl.HandleUiCommands(ctx, tuConfig, tuChannel) // , tuCmdChan)
 	rxControl.Start(ctx, tuConfig, tuChannel)
