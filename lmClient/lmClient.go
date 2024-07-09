@@ -55,7 +55,7 @@ type (
 	}
 )
 
-func Stop() {
+func stop() {
 	log.Printf("INFO LmReader will stop... - NOT IMPLEMENTED")
 	// TODO: implement a better way to stop longmynd and ffplay
 	stopFfPlayAndLongmynd()
@@ -96,14 +96,21 @@ func ReadLonmyndStatus(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, lony
 		log.Printf("WARN Failed to open '%v' fifo %v: ", fifoPath, err)
 		return
 	}
-	defer file.Close()
+	// defer file.Close()
 
 	reader := bufio.NewReader(file)
 
 	log.Printf("INFO Decode forever loop has started")
 
 	for {
-		// TODO: select to quite goes here ?
+		select {
+		case <-ctx.Done():
+			stop()
+			file.Close()
+			log.Printf("INFO ----- lmClient has stopped")
+			return
+		default:
+		}
 
 		rawStr, err := reader.ReadString(10) // delimited by char(10) == LF
 		if err != nil {

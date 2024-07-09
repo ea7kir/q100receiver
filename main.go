@@ -31,6 +31,7 @@ import (
 	"q100receiver/lmClient"
 	"q100receiver/rxControl"
 	"q100receiver/spClient"
+	"syscall"
 	"time"
 
 	"github.com/ajstarks/giocanvas"
@@ -104,7 +105,7 @@ func main() {
 	go lmClient.ReadLonmyndStatus(ctx, lmConfig, fpConfig, lmChannel)
 
 	// go rxControl.HandleUiCommands(ctx, tuConfig, tuChannel) // , tuCmdChan)
-	rxControl.Start(ctx, tuConfig, tuChannel)
+	rxControl.Start(tuConfig, tuChannel)
 
 	go func() {
 		os.Setenv("DISPLAY", ":0") // required for X11
@@ -124,7 +125,7 @@ func main() {
 		// TODO: implement with a done channel or a context.Cancel
 		rxControl.Stop()
 
-		lmClient.Stop()
+		// lmClient.Stop()
 
 		// TODO: control this with a flag
 		if !true { // change to true for powerdown
@@ -146,8 +147,13 @@ func main() {
 }
 
 func loop(w *app.Window) error {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
+	// ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	// defer stop()
+
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	// defer signal.Stop(quit)
+
 	ui := UI{
 		// th: material.NewTheme(gofont.Collection()),
 		th: material.NewTheme(),
@@ -158,14 +164,16 @@ func loop(w *app.Window) error {
 	var ops op.Ops
 	// Capture the context done channel in a variable so that we can nil it
 	// out after it closes and prevent its select case from firing again.
-	done := ctx.Done()
+	// done := ctx.Done()
 
 	for {
 		select {
-		case <-done:
+		// case <-ctx.Done():
+		case <-interrupt:
 			// When the context cancels, assign the done channel to nil to
 			// prevent it from firing over and over.
-			done = nil
+			// done = nil
+			log.Printf("INTERRUPT")
 			return nil
 			// w.Perform(system.ActionClose)
 		case tuData = <-tuChannel:
@@ -185,7 +193,8 @@ func loop(w *app.Window) error {
 				showAboutBox()
 			}
 			if ui.shutdown.Clicked(gtx) {
-				return nil
+				interrupt <- syscall.SIGINT
+				// return nil
 				// w.Perform(system.ActionClose)
 			}
 			if ui.decBand.Clicked(gtx) {

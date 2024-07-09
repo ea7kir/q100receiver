@@ -6,7 +6,6 @@
 package rxControl
 
 import (
-	"context"
 	"log"
 	"q100receiver/lmClient"
 )
@@ -41,7 +40,7 @@ var (
 )
 
 // func HandleUiCommands(ctx, tuConfig, tuChannel) // , tuCmdChan)
-func Start(ctx context.Context, cfg TuConfig_t, ch chan TuData_t) {
+func Start(cfg TuConfig_t, ch chan TuData_t) {
 	dataChan = &ch
 
 	Band = newSelector(const_BAND_LIST, cfg.Band)
