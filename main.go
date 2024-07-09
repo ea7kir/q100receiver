@@ -84,8 +84,8 @@ var (
 var (
 	tuData    rxControl.TuData_t
 	tuChannel = make(chan rxControl.TuData_t, 1)
-	spData    spClient.SpData
-	spChannel = make(chan spClient.SpData) //, 5)
+	spData    spClient.SpData_t
+	spChannel = make(chan spClient.SpData_t) //, 5)
 	lmData    lmClient.LongmyndData
 	lmChannel = make(chan lmClient.LongmyndData) //, 5)
 )
@@ -96,11 +96,15 @@ func main() {
 	log.Printf("INFO ----- q100receiver Opened -----")
 
 	ctx, cancel := context.WithCancel(context.Background())
-	go spClient.Start(ctx, spConfig, spChannel)
+
+	go spClient.ReadSpectrumServer(ctx, spConfig, spChannel)
 
 	// TODO: implement with a done channel or a context.Cancel
-	lmClient.Start(lmConfig, fpConfig, lmChannel)
-	rxControl.Start(tuConfig, tuChannel)
+	// go lmClient.ReadLonmyndStatus(ctx, lmConfig, fpConfig, lmChannel)
+	lmClient.Start(ctx, lmConfig, fpConfig, lmChannel)
+
+	// go rxControl.HandleUiCommands(ctx, tuConfig, tuChannel) // , tuCmdChan)
+	rxControl.Start(ctx, tuConfig, tuChannel)
 
 	go func() {
 		os.Setenv("DISPLAY", ":0") // required for X11
@@ -119,8 +123,8 @@ func main() {
 
 		// TODO: implement with a done channel or a context.Cancel
 		rxControl.Stop()
+
 		lmClient.Stop()
-		// spClient.Stop()
 
 		// TODO: control this with a flag
 		if !true { // change to true for powerdown

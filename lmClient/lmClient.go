@@ -7,6 +7,7 @@ package lmClient
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -54,12 +55,13 @@ type (
 	}
 )
 
-func Start(lmc LmConfig_t, fpc FpConfig_t, ch chan LongmyndData) {
+// func ReadLonmyndStatus(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, ch chan LongmyndData) {
+func Start(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, ch chan LongmyndData) {
 	lmcfg = lmc
 	fpcfg = fpc
 	lmChannel = ch
 	// stopFfPlayAndLongmynd()
-	go readLongmynd(lmcfg.StatusFifo, lmcfg.Offset, lmChannel)
+	go readLongmynd(ctx, lmcfg.StatusFifo, lmcfg.Offset, lmChannel)
 }
 
 func Stop() {
@@ -325,7 +327,7 @@ var (
 //
 //	The results are sent to a channel of type LongmyndData. When no valid signal is being
 //	received, the LongmyndData fileds will be filled with default values - normally a dash.
-func readLongmynd(fifoPath string, offset float64, lonymyndChannel chan LongmyndData) {
+func readLongmynd(ctx context.Context, fifoPath string, offset float64, lonymyndChannel chan LongmyndData) {
 	liveData.reset()
 	cacheData.reset()
 	esPair.reset()

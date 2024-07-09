@@ -20,7 +20,7 @@ type (
 		Url    string
 		Origin string
 	}
-	SpData struct {
+	SpData_t struct {
 		Yp          []float32
 		BeaconLevel float32
 	}
@@ -30,7 +30,7 @@ var (
 	Xp = make([]float32, numPoints) // x coordinates from 0.0 to 100.0
 )
 
-func Start(ctx context.Context, cfg SpConfig_t, ch chan SpData) {
+func ReadSpectrumServer(ctx context.Context, cfg SpConfig_t, ch chan SpData_t) {
 	Xp[0] = 0
 	for i := 1; i < numPoints-1; i++ {
 		Xp[i] = 100.0 * (float32(i) / float32(numPoints))
@@ -57,7 +57,7 @@ func Start(ctx context.Context, cfg SpConfig_t, ch chan SpData) {
 		time.Sleep(time.Millisecond * 500)
 	}
 
-	var spData = SpData{
+	var spData = SpData_t{
 		Yp:          make([]float32, numPoints),
 		BeaconLevel: 0.5,
 	}
@@ -69,9 +69,8 @@ func Start(ctx context.Context, cfg SpConfig_t, ch chan SpData) {
 	for {
 		select {
 		case <-done:
-			log.Printf("INFO ----- SpClient will stop")
 			ws.Close()
-			log.Printf("INFO ----- SpClient has stopped")
+			log.Printf("INFO ----- spClient has stopped")
 			return
 		default:
 		}
