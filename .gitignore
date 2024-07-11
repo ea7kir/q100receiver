@@ -1,5 +1,5 @@
 # ignore executable binary
 q100receiver
-q100receiver-ok
+q100receiver-*
 # ignore tests
 *.test
