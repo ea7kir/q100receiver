@@ -17,50 +17,42 @@ import (
 	"strings"
 )
 
-// BEGIN API ********************************************************
-
 // Represenst all the Longmynd status data being receved
-type LongmyndData_t struct {
-	StatusMsg     string
-	State         string
-	Frequency     string
-	SymbolRate    string
-	DbMer         string
-	Provider      string
-	Service       string
-	NullRatio     string
-	PidPair1      string
-	PidPair2      string
-	VideoCodec    string
-	AudioCodec    string
-	Constellation string
-	Fec           string
-	Mode          string
-	DbMargin      string
-	DbmPower      string
-	FreqOffset    string
-}
-
 type (
+	LongmyndData_t struct {
+		StatusMsg     string
+		State         string
+		Frequency     string
+		SymbolRate    string
+		DbMer         string
+		Provider      string
+		Service       string
+		NullRatio     string
+		PidPair1      string
+		PidPair2      string
+		VideoCodec    string
+		AudioCodec    string
+		Constellation string
+		Fec           string
+		Mode          string
+		DbMargin      string
+		DbmPower      string
+		FreqOffset    string
+	}
+
 	LmConfig_t struct {
 		Folder     string
 		Binary     string
 		Offset     float64
 		StatusFifo string
 	}
+
 	FpConfig_t struct {
 		Binary string
 		TsFifo string
 		Volume string
 	}
 )
-
-func stop() {
-	log.Printf("INFO LmReader will stop... - NOT IMPLEMENTED")
-	// TODO: implement a better way to stop longmynd and ffplay
-	stopFfPlayAndLongmynd()
-	log.Printf("INFO LmReader has stopped")
-}
 
 var (
 	fifoPath string
@@ -78,7 +70,7 @@ var (
 func ReadLonmyndStatus(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, lonymyndChannel chan LongmyndData_t) {
 	lmcfg = lmc // TODO: this may cause a problem when implement calibrate using offest
 	fpcfg = fpc
-	// lmChannel = lmChanel
+
 	offset = lmcfg.Offset // TODO: ditto for calibrate
 	fifoPath = lmcfg.StatusFifo
 
@@ -96,18 +88,16 @@ func ReadLonmyndStatus(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, lony
 		log.Printf("WARN Failed to open '%v' fifo %v: ", fifoPath, err)
 		return
 	}
-	// defer file.Close()
 
 	reader := bufio.NewReader(file)
-
-	log.Printf("INFO Decode forever loop has started")
 
 	for {
 		select {
 		case <-ctx.Done():
-			stop()
+			// TODO: implement a better way to stop longmynd and ffplay
+			stopFfPlayAndLongmynd()
 			file.Close()
-			log.Printf("INFO ----- lmClient has stopped")
+			log.Printf("CANCEL ----- lmClient has cancelled")
 			return
 		default:
 		}
@@ -201,11 +191,9 @@ func ReadLonmyndStatus(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, lony
 			lonymyndChannel <- *liveData
 			*cacheData = *liveData
 		}
-	} // for
-	// log.Printf("INFO lmreader has stopped")
-} // func
+	}
+}
 
-// /////////////////////////////////////////////////////////////////////////////////////////
 func Tune(frequency, sysmbolRate string) {
 	log.Printf("INFO ------ WILL TUNE")
 	startLongmynd(frequency, sysmbolRate) // TODO: pass arguments

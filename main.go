@@ -70,7 +70,7 @@ var (
 		TsFifo: lmFolder + "longmynd/longmynd_main_ts",
 		Volume: "100",
 	}
-	tuConfig = rxControl.TuConfig_t{
+	rxConfig = rxControl.RxConfig_t{
 		Band:                 "Narrow",
 		WideSymbolrate:       "1000",
 		NarrowSymbolrate:     "333",
@@ -83,12 +83,13 @@ var (
 
 // local data
 var (
-	tuData    rxControl.TuData_t
-	tuChannel = make(chan rxControl.TuData_t, 1)
-	spData    spClient.SpData_t
-	spChannel = make(chan spClient.SpData_t) //, 5)
-	lmData    lmClient.LongmyndData_t
-	lmChannel = make(chan lmClient.LongmyndData_t) //, 5)
+	rxCmdChannel = make(chan rxControl.RxCmd_t, 5)
+	rxData       rxControl.RxData_t
+	rxChannel    = make(chan rxControl.RxData_t, 5)
+	spData       spClient.SpData_t
+	spChannel    = make(chan spClient.SpData_t, 5) //, 5)
+	lmData       lmClient.LongmyndData_t
+	lmChannel    = make(chan lmClient.LongmyndData_t, 5) //, 5)
 )
 
 func main() {
@@ -98,14 +99,9 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	go spClient.ReadSpectrumServer(ctx, spConfig, spChannel)
-
-	// TODO: implement with a done channel or a context.Cancel
-	// go lmClient.ReadLonmyndStatus(ctx, lmConfig, fpConfig, lmChannel)
-	go lmClient.ReadLonmyndStatus(ctx, lmConfig, fpConfig, lmChannel)
-
-	// go rxControl.HandleUiCommands(ctx, tuConfig, tuChannel) // , tuCmdChan)
-	rxControl.Start(tuConfig, tuChannel)
+	go spClient.ReadSpectrumServer(ctx, spConfig, spChannel)            // CANCEEL WORKING
+	go lmClient.ReadLonmyndStatus(ctx, lmConfig, fpConfig, lmChannel)   // CANCEEL WORKING SOMETIMES
+	go rxControl.HandleCommands(ctx, rxConfig, rxCmdChannel, rxChannel) // CANCEEL WORKING
 
 	go func() {
 		os.Setenv("DISPLAY", ":0") // required for X11
@@ -117,15 +113,10 @@ func main() {
 			log.Fatalf("FATAL failed to start loop: %v", err)
 		}
 
-		cancel() // TODO: this NOT WORKING !!!!!!!!!!!!!!!!!!!!!!
-		log.Printf("INFO ----- cancel() called")
+		cancel()
+		log.Printf("CANCEL IN MAIN ----- cancel() called")
 		// allow time to cancel all functions
-		time.Sleep(time.Second * 2)
-
-		// TODO: implement with a done channel or a context.Cancel
-		rxControl.Stop()
-
-		// lmClient.Stop()
+		time.Sleep(time.Second * 3)
 
 		// TODO: control this with a flag
 		if !true { // change to true for powerdown
@@ -175,8 +166,8 @@ func loop(w *app.Window) error {
 			// done = nil
 			log.Printf("INTERRUPT")
 			return nil
-			// w.Perform(system.ActionClose)
-		case tuData = <-tuChannel:
+			// w.Perform(system.ActionClose) // panics
+		case rxData = <-rxChannel:
 			w.Invalidate()
 		case lmData = <-lmChannel:
 			w.Invalidate()
@@ -194,32 +185,33 @@ func loop(w *app.Window) error {
 			}
 			if ui.shutdown.Clicked(gtx) {
 				interrupt <- syscall.SIGINT
+				// TODO: try using continue
 				// return nil
 				// w.Perform(system.ActionClose)
 			}
 			if ui.decBand.Clicked(gtx) {
-				rxControl.DecBandSelector(&rxControl.Band)
+				rxCmdChannel <- rxControl.CmdDecBand
 			}
 			if ui.incBand.Clicked(gtx) {
-				rxControl.IncBandSelector(&rxControl.Band)
+				rxCmdChannel <- rxControl.CmdIncBand
 			}
 			if ui.decSymbolRate.Clicked(gtx) {
-				rxControl.DecSelector(&rxControl.SymbolRate)
+				rxCmdChannel <- rxControl.CmdDecSymbolRate
 			}
 			if ui.incSymbolRate.Clicked(gtx) {
-				rxControl.IncSelector(&rxControl.SymbolRate)
+				rxCmdChannel <- rxControl.CmdIncSymbolRate
 			}
 			if ui.decFrequency.Clicked(gtx) {
-				rxControl.DecSelector(&rxControl.Frequency)
+				rxCmdChannel <- rxControl.CmdDecFrequency
 			}
 			if ui.incFrequency.Clicked(gtx) {
-				rxControl.IncSelector(&rxControl.Frequency)
+				rxCmdChannel <- rxControl.CmdIncFrequency
 			}
 			if ui.tune.Clicked(gtx) {
-				rxControl.Tune()
+				rxCmdChannel <- rxControl.CmdTune
 			}
 			if ui.freqOffset.Clicked(gtx) {
-				rxControl.SetOffset()
+				rxCmdChannel <- rxControl.CmdCalibrate
 			}
 
 			paint.Fill(gtx.Ops, q100color.screenGrey)
@@ -383,13 +375,13 @@ func (ui *UI) q100_MainTuningRow(gtx C) D {
 		Spacing: layout.SpaceEvenly,
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return ui.q100_Selector(gtx, &ui.decBand, &ui.incBand, rxControl.Band.Value, btnWidth, 100)
+			return ui.q100_Selector(gtx, &ui.decBand, &ui.incBand, rxData.CurBand, btnWidth, 100)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return ui.q100_Selector(gtx, &ui.decSymbolRate, &ui.incSymbolRate, rxControl.SymbolRate.Value, btnWidth, 50)
+			return ui.q100_Selector(gtx, &ui.decSymbolRate, &ui.incSymbolRate, rxData.CurSymbolRate, btnWidth, 50)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return ui.q100_Selector(gtx, &ui.decFrequency, &ui.incFrequency, rxControl.Frequency.Value, btnWidth, 100)
+			return ui.q100_Selector(gtx, &ui.decFrequency, &ui.incFrequency, rxData.CurFrequency, btnWidth, 100)
 		}),
 	)
 }
@@ -414,7 +406,7 @@ func (ui *UI) q100_SpectrumDisplay(gtx C) D {
 
 				canvas.Background(q100color.gfxBgd)
 				// tuning marker
-				canvas.Rect(tuData.MarkerCentre, 50, tuData.MarkerWidth, 100, q100color.gfxMarker)
+				canvas.Rect(rxData.MarkerCentre, 50, rxData.MarkerWidth, 100, q100color.gfxMarker)
 				// polygon
 				canvas.Polygon(spClient.Xp, spData.Yp, q100color.gfxGreen)
 				// graticule
@@ -521,14 +513,14 @@ func (ui *UI) q100_Column2Buttons(gtx C) D {
 			return inset.Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Dp(btnWidth)
 				gtx.Constraints.Min.Y = gtx.Dp(btnHeight)
-				return ui.q100_Button(gtx, &ui.tune, "TUNE", rxControl.IsTuned, q100color.buttonGreen)
+				return ui.q100_Button(gtx, &ui.tune, "TUNE", rxData.CurIsTuned, q100color.buttonGreen)
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
 			return inset.Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Dp(btnWidth)
 				gtx.Constraints.Min.Y = gtx.Dp(btnHeight)
-				return ui.q100_Button(gtx, &ui.freqOffset, lmData.FreqOffset, rxControl.IsOffset, q100color.buttonRed)
+				return ui.q100_Button(gtx, &ui.freqOffset, lmData.FreqOffset, rxData.CurIsOffset, q100color.buttonRed)
 			})
 		}),
 	)
