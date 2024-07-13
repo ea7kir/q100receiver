@@ -57,7 +57,9 @@ type (
 var (
 	fifoPath string
 	offset   float64
-	// frequencyOffset float64
+	// requestedFrequencyString string
+	frequencyRequestedKHz float64
+	frequencyErroorKHz    float64
 )
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -137,7 +139,7 @@ func ReadLonmyndStatus(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, lony
 		// case 4: // I Symbol Power - Measure of the current power being seen in the I symbols
 		// case 5: // Q Symbol Power - Measure of the current power being seen in the Q symbols
 		case 6: // Carrier Frequency - During a search this is the carrier frequency being trialled. When locked this is the Carrier Frequency detected in the stream. Sent in KHz
-			id6_setFrequency(lmVal, offset)
+			id6_setFrequency(lmVal) //, offset)
 		// case 7: // I Constellation - Single signed byte representing the voltage of a sampled I point
 		// case 8: // Q Constellation - Single signed byte representing the voltage of a sampled Q point
 		case 9: // Symbol Rate - During a search this is the symbol rate being trialled.  When locked this is the symbol rate detected in the stream
@@ -197,7 +199,16 @@ func ReadLonmyndStatus(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, lony
 
 func Tune(frequency, sysmbolRate string) {
 	log.Printf("INFO ------ WILL TUNE")
-	startLongmynd(frequency, sysmbolRate) // TODO: pass arguments
+	startLongmynd(frequency, sysmbolRate)
+
+	// trim "10491.50 / 00" to "10491.50"
+	frequencySplit := strings.SplitN(frequency, " ", 2)[0]
+	requestedFrequency, err := strconv.ParseFloat(frequencySplit, 64)
+	if err != nil {
+		log.Fatalf("FATAL bad lmFrequency: %v", err)
+
+	}
+	frequencyRequestedKHz = requestedFrequency * 1000
 }
 
 func UnTune() {
@@ -207,11 +218,11 @@ func UnTune() {
 }
 
 func EnableOffset() {
-	// offset = offset - frequencyOffset
+	offset = offset - frequencyErroorKHz
 }
 
 func DisableOffset() {
-	// offset = lmcfg.Offset
+	offset = lmcfg.Offset
 }
 
 // END API ********************************************************
@@ -243,9 +254,8 @@ func (p *LongmyndData_t) resetPartial() {
 }
 
 var (
-	lmcfg LmConfig_t
-	fpcfg FpConfig_t
-	// lmChannel      chan LongmyndData_t
+	lmcfg          LmConfig_t
+	fpcfg          FpConfig_t
 	lmCmd          *exec.Cmd
 	ffPlayCmd      *exec.Cmd
 	ffPlayIsACtive bool // TODO: temp fix to prevent more than one ffplay instance
@@ -480,17 +490,18 @@ func id1_setState(stateStr string) {
 }
 
 // Carrier Frequency - During a search this is the carrier frequency being trialled. When locked this is the Carrier Frequency detected in the stream. Sent in KHz
-func id6_setFrequency(carrierFrequencyStr string, offset float64) {
+func id6_setFrequency(carrierFrequencyStr string) { // , offset float64) {
 	kHzFloat, err := strconv.ParseFloat(carrierFrequencyStr, 64)
 	if err != nil {
 		log.Printf("WARN Bad carrierFrequencyStr: %v", err)
 		liveData.Frequency = kDash
 		return
 	}
-	frequency := (kHzFloat + offset) / 1000
-	// frequencyOffset = (frequency - 10491.5) * 1000.0
-	liveData.Frequency = fmt.Sprintf("%.2f", frequency)
-	// liveData.FreqOffset = fmt.Sprintf("%.1f", frequencyOffset / 1000)
+	receivedFrequencyKHz := kHzFloat + offset
+	liveData.Frequency = fmt.Sprintf("%.2f", receivedFrequencyKHz/1000)
+
+	frequencyErroorKHz = (receivedFrequencyKHz - frequencyRequestedKHz)
+	liveData.FreqOffset = fmt.Sprintf("%.3f", frequencyErroorKHz/1000)
 }
 
 // Symbol Rate - During a search this is the symbol rate being trialled.  When locked this is the symbol rate detected in the stream
@@ -770,7 +781,7 @@ func stopFfPlayAndLongmynd() {
 
 // Start Longmynd with frequency and symbolrate
 //
-//	ie. /home/pi/q100/longmynd/longmynd -S 0.6 requestKHzStr symbolRate
+//	ie. /home/pi/q100/longmynd/longmynd -S 0.6 requestKHzStr symbolRateStr
 func startLongmynd(frequency, symbolRate string) {
 	// trim "10491.50 / 00" to "10491.50"
 	frequencySplit := strings.SplitN(frequency, " ", 2)[0]

@@ -105,7 +105,7 @@ func setLongmynd() {
 		lmClient.UnTune()
 		isTuned = false
 	} else {
-		lmClient.Tune(rxData.CurFrequency, rxData.CurSymbolRate) // Frequency.value, SymbolRate.value)
+		lmClient.Tune(rxData.CurFrequency, rxData.CurSymbolRate)
 		isTuned = true
 	}
 	rxData.CurIsTuned = isTuned
