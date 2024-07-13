@@ -1,16 +1,13 @@
 #!/bin/bash
 
-# updated to GO 1.22 on March 2 2024
-
-GOVERSION=1.22.2
-
-echo Update Pi OS
 sudo apt update
 sudo apt -y full-upgrade
 sudo apt -y autoremove
 sudo apt clean
 
 ###################################################
+
+GOVERSION=1.22.5
 
 echo Installing Go $GOVERSION
 GOFILE=go$GOVERSION.linux-arm64.tar.gz
