@@ -57,6 +57,7 @@ type (
 var (
 	fifoPath string
 	offset   float64
+	// frequencyOffset float64
 )
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -203,6 +204,14 @@ func UnTune() {
 	log.Printf("INFO ------ WILL UNTUNE")
 	stopFfPlayAndLongmynd()
 
+}
+
+func EnableOffset() {
+	// offset = offset - frequencyOffset
+}
+
+func DisableOffset() {
+	// offset = lmcfg.Offset
 }
 
 // END API ********************************************************
@@ -479,8 +488,9 @@ func id6_setFrequency(carrierFrequencyStr string, offset float64) {
 		return
 	}
 	frequency := (kHzFloat + offset) / 1000
+	// frequencyOffset = (frequency - 10491.5) * 1000.0
 	liveData.Frequency = fmt.Sprintf("%.2f", frequency)
-	liveData.FreqOffset = "+500"
+	// liveData.FreqOffset = fmt.Sprintf("%.1f", frequencyOffset / 1000)
 }
 
 // Symbol Rate - During a search this is the symbol rate being trialled.  When locked this is the symbol rate detected in the stream

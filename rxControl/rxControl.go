@@ -100,15 +100,6 @@ func HandleCommands(ctx context.Context, cfg RxConfig_t, cmdCh chan RxCmd_t, dat
 	}
 }
 
-// func Stop() {
-// 	log.Printf("INFO Tuner will stop... - NOT IMPLEMENTED")
-// 	if isTuned {
-// 		lmClient.UnTune()
-// 		isTuned = false
-// 	}
-// 	log.Printf("INFO Tuner has stopped")
-// }
-
 func setLongmynd() {
 	if isTuned {
 		lmClient.UnTune()
@@ -121,10 +112,12 @@ func setLongmynd() {
 	dataChan <- rxData
 }
 
-func setOffset() {
+func setOffset() { // not sure if this is the right place. may lmClient would be better
 	if isOffset {
+		lmClient.DisableOffset()
 		isOffset = false
 	} else {
+		lmClient.EnableOffset()
 		isOffset = true
 	}
 	rxData.CurIsOffset = isOffset
@@ -169,8 +162,6 @@ func decSelector(st *selector_t) {
 		somethingChanged()
 	}
 }
-
-// END API ****************************************************
 
 var (
 	const_BAND_LIST = []string{
