@@ -301,7 +301,7 @@ func (ui *UI) q100_Label(gtx C, label string, txtColor color.NRGBA) D {
 
 // Returns 1 row of 2 buttons and a label for About, Status and Shutdown
 func (ui *UI) q100_TopStatusRow(gtx C) D {
-	const btnWidth = 30
+	const btnWidth = 50
 	inset := layout.Inset{
 		Top:    2,
 		Bottom: 2,
