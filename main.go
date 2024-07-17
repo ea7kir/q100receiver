@@ -48,48 +48,15 @@ import (
 	"golang.org/x/image/colornames"
 )
 
-// application directory for the configuration data
-const lmFolder = "/home/pi/Q100/"
-
-// configuration data
-var (
-	spConfig = spClient.SpConfig_t{
-		// Url:    "wss://eshail.batc.org.uk/wb/fft/fft_ea7kirsatcontroller:443/",
-		// Origin: "http://eshail.batc.org.uk/wb",
-		Origin: "https://eshail.batc.org.uk/",
-		Url:    "wss://eshail.batc.org.uk/wb/fft/fft_ea7kirsatcontroller:443/wss",
-	}
-	lmConfig = lmClient.LmConfig_t{
-		Folder:     lmFolder + "longmynd/",
-		Binary:     lmFolder + "longmynd/longmynd",
-		Offset:     float64(9750000),
-		StatusFifo: lmFolder + "longmynd/longmynd_main_status",
-	}
-	fpConfig = lmClient.FpConfig_t{
-		Binary: "/usr/bin/ffplay",
-		TsFifo: lmFolder + "longmynd/longmynd_main_ts",
-		Volume: "100",
-	}
-	rxConfig = rxControl.RxConfig_t{
-		Band:                 "Narrow",
-		WideSymbolrate:       "1000",
-		NarrowSymbolrate:     "333",
-		VeryNarrowSymbolRate: "125",
-		WideFrequency:        "10494.75 / 09",
-		NarrowFrequency:      "10499.25 / 27",
-		VeryNarrowFrequency:  "10496.00 / 14",
-	}
-)
-
 // local data
 var (
-	rxCmdChannel = make(chan rxControl.RxCmd_t, 5)
-	rxData       rxControl.RxData_t
-	rxChannel    = make(chan rxControl.RxData_t, 5)
-	spData       spClient.SpData_t
-	spChannel    = make(chan spClient.SpData_t, 5) //, 5)
-	lmData       lmClient.LongmyndData_t
-	lmChannel    = make(chan lmClient.LongmyndData_t, 5) //, 5)
+	rxCmdChan  = make(chan rxControl.RxCmd_t) //, 5)
+	rxData     rxControl.RxData_t
+	rxDataChan = make(chan rxControl.RxData_t) //, 5)
+	spData     spClient.SpData_t
+	spDataChan = make(chan spClient.SpData_t) //, 5)
+	lmData     lmClient.LmData_t
+	lmDataChan = make(chan lmClient.LmData_t) //, 5)
 )
 
 func main() {
@@ -99,9 +66,11 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	go spClient.ReadSpectrumServer(ctx, spConfig, spChannel)            // CANCEEL WORKING
-	go lmClient.ReadLonmyndStatus(ctx, lmConfig, fpConfig, lmChannel)   // CANCEEL WORKING SOMETIMES
-	go rxControl.HandleCommands(ctx, rxConfig, rxCmdChannel, rxChannel) // CANCEEL WORKING
+	go spClient.ReadSpectrumServer(ctx, spDataChan)
+
+	// go lmClient.ReadLonmyndStatus(ctx, lmCmdChan, lmDataChan)
+
+	go rxControl.HandleCommands(ctx, rxCmdChan, rxDataChan, lmDataChan)
 
 	go func() {
 		os.Setenv("DISPLAY", ":0") // required for X11
@@ -167,11 +136,11 @@ func loop(w *app.Window) error {
 			log.Printf("INTERRUPT")
 			return nil
 			// w.Perform(system.ActionClose) // panics
-		case rxData = <-rxChannel:
+		case rxData = <-rxDataChan:
 			w.Invalidate()
-		case lmData = <-lmChannel:
+		case lmData = <-lmDataChan:
 			w.Invalidate()
-		case spData = <-spChannel:
+		case spData = <-spDataChan:
 			w.Invalidate()
 		}
 
@@ -190,28 +159,28 @@ func loop(w *app.Window) error {
 				// w.Perform(system.ActionClose)
 			}
 			if ui.decBand.Clicked(gtx) {
-				rxCmdChannel <- rxControl.CmdDecBand
+				rxCmdChan <- rxControl.CmdDecBand
 			}
 			if ui.incBand.Clicked(gtx) {
-				rxCmdChannel <- rxControl.CmdIncBand
+				rxCmdChan <- rxControl.CmdIncBand
 			}
 			if ui.decSymbolRate.Clicked(gtx) {
-				rxCmdChannel <- rxControl.CmdDecSymbolRate
+				rxCmdChan <- rxControl.CmdDecSymbolRate
 			}
 			if ui.incSymbolRate.Clicked(gtx) {
-				rxCmdChannel <- rxControl.CmdIncSymbolRate
+				rxCmdChan <- rxControl.CmdIncSymbolRate
 			}
 			if ui.decFrequency.Clicked(gtx) {
-				rxCmdChannel <- rxControl.CmdDecFrequency
+				rxCmdChan <- rxControl.CmdDecFrequency
 			}
 			if ui.incFrequency.Clicked(gtx) {
-				rxCmdChannel <- rxControl.CmdIncFrequency
+				rxCmdChan <- rxControl.CmdIncFrequency
 			}
 			if ui.tune.Clicked(gtx) {
-				rxCmdChannel <- rxControl.CmdTune
+				rxCmdChan <- rxControl.CmdTune
 			}
 			if ui.freqOffset.Clicked(gtx) {
-				rxCmdChannel <- rxControl.CmdCalibrate
+				rxCmdChan <- rxControl.CmdCalibrate
 			}
 
 			paint.Fill(gtx.Ops, q100color.screenGrey)
@@ -530,10 +499,10 @@ func (ui *UI) q100_Column2Buttons(gtx C) D {
 func (ui *UI) q100_3x4statusMatrixPlus2buttons(gtx C) D {
 	names1 := [4]string{"Frequency", "Symbol Rate", "Mode", "Constellation"}
 	values1 := [4]string{lmData.Frequency, lmData.SymbolRate, lmData.Mode, lmData.Constellation}
+
 	names2 := [4]string{"FEC", "Codecs", "dB MER", "dB Margin"}
 	values2 := [4]string{lmData.Fec, lmData.VideoCodec + " " + lmData.AudioCodec, lmData.DbMer, lmData.DbMargin}
-	// names3 := [4]string{"dBm Power", "Null Ratio", "Provider", "Service"}
-	// values3 := [4]string{lmData.DbmPower, lmData.NullRatio, lmData.Provider, lmData.Service}
+
 	names3 := [4]string{"dBm Power", "Null Ratio %", "Video PID", "Audio PID"}
 	values3 := [4]string{lmData.DbmPower, lmData.NullRatio, lmData.PidPair1, lmData.PidPair2}
 

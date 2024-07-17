@@ -18,23 +18,34 @@ import (
 )
 
 const (
-	CmdTune = iota
-	CmdUnTune
-	CmdEnableOffset
-	CmdDisableOffset
+	config_LmBaseFolder = "/home/pi/Q100/"
+
+	config_LmFolder     = config_LmBaseFolder + "longmynd/"
+	config_LmBinary     = config_LmBaseFolder + "longmynd/longmynd"
+	config_LmStatusFifo = config_LmBaseFolder + "longmynd/longmynd_main_status"
+	config_LmOffset     = float64(9750000)
+
+	config_FpTsFifo = config_LmBaseFolder + "longmynd/longmynd_main_ts"
+	config_FpBinary = "/usr/bin/ffplay"
+	config_FpVolume = "100"
+
+	CmdTune          = 1
+	CmdUnTune        = 2
+	CmdEnableOffset  = 3
+	CmdDisableOffset = 4
 )
 
 type (
-	LmCmd_t int
+	// LmCmd_t int
 
-	LmClientCmd_t struct {
-		Type          LmCmd_t
+	LmCmd_t struct {
+		Type          int
 		FrequencyStr  string
 		FrequencyKHz  float64
 		SymbolRateStr string
 	}
 
-	LongmyndData_t struct {
+	LmData_t struct {
 		StatusMsg     string
 		State         string
 		Frequency     string
@@ -54,26 +65,19 @@ type (
 		DbmPower      string
 		FreqOffset    string
 	}
-
-	LmConfig_t struct {
-		Folder     string
-		Binary     string
-		Offset     float64
-		StatusFifo string
-	}
-
-	FpConfig_t struct {
-		Binary string
-		TsFifo string
-		Volume string
-	}
 )
 
 var (
-	// fifoPath string
-	// offset   float64
 	frequencyRequestedKHz float64
 )
+
+// func openFifo(fileName string) (*os.File, error) {
+// 	for {
+// 		// will hang here until longmynd starts for the fiesrt time
+// 		file, err := os.OpenFile(fileName, os.O_CREATE, os.ModeNamedPipe)
+// 		return file, err
+// 	}
+// }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -83,12 +87,7 @@ var (
 //	received, the LongmyndData fileds will be filled with default values - normally a dash.
 //
 // func ReadLonmyndStatus(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, ch chan LongmyndData) {
-func ReadLonmyndStatus(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, lonymyndChannel chan LongmyndData_t) {
-	lmcfg = lmc
-	fpcfg = fpc
-
-	// offset = lmcfg.Offset // TODO: ditto for calibrate
-	// fifoPath = lmcfg.StatusFifo
+func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan chan<- LmData_t) {
 
 	liveData.reset()
 	cacheData.reset()
@@ -96,34 +95,50 @@ func ReadLonmyndStatus(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, lony
 
 	isLocked := false
 
-	lonymyndChannel <- *liveData
+	lmDataChan <- *liveData
+
+	// go openFifo(config_LmStatusFifo)
 
 	// will hang here until longmynd starts for the fiesrt time
-	file, err := os.OpenFile(lmcfg.StatusFifo, os.O_CREATE, os.ModeNamedPipe)
+	// file, err := os.OpenFile(config_LmStatusFifo, os.O_CREATE, os.ModeNamedPipe)
+	// file, err := os.OpenFile(config_LmStatusFifo, os.O_CREATE|os.O_RDONLY, os.ModeNamedPipe)
+	file, err := os.OpenFile(config_LmStatusFifo, os.O_RDONLY, os.ModeNamedPipe)
 	if err != nil {
-		log.Printf("WARN Failed to open '%v' fifo %v: ", lmcfg.StatusFifo, err)
+		log.Printf("WARN Failed to open '%v' fifo %v: ", config_LmStatusFifo, err)
 		return
 	}
 
 	reader := bufio.NewReader(file)
-
 	for {
 		select {
 		case <-ctx.Done():
-			// TODO: implement a better way to stop longmynd and ffplay
 			stopFfPlayAndLongmynd()
 			file.Close()
 			log.Printf("CANCEL ----- lmClient has cancelled")
 			return
+		case cmd := <-lmCmdChan:
+			switch cmd.Type {
+			case CmdTune:
+				log.Printf("INFO ------ WILL TUNE")
+				startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr)
+			case CmdUnTune:
+				log.Printf("INFO ------ WILL UNTUNE")
+				stopFfPlayAndLongmynd()
+			case CmdEnableOffset:
+				enableOffset()
+			case CmdDisableOffset:
+				disableOffset()
+
+			}
 		default:
 		}
 
 		rawStr, err := reader.ReadString(10) // delimited by char(10) == LF
 		if err != nil {
-			//log.Printf("ERROR reading fifo: %v", err)
+			log.Printf("ERROR reading fifo: %v", err)
 			liveData.reset()
 			cacheData.reset()
-			lonymyndChannel <- *liveData
+			lmDataChan <- *liveData
 			// time.Sleep(100 * time.Millisecond)
 			continue
 		}
@@ -143,7 +158,7 @@ func ReadLonmyndStatus(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, lony
 				cacheData.reset()
 				esPair.reset()
 				agcPair.reset()
-				lonymyndChannel <- *liveData
+				lmDataChan <- *liveData
 				// time.Sleep(5 * time.Millisecond)
 				continue
 			}
@@ -204,48 +219,26 @@ func ReadLonmyndStatus(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, lony
 		}
 
 		if *liveData != *cacheData {
-			lonymyndChannel <- *liveData
+			lmDataChan <- *liveData
 			*cacheData = *liveData
 		}
 	}
 }
 
-func Tune(frequency, sysmbolRate string) {
-	log.Printf("INFO ------ WILL TUNE")
-	startLongmynd(frequency, sysmbolRate)
-
-	// trim "10491.50 / 00" to "10491.50"
-	// frequencySplit := strings.SplitN(frequency, " ", 2)[0]
-	// requestedFrequency, err := strconv.ParseFloat(frequencySplit, 64)
-	// if err != nil {
-	// 	log.Fatalf("FATAL bad lmFrequency: %v", err)
-
-	// }
-	// frequencyRequestedKHz = requestedFrequency * 1000
-}
-
-func UnTune() {
-	log.Printf("INFO ------ WILL UNTUNE")
-	stopFfPlayAndLongmynd()
+func enableOffset() {
 
 }
 
-func EnableOffset() {
+func disableOffset() {
 
 }
 
-func DisableOffset() {
-
-}
-
-// END API ********************************************************
-
-func (d *LongmyndData_t) reset() {
+func (d *LmData_t) reset() {
 	d.resetPartial()
 	d.State = kDash
 }
 
-func (d *LongmyndData_t) resetPartial() {
+func (d *LmData_t) resetPartial() {
 	d.StatusMsg = "Not tuned"
 	// d.State = kDash
 	d.Frequency = kDash
@@ -267,10 +260,8 @@ func (d *LongmyndData_t) resetPartial() {
 }
 
 var (
-	lmcfg          LmConfig_t
-	fpcfg          FpConfig_t
-	lmCmd          *exec.Cmd
-	ffPlayCmd      *exec.Cmd
+	lmExecCmd      *exec.Cmd
+	fpExecCmd      *exec.Cmd
 	ffPlayIsACtive bool // TODO: temp fix to prevent more than one ffplay instance
 )
 
@@ -472,8 +463,8 @@ const (
 var (
 	esPair    = esPairStuct{}
 	agcPair   = new(agcPairStuct)
-	liveData  = new(LongmyndData_t)
-	cacheData = new(LongmyndData_t)
+	liveData  = new(LmData_t)
+	cacheData = new(LmData_t)
 	isTuned   bool
 	isPlaying bool
 )
@@ -483,7 +474,7 @@ var (
 ***********************************************************/
 
 // State
-func (d *LongmyndData_t) id1_setState(stateStr string) {
+func (d *LmData_t) id1_setState(stateStr string) {
 	switch stateStr {
 	case "0":
 		d.State = kInitialising
@@ -503,14 +494,14 @@ func (d *LongmyndData_t) id1_setState(stateStr string) {
 }
 
 // Carrier Frequency - During a search this is the carrier frequency being trialled. When locked this is the Carrier Frequency detected in the stream. Sent in KHz
-func (d *LongmyndData_t) id6_setFrequency(carrierFrequencyStr string) {
+func (d *LmData_t) id6_setFrequency(carrierFrequencyStr string) {
 	kHzFloat, err := strconv.ParseFloat(carrierFrequencyStr, 64)
 	if err != nil {
 		log.Printf("WARN Bad carrierFrequencyStr: %v", err)
 		d.Frequency = kDash
 		return
 	}
-	receivedFrequencyKHz := kHzFloat + lmcfg.Offset
+	receivedFrequencyKHz := kHzFloat + config_LmOffset
 	d.Frequency = fmt.Sprintf("%.2f", receivedFrequencyKHz/1000)
 
 	frequencyErroorKHz := (receivedFrequencyKHz - frequencyRequestedKHz)
@@ -518,7 +509,7 @@ func (d *LongmyndData_t) id6_setFrequency(carrierFrequencyStr string) {
 }
 
 // Symbol Rate - During a search this is the symbol rate being trialled.  When locked this is the symbol rate detected in the stream
-func (d *LongmyndData_t) id9_setSymbolRate(symbolRateStr string) {
+func (d *LmData_t) id9_setSymbolRate(symbolRateStr string) {
 	sysmbolRateFloat, err := strconv.ParseFloat(symbolRateStr, 64)
 	if err != nil {
 		log.Printf("WARN Bad symbolRateStr: %v", err)
@@ -530,7 +521,7 @@ func (d *LongmyndData_t) id9_setSymbolRate(symbolRateStr string) {
 }
 
 // MER - Modulation Error Ratio in dB * 10
-func (d *LongmyndData_t) id12_setDbMer(merStr string) {
+func (d *LmData_t) id12_setDbMer(merStr string) {
 	dbMerFloat, err := strconv.ParseFloat(merStr, 64)
 	if err != nil {
 		log.Printf("WARN Bad merStr: %v", err)
@@ -542,7 +533,7 @@ func (d *LongmyndData_t) id12_setDbMer(merStr string) {
 }
 
 // Service Provider - TS Service Provider Name
-func (d *LongmyndData_t) id13_setProvider(providerStr string) {
+func (d *LmData_t) id13_setProvider(providerStr string) {
 	if providerStr == "" {
 		d.Provider = kDash
 		return
@@ -551,7 +542,7 @@ func (d *LongmyndData_t) id13_setProvider(providerStr string) {
 }
 
 // Service Provider Service - TS Service Name
-func (d *LongmyndData_t) id14_setService(serviceStr string) {
+func (d *LmData_t) id14_setService(serviceStr string) {
 	if serviceStr == "" {
 		d.Service = kDash
 		return
@@ -560,7 +551,7 @@ func (d *LongmyndData_t) id14_setService(serviceStr string) {
 }
 
 // Null Ratio - Ratio of Nulls in TS as percentage
-func (d *LongmyndData_t) id15_setNullRatio(nullRatioStr string) {
+func (d *LmData_t) id15_setNullRatio(nullRatioStr string) {
 	if nullRatioStr == "" {
 		log.Printf("WARN Missing nullRatioStr")
 		d.NullRatio = kDash
@@ -596,7 +587,7 @@ func id16_setEsPid(esPidStr string) {
 }
 
 // ES TYPE - Elementary Stream Type (repeated as pair with 16 for each ES)
-func (d *LongmyndData_t) id17_setEsType(esType string) {
+func (d *LmData_t) id17_setEsType(esType string) {
 	if esPair.waitingFor1stType {
 		esPair.the1stTypeValue = esType
 		esPair.waitingFor1stPid = false
@@ -634,7 +625,7 @@ func (d *LongmyndData_t) id17_setEsType(esType string) {
 	case 51:
 		d.VideoCodec = "H.266"
 	default:
-		// d.VideoCodec = "???"
+		d.VideoCodec = "???"
 	}
 
 	switch typ {
@@ -651,13 +642,13 @@ func (d *LongmyndData_t) id17_setEsType(esType string) {
 	case 129:
 		d.AudioCodec = "AC3"
 	default:
-		// d.AudioCodec = "???"
+		d.AudioCodec = "???"
 	}
 
 }
 
 // MODCOD - Received Modulation & Coding Rate. See MODCOD Lookup Table below
-func (d *LongmyndData_t) id18_setConstellationAndFecAndMargin(modcodStr string) {
+func (d *LmData_t) id18_setConstellationAndFecAndMargin(modcodStr string) {
 	// set Constellation and Fec
 	modcodInt, err := strconv.Atoi(modcodStr) // wiil panic panic if modcodInt is > 28
 	if err != nil {
@@ -684,7 +675,7 @@ func (d *LongmyndData_t) id18_setConstellationAndFecAndMargin(modcodStr string) 
 		d.Constellation = kModcodeDvdS2[modcodInt].constellation // TODO: throws panic: runtime error: index out of range [31] with length 29
 		d.Fec = kModcodeDvdS2[modcodInt].fec
 	default:
-		// log.Printf("WARN Unknkown longmyndData.mode %v", mode) // TODO: why here, when no signal received ?
+		log.Printf("WARN Unknkown longmyndData.mode %v", d.Mode) // TODO: why here, when no signal received ?
 		return
 	}
 	// set Margin
@@ -740,14 +731,14 @@ func id26_setDbmPower(agc1Str string) {
 }
 
 // AGC2 Gain - Gain value of AGC2 (0: Minimum Gain, 65535: Maximum Gain)
-func (d *LongmyndData_t) id27_setDbmPower(agc2Str string) {
+func (d *LmData_t) id27_setDbmPower(agc2Str string) {
 	if !agcPair.waitingForAgc2 {
 		return
 	}
 	agc2, err := strconv.Atoi(agc2Str)
 	if err != nil {
 		log.Printf("WARN Failed to convert agc2Str %v", err)
-		liveData.DbmPower = kDash
+		d.DbmPower = kDash
 		return
 	}
 	agcPair.the2ndAgcValue = agc2
@@ -803,12 +794,12 @@ func startLongmynd(frequency, symbolRate string) {
 		log.Fatalf("FATAL bad lmFrequency: %v", err)
 
 	}
-	requestKHz := (requestedFrequency * 1000) - lmcfg.Offset
+	requestKHz := (requestedFrequency * 1000) - config_LmOffset
 	requestKHzStr := strconv.FormatFloat(requestKHz, 'f', 0, 64)
 	log.Printf("INFO longmynd will start...")
-	lmCmd = exec.Command("./longmynd", "-S", "0.6", requestKHzStr, symbolRate)
-	lmCmd.Dir = lmcfg.Folder // ie. /home/pi/Q100/longmynd/
-	if err = lmCmd.Start(); err != nil {
+	lmExecCmd = exec.Command("./longmynd", "-S", "0.6", requestKHzStr, symbolRate)
+	lmExecCmd.Dir = config_LmFolder // ie. /home/pi/Q100/longmynd/
+	if err = lmExecCmd.Start(); err != nil {
 		log.Printf("ERROR failed to start longmynd: %v", err)
 		return
 	}
@@ -820,8 +811,8 @@ func startLongmynd(frequency, symbolRate string) {
 func stopLongmynd() {
 	if isTuned {
 		log.Printf("INFO longmynd will stop...")
-		lmCmd.Process.Kill()
-		lmCmd.Process.Wait()
+		lmExecCmd.Process.Kill()
+		lmExecCmd.Process.Wait()
 		cmd := exec.Command("/usr/bin/pkill", "longmynd")
 		if err := cmd.Start(); err != nil {
 			log.Printf("ERROR failed to stop longmynd: %v", err)
@@ -839,8 +830,8 @@ func stopLongmynd() {
 func startFfplay() {
 	if !isPlaying && !ffPlayIsACtive {
 		log.Printf("INFO ffplay will start...")
-		ffPlayCmd = exec.Command("/usr/bin/ffplay", "-left", "800", "-fs", "-volume", fpcfg.Volume, "-i", fpcfg.TsFifo)
-		if err := ffPlayCmd.Start(); err != nil {
+		fpExecCmd = exec.Command("/usr/bin/ffplay", "-left", "800", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
+		if err := fpExecCmd.Start(); err != nil {
 			log.Printf("ERROR failed to start ffplay: %v", err)
 			return
 		}
@@ -855,8 +846,8 @@ func startFfplay() {
 func stopFfplay() {
 	if isPlaying {
 		log.Printf("INFO ffplay will stop...")
-		ffPlayCmd.Process.Kill()
-		ffPlayCmd.Process.Wait()
+		fpExecCmd.Process.Kill()
+		fpExecCmd.Process.Wait()
 		cmd := exec.Command("/usr/bin/pkill", "ffplay")
 		if err := cmd.Start(); err != nil {
 			log.Printf("ERROR failed to stop ffplay: %v", err)

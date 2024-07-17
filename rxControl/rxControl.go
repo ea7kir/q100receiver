@@ -7,22 +7,22 @@ package rxControl
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"q100receiver/lmClient"
 )
 
-// BEGIN API ****************************************************
+const (
+	config_rxBand                 = "Narrow"
+	config_rxWideSymbolrate       = "1000"
+	config_rxNarrowSymbolrate     = "333"
+	config_rxVeryNarrowSymbolRate = "125"
+	config_rxWideFrequency        = "10494.75 / 09"
+	config_rxNarrowFrequency      = "10499.25 / 27"
+	config_rxVeryNarrowFrequency  = "10496.00 / 14"
+)
 
 type (
-	RxConfig_t struct {
-		Band                 string
-		WideFrequency        string
-		WideSymbolrate       string
-		NarrowFrequency      string
-		NarrowSymbolrate     string
-		VeryNarrowFrequency  string
-		VeryNarrowSymbolRate string
-	}
 	RxData_t struct {
 		CurBand       string
 		CurSymbolRate string
@@ -38,8 +38,10 @@ type (
 )
 
 var (
+	lmCmd              = lmClient.LmCmd_t{}
+	lmCmdChan          = make(chan lmClient.LmCmd_t, 5)
 	rxData             RxData_t
-	dataChan           chan RxData_t
+	rxDataChan         chan<- RxData_t
 	bandSelector       selector_t
 	symbolRateSelector selector_t
 	frequencySelector  selector_t
@@ -48,80 +50,90 @@ var (
 	isOffset = false
 )
 
-// func HandleUiCommands(ctx, rxConfig, tuChannel) // , tuCmdChan)
-func HandleCommands(ctx context.Context, cfg RxConfig_t, cmdCh chan RxCmd_t, dataCh chan RxData_t) {
-	dataChan = dataCh
+func HandleCommands(ctx context.Context, rxCmdChan <-chan RxCmd_t, rxDataCh chan<- RxData_t, lmDataChan chan lmClient.LmData_t) {
+	rxDataChan = rxDataCh
 
-	bandSelector = newSelector(const_BAND_LIST, cfg.Band)
+	bandSelector = newSelector(const_BAND_LIST, config_rxBand)
 
 	beaconSymbolRate = newSelector(const_BEACON_SYMBOLRATE_LIST, const_BEACON_SYMBOLRATE_LIST[0])
 	beaconFrequency = newSelector(const_BEACON_FREQUENCY_LIST, const_BEACON_FREQUENCY_LIST[0])
 
-	wideSymbolRate = newSelector(const_WIDE_SYMBOLRATE_LIST, cfg.WideSymbolrate)
-	wideFrequency = newSelector(const_WIDE_FREQUENCY_LIST, cfg.WideFrequency)
+	wideSymbolRate = newSelector(const_WIDE_SYMBOLRATE_LIST, config_rxWideSymbolrate)
+	wideFrequency = newSelector(const_WIDE_FREQUENCY_LIST, config_rxWideFrequency)
 
-	narrowSymbolRate = newSelector(const_NARROW_SYMBOLRATE_LIST, cfg.NarrowSymbolrate)
-	narrowFrequency = newSelector(const_NARROW_FREQUENCY_LIST, cfg.NarrowFrequency)
+	narrowSymbolRate = newSelector(const_NARROW_SYMBOLRATE_LIST, config_rxNarrowSymbolrate)
+	narrowFrequency = newSelector(const_NARROW_FREQUENCY_LIST, config_rxNarrowFrequency)
 
-	veryNarrowSymbolRate = newSelector(const_VERY_NARROW_SYMBOLRATE_LIST, cfg.NarrowSymbolrate)
-	veryNarrowFrequency = newSelector(const_VERY_NARROW_FREQUENCY_LIST, cfg.VeryNarrowFrequency)
+	veryNarrowSymbolRate = newSelector(const_VERY_NARROW_SYMBOLRATE_LIST, config_rxNarrowSymbolrate)
+	veryNarrowFrequency = newSelector(const_VERY_NARROW_FREQUENCY_LIST, config_rxVeryNarrowFrequency)
 
 	switchBand()
+
+	go lmClient.ReadLonmyndStatus(ctx, lmCmdChan, lmDataChan)
 
 	for {
 		select {
 		case <-ctx.Done():
 			if isTuned {
-				lmClient.UnTune()
+				lmCmd.Type = lmClient.CmdUnTune
+				lmCmdChan <- lmCmd
 				isTuned = false
 			}
 			log.Printf("CANCEL ----- rxControl has cancelled")
 			return
-		case command := <-cmdCh:
-			switch command {
+		case rxCmd := <-rxCmdChan:
+			switch rxCmd {
 			case CmdDecBand:
-				decBandSelector(&bandSelector)
+				fmt.Println("rxCmdChan <- rxControl.CmdDecBand")
+				bandSelector.decBandSelector()
 			case CmdIncBand:
-				incBandSelector(&bandSelector)
+				bandSelector.incBandSelector()
 			case CmdDecSymbolRate:
-				decSelector(&symbolRateSelector)
+				symbolRateSelector.decSelector()
 			case CmdIncSymbolRate:
-				incSelector(&symbolRateSelector)
+				symbolRateSelector.incSelector()
 			case CmdDecFrequency:
-				decSelector(&frequencySelector)
+				frequencySelector.decSelector()
 			case CmdIncFrequency:
-				incSelector(&frequencySelector)
+				frequencySelector.incSelector()
 			case CmdTune:
 				setLongmynd()
 			case CmdCalibrate:
 				setOffset()
 			}
+		default:
 		}
 	}
 }
 
 func setLongmynd() {
 	if isTuned {
-		lmClient.UnTune()
+		lmCmd.Type = lmClient.CmdUnTune
+		lmCmdChan <- lmCmd
 		isTuned = false
 	} else {
-		lmClient.Tune(rxData.CurFrequency, rxData.CurSymbolRate)
+		lmCmd.Type = lmClient.CmdTune
+		lmCmd.FrequencyStr = rxData.CurFrequency
+		lmCmd.SymbolRateStr = rxData.CurSymbolRate
+		lmCmdChan <- lmCmd
 		isTuned = true
 	}
 	rxData.CurIsTuned = isTuned
-	dataChan <- rxData
+	rxDataChan <- rxData
 }
 
 func setOffset() { // not sure if this is the right place. may lmClient would be better
 	if isOffset {
-		lmClient.DisableOffset()
+		lmCmd.Type = lmClient.CmdDisableOffset
+		lmCmdChan <- lmCmd
 		isOffset = false
 	} else {
-		lmClient.EnableOffset()
+		lmCmd.Type = lmClient.CmdEnableOffset
+		lmCmdChan <- lmCmd
 		isOffset = true
 	}
 	rxData.CurIsOffset = isOffset
-	dataChan <- rxData
+	rxDataChan <- rxData
 }
 
 type selector_t struct {
@@ -131,34 +143,34 @@ type selector_t struct {
 	value     string
 }
 
-func incBandSelector(st *selector_t) {
-	if st.currIndex < st.lastIndex {
-		st.currIndex++
-		st.value = st.list[st.currIndex]
+func (s *selector_t) incBandSelector() {
+	if s.currIndex < s.lastIndex {
+		s.currIndex++
+		s.value = s.list[s.currIndex]
 		switchBand()
 	}
 }
 
-func decBandSelector(st *selector_t) {
-	if st.currIndex > 0 {
-		st.currIndex--
-		st.value = st.list[st.currIndex]
+func (s *selector_t) decBandSelector() {
+	if s.currIndex > 0 {
+		s.currIndex--
+		s.value = s.list[s.currIndex]
 		switchBand()
 	}
 }
 
-func incSelector(st *selector_t) {
-	if st.currIndex < st.lastIndex {
-		st.currIndex++
-		st.value = st.list[st.currIndex]
+func (s *selector_t) incSelector() {
+	if s.currIndex < s.lastIndex {
+		s.currIndex++
+		s.value = s.list[s.currIndex]
 		somethingChanged()
 	}
 }
 
-func decSelector(st *selector_t) {
-	if st.currIndex > 0 {
-		st.currIndex--
-		st.value = st.list[st.currIndex]
+func (s *selector_t) decSelector() {
+	if s.currIndex > 0 {
+		s.currIndex--
+		s.value = s.list[s.currIndex]
 		somethingChanged()
 	}
 }
@@ -255,14 +267,14 @@ var (
 type RxCmd_t int
 
 const (
-	CmdDecBand = iota
-	CmdIncBand
-	CmdDecSymbolRate
-	CmdIncSymbolRate
-	CmdDecFrequency
-	CmdIncFrequency
-	CmdTune
-	CmdCalibrate
+	CmdDecBand       = 1
+	CmdIncBand       = 2
+	CmdDecSymbolRate = 3
+	CmdIncSymbolRate = 4
+	CmdDecFrequency  = 5
+	CmdIncFrequency  = 6
+	CmdTune          = 7
+	CmdCalibrate     = 8
 )
 
 func indexInList(list []string, with string) int { // TODO: add error check
@@ -304,7 +316,8 @@ func switchBand() { // TODO: should switch back to previosly use settings
 }
 
 func somethingChanged() {
-	lmClient.UnTune()
+	lmCmd.Type = lmClient.CmdUnTune
+	lmCmdChan <- lmCmd
 	isTuned = false
 
 	rxData.CurBand = bandSelector.value
@@ -315,5 +328,5 @@ func somethingChanged() {
 	rxData.MarkerWidth = const_symbolRateWidth[symbolRateSelector.value]
 	rxData.CurIsTuned = isTuned
 	rxData.CurIsOffset = isOffset
-	dataChan <- rxData
+	rxDataChan <- rxData
 }
