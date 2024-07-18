@@ -50,13 +50,13 @@ import (
 
 // local data
 var (
-	rxCmdChan  = make(chan rxControl.RxCmd_t) //, 5)
-	rxData     rxControl.RxData_t
-	rxDataChan = make(chan rxControl.RxData_t) //, 5)
-	spData     spClient.SpData_t
-	spDataChan = make(chan spClient.SpData_t) //, 5)
-	lmData     lmClient.LmData_t
-	lmDataChan = make(chan lmClient.LmData_t) //, 5)
+	rxCmdChan  = make(chan rxControl.RxCmd_t)
+	rxData     = rxControl.RxData_t{}
+	rxDataChan = make(chan rxControl.RxData_t)
+	spData     = spClient.SpData_t{}
+	spDataChan = make(chan spClient.SpData_t)
+	lmData     = lmClient.LmData_t{}
+	lmDataChan = make(chan lmClient.LmData_t)
 )
 
 func main() {

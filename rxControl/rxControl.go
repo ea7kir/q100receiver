@@ -7,7 +7,6 @@ package rxControl
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"q100receiver/lmClient"
 )
@@ -82,7 +81,6 @@ func HandleCommands(ctx context.Context, rxCmdChan <-chan RxCmd_t, rxDataCh chan
 		case rxCmd := <-rxCmdChan:
 			switch rxCmd {
 			case CmdDecBand:
-				fmt.Println("rxCmdChan <- rxControl.CmdDecBand")
 				bandSelector.decBandSelector()
 			case CmdIncBand:
 				bandSelector.incBandSelector()
