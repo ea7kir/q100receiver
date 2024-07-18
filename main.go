@@ -68,8 +68,6 @@ func main() {
 
 	go spClient.ReadSpectrumServer(ctx, spDataChan)
 
-	// go lmClient.ReadLonmyndStatus(ctx, lmCmdChan, lmDataChan)
-
 	go rxControl.HandleCommands(ctx, rxCmdChan, rxDataChan, lmDataChan)
 
 	go func() {

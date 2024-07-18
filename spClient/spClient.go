@@ -26,7 +26,6 @@ type (
 	}
 )
 
-// TODO: move make() into ReadSpectrumServer
 var (
 	Xp = make([]float32, config_NumPoints) // x coordinates from 0.0 to 100.0
 )
@@ -38,13 +37,12 @@ func ReadSpectrumServer(ctx context.Context, ch chan<- SpData_t) {
 	}
 	Xp[config_NumPoints-1] = 100
 
-	// TODO: needs a timeout. see https://pkg.go.dev/nhooyr.io/websocket
-	//	which uses: ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-
-	const MAXTRIES = 10
 	var ws *websocket.Conn
 	var err error
 
+	// TODO: needs a timeout. see https://pkg.go.dev/nhooyr.io/websocket
+	//	which uses: ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	const MAXTRIES = 10
 	for i := 1; i <= MAXTRIES; i++ {
 		log.Printf("INFO Dial attempt %v", i)
 		ws, err = websocket.Dial(config_Url, "", config_Origin)
@@ -108,5 +106,6 @@ func ReadSpectrumServer(ctx context.Context, ch chan<- SpData_t) {
 		// log.Printf("INFO beacon level %v : Yp[i] %v", spData.BeaconLevel, spData.Yp[103])
 
 		ch <- spData
+
 	}
 }

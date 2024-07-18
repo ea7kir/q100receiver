@@ -27,9 +27,7 @@ type (
 		CurBand       string
 		CurSymbolRate string
 		CurFrequency  string
-		//
-		// FUTURE: received longmynd data could go here
-		//
+
 		MarkerCentre float32
 		MarkerWidth  float32
 		CurIsTuned   bool

@@ -71,14 +71,6 @@ var (
 	frequencyRequestedKHz float64
 )
 
-// func openFifo(fileName string) (*os.File, error) {
-// 	for {
-// 		// will hang here until longmynd starts for the fiesrt time
-// 		file, err := os.OpenFile(fileName, os.O_CREATE, os.ModeNamedPipe)
-// 		return file, err
-// 	}
-// }
-
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 // Reads the longmynd status fifo and translates to formated strings.
@@ -97,24 +89,54 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 
 	lmDataChan <- *liveData
 
-	// go openFifo(config_LmStatusFifo)
+	var file *os.File = nil
+	var reader *bufio.Reader = nil
+	var fileIsOpen = false
 
-	// will hang here until longmynd starts for the fiesrt time
-	// file, err := os.OpenFile(config_LmStatusFifo, os.O_CREATE, os.ModeNamedPipe)
-	// file, err := os.OpenFile(config_LmStatusFifo, os.O_CREATE|os.O_RDONLY, os.ModeNamedPipe)
-	file, err := os.OpenFile(config_LmStatusFifo, os.O_RDONLY, os.ModeNamedPipe)
-	if err != nil {
-		log.Printf("WARN Failed to open '%v' fifo %v: ", config_LmStatusFifo, err)
-		return
-	}
-
-	reader := bufio.NewReader(file)
 	for {
+		if !fileIsOpen {
+			select {
+			case <-ctx.Done():
+				stopFfPlayAndLongmynd()
+				// file.Close()
+				log.Printf("CANCEL ----- lmClient 1 has cancelled")
+				return
+			case cmd := <-lmCmdChan:
+				switch cmd.Type {
+				case CmdTune:
+					log.Printf("INFO ------ WILL TUNE for the first time")
+					startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr)
+					var err error
+					file, err = os.OpenFile(config_LmStatusFifo, os.O_RDONLY, os.ModeNamedPipe)
+					if err != nil {
+						log.Fatalf("FATAL Failed to open '%v' fifo %v: ", config_LmStatusFifo, err)
+					}
+					reader = bufio.NewReader(file)
+					fileIsOpen = true
+				// continue
+				case CmdUnTune:
+					log.Printf("WARN cmd.Type %v should not be called here", cmd.Type)
+					// stopFfPlayAndLongmynd()
+				case CmdEnableOffset:
+					log.Printf("WARN cmd.Type %v should not be called here", cmd.Type)
+					// enableOffset()
+				case CmdDisableOffset:
+					log.Printf("WARN cmd.Type %v should not be called here", cmd.Type)
+					// disableOffset()
+				default:
+					log.Fatalf("FATAL cmd.Type was %v", cmd.Type)
+				}
+				// default:
+			}
+			fmt.Println(".")
+			continue
+		}
+
 		select {
 		case <-ctx.Done():
 			stopFfPlayAndLongmynd()
 			file.Close()
-			log.Printf("CANCEL ----- lmClient has cancelled")
+			log.Printf("CANCEL ----- lmClient 2 has cancelled")
 			return
 		case cmd := <-lmCmdChan:
 			switch cmd.Type {
@@ -130,7 +152,7 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 				disableOffset()
 
 			}
-		default:
+			// default:
 		}
 
 		rawStr, err := reader.ReadString(10) // delimited by char(10) == LF
