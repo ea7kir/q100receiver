@@ -113,7 +113,7 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 					}
 					reader = bufio.NewReader(file)
 					fileIsOpen = true
-				// continue
+					continue
 				case CmdUnTune:
 					log.Printf("WARN cmd.Type %v should not be called here", cmd.Type)
 					// stopFfPlayAndLongmynd()
@@ -128,7 +128,7 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 				}
 				// default:
 			}
-			fmt.Println(".")
+			// log.Println("TEMP .")
 			continue
 		}
 
@@ -152,9 +152,9 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 				disableOffset()
 
 			}
-			// default:
+		default:
 		}
-
+		// log.Printf("TEMP in lmClient loop")
 		rawStr, err := reader.ReadString(10) // delimited by char(10) == LF
 		if err != nil {
 			log.Printf("ERROR reading fifo: %v", err)
@@ -205,7 +205,7 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 		case 15: // Null Ratio - Ratio of Nulls in TS as percentage
 			liveData.id15_setNullRatio(lmVal)
 		case 16: // The PID numbers themselves are fairly arbitrary, will vary based on the transmitted signal and don't really mean anything in a single program multiplex.
-			id16_setEsPid(lmVal)
+			liveData.id16_setEsPid(lmVal)
 		case 17: // ES TYPE - Elementary Stream Type (repeated as pair with 16 for each ES)
 			liveData.id17_setEsType(lmVal)
 		case 18: // MODCOD - Received Modulation & Coding Rate. See MODCOD Lookup Table below
@@ -218,7 +218,7 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 		// case 24: // LNB Voltage Enabled - 1 if LNB Voltage Supply is enabled, 0 otherwise (LNB Voltage Supply requires add-on board)
 		// case 25: // LNB H Polarisation - 1 if LNB Voltage Supply is configured for Horizontal Polarisation (18V), 0 otherwise (LNB Voltage Supply requires add-on board)
 		case 26: // AGC1 Gain - Gain value of AGC1 (0: Signal too weak, 65535: Signal too strong)
-			id26_setDbmPower(lmVal)
+			liveData.id26_setDbmPower(lmVal)
 		case 27: // AGC2 Gain - Gain value of AGC2 (0: Minimum Gain, 65535: Maximum Gain)
 			liveData.id27_setDbmPower(lmVal)
 		} // switch
@@ -583,7 +583,7 @@ func (d *LmData_t) id15_setNullRatio(nullRatioStr string) {
 }
 
 // The PID numbers themselves are fairly arbitrary, will vary based on the transmitted signal and don't really mean anything in a single program multiplex.
-func id16_setEsPid(esPidStr string) {
+func (d *LmData_t) id16_setEsPid(esPidStr string) {
 	// In the status stream 16 and 17 always come in pairs, 16 is the PID and 17 is the type for that PID, e.g.
 	// This means that PID 257 is of type 27 which you look up in the table to be H.264 and PID 258 is type 3 which the table says is MP3.
 	// $16,257 == PID 257 is of type 27 which you look up in the table to be H.264
@@ -739,7 +739,7 @@ func (d *LmData_t) id18_setConstellationAndFecAndMargin(modcodStr string) {
 }
 
 // AGC1 Gain - Gain value of AGC1 (0: Signal too weak, 65535: Signal too strong)
-func id26_setDbmPower(agc1Str string) {
+func (d *LmData_t) id26_setDbmPower(agc1Str string) {
 	if agcPair.waitingForAgc2 {
 		return
 	}

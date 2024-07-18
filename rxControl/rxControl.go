@@ -71,11 +71,11 @@ func HandleCommands(ctx context.Context, rxCmdChan <-chan RxCmd_t, rxDataCh chan
 	for {
 		select {
 		case <-ctx.Done():
-			if isTuned {
-				lmCmd.Type = lmClient.CmdUnTune
-				lmCmdChan <- lmCmd
-				isTuned = false
-			}
+			// if isTuned {
+			// 	lmCmd.Type = lmClient.CmdUnTune
+			// 	lmCmdChan <- lmCmd
+			// 	isTuned = false
+			// }
 			log.Printf("CANCEL ----- rxControl has cancelled")
 			return
 		case rxCmd := <-rxCmdChan:
@@ -97,7 +97,7 @@ func HandleCommands(ctx context.Context, rxCmdChan <-chan RxCmd_t, rxDataCh chan
 			case CmdCalibrate:
 				setOffset()
 			}
-		default:
+			// default:
 		}
 	}
 }

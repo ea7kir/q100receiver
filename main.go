@@ -135,8 +135,10 @@ func loop(w *app.Window) error {
 			return nil
 			// w.Perform(system.ActionClose) // panics
 		case rxData = <-rxDataChan:
+			// log.Printf("TEMP got rxData")
 			w.Invalidate()
 		case lmData = <-lmDataChan:
+			// log.Printf("TEMP got lmData")
 			w.Invalidate()
 		case spData = <-spDataChan:
 			w.Invalidate()
