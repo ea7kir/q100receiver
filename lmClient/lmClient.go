@@ -36,8 +36,6 @@ const (
 )
 
 type (
-	// LmCmd_t int
-
 	LmCmd_t struct {
 		Type          int
 		FrequencyStr  string
@@ -92,16 +90,16 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 
 	lmDataChan <- liveData
 
-	var file *os.File = nil
+	var fifo *os.File = nil
 	var reader *bufio.Reader = nil
-	var fileIsOpen = false
+	var fifoIsOpen = false
 
 	for {
-		if !fileIsOpen {
+		if !fifoIsOpen {
 			select {
 			case <-ctx.Done():
 				stopFfPlayAndLongmynd()
-				// file.Close()
+				// fifo.Close()
 				log.Printf("CANCEL ----- lmClient 1 has cancelled")
 				return
 			case cmd := <-lmCmdChan:
@@ -110,12 +108,12 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 					log.Printf("INFO ------ WILL TUNE for the first time")
 					startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr)
 					var err error
-					file, err = os.OpenFile(config_LmStatusFifo, os.O_RDONLY, os.ModeNamedPipe)
+					fifo, err = os.OpenFile(config_LmStatusFifo, os.O_RDONLY, os.ModeNamedPipe)
 					if err != nil {
 						log.Fatalf("FATAL Failed to open '%v' fifo %v: ", config_LmStatusFifo, err)
 					}
-					reader = bufio.NewReader(file)
-					fileIsOpen = true
+					reader = bufio.NewReader(fifo)
+					fifoIsOpen = true
 					continue
 				case CmdUnTune:
 					log.Printf("WARN cmd.Type %v should not be called here", cmd.Type)
@@ -138,7 +136,7 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 		select {
 		case <-ctx.Done():
 			stopFfPlayAndLongmynd()
-			file.Close()
+			fifo.Close()
 			log.Printf("CANCEL ----- lmClient 2 has cancelled")
 			return
 		case cmd := <-lmCmdChan:
@@ -853,6 +851,18 @@ func (d *LmData_t) id27_setDbmPower(agc2Str string) {
 *	START AND STOP FUNCTIONS
 *
 ************************************************************************/
+
+type (
+	lmDependants_t struct {
+		isPlaying      bool
+		isTuned        bool
+		ffPlayIsACtive bool
+		lmExecCmd      *exec.Cmd
+		fpExecCmd      *exec.Cmd
+		fifo           *os.File
+		fifoIsOpen     bool
+	}
+)
 
 func stopFfPlayAndLongmynd() {
 	if isPlaying {
