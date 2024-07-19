@@ -56,6 +56,7 @@ func (d *lmDependants_t) startLongmynd(frequency, symbolRate string) {
 		return
 	}
 	log.Printf("INFO longmynd has started with f = %v", requestKHzStr)
+	// d.fifo =
 	d.isTuned = true
 }
 
@@ -74,6 +75,7 @@ func (d *lmDependants_t) stopLongmynd() {
 	}
 	log.Printf("INFO longmynd has stopped")
 	d.isTuned = false
+	// d.fifo.Close()
 }
 
 // Start ffplay

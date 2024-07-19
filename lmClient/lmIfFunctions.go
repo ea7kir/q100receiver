@@ -10,6 +10,16 @@ import (
 	internal to this file
 ***********************************************************/
 
+const (
+	kDash         = "-"
+	kInitialising = "Initialising"
+	kSeaching     = "Seaching"
+	kFoundHeaders = "Found Headers"
+	kLocked       = "Locked"
+	kDVB_S        = "DVB-S"
+	kDVB_S2       = "DVB-S2"
+)
+
 type (
 	esPairStuct struct {
 		waitingFor1stPid  bool
@@ -88,16 +98,21 @@ func (d *LmData_t) id1_setState(stateStr string) {
 	switch stateStr {
 	case "0":
 		d.State = kInitialising
+		// d.isLocked = false
 	case "1":
 		d.State = kSeaching
+		// d.isLocked = false
 	case "2":
 		d.State = kFoundHeaders
+		// d.isLocked = false
 	case "3":
 		d.State = kLocked
 		d.Mode = kDVB_S
+		// d.isLocked = true
 	case "4":
 		d.State = kLocked
 		d.Mode = kDVB_S2
+		// d.isLocked = true
 	default:
 		log.Printf("WARN Undefined status: %v", stateStr)
 		return
