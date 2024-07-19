@@ -68,6 +68,7 @@ type (
 
 var (
 	frequencyRequestedKHz float64
+	dependanst            = lmDependants_t{}
 )
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -90,15 +91,15 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 
 	lmDataChan <- liveData
 
-	var fifo *os.File = nil
+	// var fifo *os.File = nil
 	var reader *bufio.Reader = nil
-	var fifoIsOpen = false
+	// var fifoIsOpen = false
 
 	for {
-		if !fifoIsOpen {
+		if !dependanst.fifoIsOpen {
 			select {
 			case <-ctx.Done():
-				stopFfPlayAndLongmynd()
+				dependanst.stopFfPlayAndLongmynd()
 				// fifo.Close()
 				log.Printf("CANCEL ----- lmClient 1 has cancelled")
 				return
@@ -106,14 +107,14 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 				switch cmd.Type {
 				case CmdTune:
 					log.Printf("INFO ------ WILL TUNE for the first time")
-					startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr)
+					dependanst.startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr)
 					var err error
-					fifo, err = os.OpenFile(config_LmStatusFifo, os.O_RDONLY, os.ModeNamedPipe)
+					dependanst.fifo, err = os.OpenFile(config_LmStatusFifo, os.O_RDONLY, os.ModeNamedPipe)
 					if err != nil {
 						log.Fatalf("FATAL Failed to open '%v' fifo %v: ", config_LmStatusFifo, err)
 					}
-					reader = bufio.NewReader(fifo)
-					fifoIsOpen = true
+					reader = bufio.NewReader(dependanst.fifo)
+					dependanst.fifoIsOpen = true
 					continue
 				case CmdUnTune:
 					log.Printf("WARN cmd.Type %v should not be called here", cmd.Type)
@@ -135,18 +136,18 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 
 		select {
 		case <-ctx.Done():
-			stopFfPlayAndLongmynd()
-			fifo.Close()
+			dependanst.stopFfPlayAndLongmynd()
+			dependanst.fifo.Close()
 			log.Printf("CANCEL ----- lmClient 2 has cancelled")
 			return
 		case cmd := <-lmCmdChan:
 			switch cmd.Type {
 			case CmdTune:
 				log.Printf("INFO ------ WILL TUNE")
-				startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr)
+				dependanst.startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr)
 			case CmdUnTune:
 				log.Printf("INFO ------ WILL UNTUNE")
-				stopFfPlayAndLongmynd()
+				dependanst.stopFfPlayAndLongmynd()
 			case CmdEnableOffset:
 				enableOffset()
 			case CmdDisableOffset:
@@ -224,15 +225,15 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 			liveData.id27_setDbmPower(lmVal)
 		} // switch
 
-		if isTuned && isLocked && !isPlaying {
-			startFfplay()
+		if dependanst.isTuned && isLocked && !dependanst.isPlaying {
+			dependanst.startFfplay()
 		}
-		if isTuned && !isLocked && isPlaying {
-			stopFfplay()
+		if dependanst.isTuned && !isLocked && dependanst.isPlaying {
+			dependanst.stopFfplay()
 		}
-		if !isTuned && isPlaying {
+		if !dependanst.isTuned && dependanst.isPlaying {
 			isLocked = false
-			stopFfPlayAndLongmynd()
+			dependanst.stopFfPlayAndLongmynd()
 		}
 
 		if isLocked {
@@ -262,9 +263,9 @@ func disableOffset() {
 }
 
 var (
-	lmExecCmd      *exec.Cmd
-	fpExecCmd      *exec.Cmd
-	ffPlayIsACtive bool // TODO: temp fix to prevent more than one ffplay instance
+// lmExecCmd      *exec.Cmd
+// fpExecCmd      *exec.Cmd
+// ffPlayIsACtive bool // TODO: temp fix to prevent more than one ffplay instance
 )
 
 type (
@@ -468,8 +469,8 @@ var (
 	agcPair = agcPairStuct{}
 	// liveData = new(LmData_t)
 	// cacheData = new(LmData_t)
-	isTuned   bool
-	isPlaying bool
+	// isTuned bool
+	// isPlaying bool
 )
 
 /***********************************************************
@@ -663,7 +664,6 @@ func (d *LmData_t) id17_setEsType(esType string) {
 		esPair.waitingFor1stType = false
 		esPair.waitingFor2ndType = false
 		d.PidPair2 = fmt.Sprintf("%v %v", esPair.the2ndPidValue, esPair.the2ndTypeValue) // beacon 258 3 = audio
-		log.Printf("Audio %v %v", esPair.the2ndPidValue, esPair.the2ndTypeValue)
 		switch typ {
 		case 2:
 			d.AudioCodec = "MPEG2"
@@ -864,19 +864,19 @@ type (
 	}
 )
 
-func stopFfPlayAndLongmynd() {
-	if isPlaying {
-		stopFfplay()
+func (d *lmDependants_t) stopFfPlayAndLongmynd() {
+	if d.isPlaying {
+		d.stopFfplay()
 	}
-	if isTuned {
-		stopLongmynd()
+	if d.isTuned {
+		d.stopLongmynd()
 	}
 }
 
 // Start Longmynd with frequency and symbolrate
 //
 //	ie. /home/pi/q100/longmynd/longmynd -S 0.6 requestKHzStr symbolRateStr
-func startLongmynd(frequency, symbolRate string) {
+func (d *lmDependants_t) startLongmynd(frequency, symbolRate string) {
 	// trim "10491.50 / 00" to "10491.50"
 	frequencySplit := strings.SplitN(frequency, " ", 2)[0]
 	requestedFrequency, err := strconv.ParseFloat(frequencySplit, 64)
@@ -887,22 +887,22 @@ func startLongmynd(frequency, symbolRate string) {
 	requestKHz := (requestedFrequency * 1000) - config_LmOffset
 	requestKHzStr := strconv.FormatFloat(requestKHz, 'f', 0, 64)
 	log.Printf("INFO longmynd will start...")
-	lmExecCmd = exec.Command("./longmynd", "-S", "0.6", requestKHzStr, symbolRate)
-	lmExecCmd.Dir = config_LmFolder // ie. /home/pi/Q100/longmynd/
-	if err = lmExecCmd.Start(); err != nil {
+	d.lmExecCmd = exec.Command("./longmynd", "-S", "0.6", requestKHzStr, symbolRate)
+	d.lmExecCmd.Dir = config_LmFolder // ie. /home/pi/Q100/longmynd/
+	if err = d.lmExecCmd.Start(); err != nil {
 		log.Printf("ERROR failed to start longmynd: %v", err)
 		return
 	}
 	log.Printf("INFO longmynd has started with f = %v", requestKHzStr)
-	isTuned = true
+	d.isTuned = true
 }
 
 // Stop Longmynd
-func stopLongmynd() {
-	if isTuned {
+func (d *lmDependants_t) stopLongmynd() {
+	if d.isTuned {
 		log.Printf("INFO longmynd will stop...")
-		lmExecCmd.Process.Kill()
-		lmExecCmd.Process.Wait()
+		d.lmExecCmd.Process.Kill()
+		d.lmExecCmd.Process.Wait()
 		cmd := exec.Command("/usr/bin/pkill", "longmynd")
 		if err := cmd.Start(); err != nil {
 			log.Printf("ERROR failed to stop longmynd: %v", err)
@@ -911,33 +911,33 @@ func stopLongmynd() {
 		cmd.Wait()
 	}
 	log.Printf("INFO longmynd has stopped")
-	isTuned = false
+	d.isTuned = false
 }
 
 // Start ffplay
 //
 //	ie. with position in frame buffer, fullscreen and volume
-func startFfplay() {
-	if !isPlaying && !ffPlayIsACtive {
+func (d *lmDependants_t) startFfplay() {
+	if !d.isPlaying && !d.ffPlayIsACtive {
 		log.Printf("INFO ffplay will start...")
-		fpExecCmd = exec.Command("/usr/bin/ffplay", "-left", "800", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
-		if err := fpExecCmd.Start(); err != nil {
+		d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-left", "800", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
+		if err := d.fpExecCmd.Start(); err != nil {
 			log.Printf("ERROR failed to start ffplay: %v", err)
 			return
 		}
 		// cmd.Wait()
 		log.Printf("INFO ffplay has started")
 	}
-	ffPlayIsACtive = true
-	isPlaying = true
+	d.ffPlayIsACtive = true
+	d.isPlaying = true
 }
 
 // Stop ffplay
-func stopFfplay() {
-	if isPlaying {
+func (d *lmDependants_t) stopFfplay() {
+	if d.isPlaying {
 		log.Printf("INFO ffplay will stop...")
-		fpExecCmd.Process.Kill()
-		fpExecCmd.Process.Wait()
+		d.fpExecCmd.Process.Kill()
+		d.fpExecCmd.Process.Wait()
 		cmd := exec.Command("/usr/bin/pkill", "ffplay")
 		if err := cmd.Start(); err != nil {
 			log.Printf("ERROR failed to stop ffplay: %v", err)
@@ -946,6 +946,6 @@ func stopFfplay() {
 		cmd.Wait()
 	}
 	log.Printf("INFO ffplay has stppoed")
-	ffPlayIsACtive = false
-	isPlaying = false
+	d.ffPlayIsACtive = false
+	d.isPlaying = false
 }
