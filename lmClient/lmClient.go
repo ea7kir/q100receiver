@@ -68,7 +68,7 @@ type (
 
 var (
 	frequencyRequestedKHz float64
-	dependanst            = lmDependants_t{}
+	dependant             = lmDependants_t{}
 )
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -96,10 +96,10 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 	// var fifoIsOpen = false
 
 	for {
-		if !dependanst.fifoIsOpen {
+		if !dependant.fifoIsOpen {
 			select {
 			case <-ctx.Done():
-				dependanst.stopFfPlayAndLongmynd()
+				dependant.stopFfPlayAndLongmynd()
 				// fifo.Close()
 				log.Printf("CANCEL ----- lmClient 1 has cancelled")
 				return
@@ -107,14 +107,14 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 				switch cmd.Type {
 				case CmdTune:
 					log.Printf("INFO ------ WILL TUNE for the first time")
-					dependanst.startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr)
+					dependant.startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr)
 					var err error
-					dependanst.fifo, err = os.OpenFile(config_LmStatusFifo, os.O_RDONLY, os.ModeNamedPipe)
+					dependant.fifo, err = os.OpenFile(config_LmStatusFifo, os.O_RDONLY, os.ModeNamedPipe)
 					if err != nil {
 						log.Fatalf("FATAL Failed to open '%v' fifo %v: ", config_LmStatusFifo, err)
 					}
-					reader = bufio.NewReader(dependanst.fifo)
-					dependanst.fifoIsOpen = true
+					reader = bufio.NewReader(dependant.fifo)
+					dependant.fifoIsOpen = true
 					continue
 				case CmdUnTune:
 					log.Printf("WARN cmd.Type %v should not be called here", cmd.Type)
@@ -136,18 +136,18 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 
 		select {
 		case <-ctx.Done():
-			dependanst.stopFfPlayAndLongmynd()
-			dependanst.fifo.Close()
+			dependant.stopFfPlayAndLongmynd()
+			dependant.fifo.Close()
 			log.Printf("CANCEL ----- lmClient 2 has cancelled")
 			return
 		case cmd := <-lmCmdChan:
 			switch cmd.Type {
 			case CmdTune:
 				log.Printf("INFO ------ WILL TUNE")
-				dependanst.startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr)
+				dependant.startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr)
 			case CmdUnTune:
 				log.Printf("INFO ------ WILL UNTUNE")
-				dependanst.stopFfPlayAndLongmynd()
+				dependant.stopFfPlayAndLongmynd()
 			case CmdEnableOffset:
 				enableOffset()
 			case CmdDisableOffset:
@@ -225,15 +225,15 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 			liveData.id27_setDbmPower(lmVal)
 		} // switch
 
-		if dependanst.isTuned && isLocked && !dependanst.isPlaying {
-			dependanst.startFfplay()
+		if dependant.isTuned && isLocked && !dependant.isPlaying {
+			dependant.startFfplay()
 		}
-		if dependanst.isTuned && !isLocked && dependanst.isPlaying {
-			dependanst.stopFfplay()
+		if dependant.isTuned && !isLocked && dependant.isPlaying {
+			dependant.stopFfplay()
 		}
-		if !dependanst.isTuned && dependanst.isPlaying {
+		if !dependant.isTuned && dependant.isPlaying {
 			isLocked = false
-			dependanst.stopFfPlayAndLongmynd()
+			dependant.stopFfPlayAndLongmynd()
 		}
 
 		if isLocked {
