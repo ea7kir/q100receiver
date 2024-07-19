@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -96,44 +95,44 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 	// var fifoIsOpen = false
 
 	for {
-		if !dependant.fifoIsOpen {
-			select {
-			case <-ctx.Done():
-				dependant.stopFfPlayAndLongmynd()
-				// fifo.Close()
-				log.Printf("CANCEL ----- lmClient 1 has cancelled")
-				return
-			case cmd := <-lmCmdChan:
-				switch cmd.Type {
-				case CmdTune:
-					log.Printf("INFO ------ WILL TUNE for the first time")
-					dependant.startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr)
-					// MOVED TO startLongmynd
-					var err error
-					dependant.fifo, err = os.OpenFile(config_LmStatusFifo, os.O_RDONLY, os.ModeNamedPipe)
-					if err != nil {
-						log.Fatalf("FATAL Failed to open '%v' fifo %v: ", config_LmStatusFifo, err)
-					}
-					reader = bufio.NewReader(dependant.fifo)
-					dependant.fifoIsOpen = true
-					continue
-				case CmdUnTune:
-					log.Printf("WARN cmd.Type %v should not be called here", cmd.Type)
-					// stopFfPlayAndLongmynd()
-				case CmdEnableOffset:
-					log.Printf("WARN cmd.Type %v should not be called here", cmd.Type)
-					// enableOffset()
-				case CmdDisableOffset:
-					log.Printf("WARN cmd.Type %v should not be called here", cmd.Type)
-					// disableOffset()
-				default:
-					log.Fatalf("FATAL cmd.Type was %v", cmd.Type)
-				}
-				// default:
-			}
-			// log.Println("TEMP .")
-			continue
-		}
+		// if !dependant.fifoIsOpen {
+		// 	select {
+		// 	case <-ctx.Done():
+		// 		dependant.stopFfPlayAndLongmynd()
+		// 		// fifo.Close()
+		// 		log.Printf("CANCEL ----- lmClient 1 has cancelled")
+		// 		return
+		// 	case cmd := <-lmCmdChan:
+		// 		switch cmd.Type {
+		// 		case CmdTune:
+		// 			log.Printf("INFO ------ WILL TUNE for the first time")
+		// 			dependant.startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr)
+		// 			// MOVED TO startLongmynd
+		// 			var err error
+		// 			dependant.fifo, err = os.OpenFile(config_LmStatusFifo, os.O_RDONLY, os.ModeNamedPipe)
+		// 			if err != nil {
+		// 				log.Fatalf("FATAL Failed to open '%v' fifo %v: ", config_LmStatusFifo, err)
+		// 			}
+		// 			reader = bufio.NewReader(dependant.fifo)
+		// 			dependant.fifoIsOpen = true
+		// 			continue
+		// 		case CmdUnTune:
+		// 			log.Printf("WARN cmd.Type %v should not be called here", cmd.Type)
+		// 			// stopFfPlayAndLongmynd()
+		// 		case CmdEnableOffset:
+		// 			log.Printf("WARN cmd.Type %v should not be called here", cmd.Type)
+		// 			// enableOffset()
+		// 		case CmdDisableOffset:
+		// 			log.Printf("WARN cmd.Type %v should not be called here", cmd.Type)
+		// 			// disableOffset()
+		// 		default:
+		// 			log.Fatalf("FATAL cmd.Type was %v", cmd.Type)
+		// 		}
+		// 		// default:
+		// 	}
+		// 	// log.Println("TEMP .")
+		// 	continue
+		// }
 
 		select {
 		case <-ctx.Done():
@@ -146,9 +145,11 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 			case CmdTune:
 				log.Printf("INFO ------ WILL TUNE")
 				dependant.startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr)
+				reader = bufio.NewReader(dependant.fifo)
 			case CmdUnTune:
 				log.Printf("INFO ------ WILL UNTUNE")
 				dependant.stopFfPlayAndLongmynd()
+				// DO WE NEED TO CONTINUE ?
 			case CmdEnableOffset:
 				enableOffset()
 			case CmdDisableOffset:
