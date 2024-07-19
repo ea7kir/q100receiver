@@ -46,6 +46,7 @@ type (
 	}
 
 	LmData_t struct {
+		changed       bool
 		StatusMsg     string
 		State         string
 		Frequency     string
@@ -81,13 +82,15 @@ var (
 // func ReadLonmyndStatus(ctx context.Context, lmc LmConfig_t, fpc FpConfig_t, ch chan LongmyndData) {
 func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan chan<- LmData_t) {
 
+	liveData := LmData_t{}
+
 	liveData.reset()
-	cacheData.reset()
+	// cacheData.reset()
 	esPair.reset()
 
 	isLocked := false
 
-	lmDataChan <- *liveData
+	lmDataChan <- liveData
 
 	var file *os.File = nil
 	var reader *bufio.Reader = nil
@@ -159,8 +162,8 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 		if err != nil {
 			log.Printf("ERROR reading fifo: %v", err)
 			liveData.reset()
-			cacheData.reset()
-			lmDataChan <- *liveData
+			// cacheData.reset()
+			lmDataChan <- liveData
 			// time.Sleep(100 * time.Millisecond)
 			continue
 		}
@@ -177,10 +180,10 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 			isLocked = liveData.State == kLocked
 			if !isLocked { // if not locked, reset most status
 				liveData.resetPartial()
-				cacheData.reset()
+				// cacheData.reset()
 				esPair.reset()
 				agcPair.reset()
-				lmDataChan <- *liveData
+				lmDataChan <- liveData
 				// time.Sleep(5 * time.Millisecond)
 				continue
 			}
@@ -240,9 +243,14 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 			liveData.StatusMsg = liveData.State
 		}
 
-		if *liveData != *cacheData {
-			lmDataChan <- *liveData
-			*cacheData = *liveData
+		// if *liveData != *cacheData {
+		// 	lmDataChan <- *liveData
+		// 	*cacheData = *liveData
+		// }
+
+		if liveData.changed {
+			lmDataChan <- liveData
+			liveData.changed = false
 		}
 	}
 }
@@ -253,32 +261,6 @@ func enableOffset() {
 
 func disableOffset() {
 
-}
-
-func (d *LmData_t) reset() {
-	d.resetPartial()
-	d.State = kDash
-}
-
-func (d *LmData_t) resetPartial() {
-	d.StatusMsg = "Not tuned"
-	// d.State = kDash
-	d.Frequency = kDash
-	d.SymbolRate = kDash
-	d.DbMer = kDash
-	d.Provider = kDash
-	d.Service = kDash
-	d.NullRatio = kDash
-	d.PidPair1 = kDash
-	d.PidPair2 = kDash
-	d.VideoCodec = kDash
-	d.AudioCodec = kDash
-	d.Constellation = kDash
-	d.Fec = kDash
-	d.Mode = kDash
-	d.DbMargin = kDash
-	d.DbmPower = kDash
-	d.FreqOffset = kDash
 }
 
 var (
@@ -483,10 +465,11 @@ const (
 )
 
 var (
-	esPair    = esPairStuct{}
-	agcPair   = new(agcPairStuct)
-	liveData  = new(LmData_t)
-	cacheData = new(LmData_t)
+	esPair = esPairStuct{}
+	// agcPair = new(agcPairStuct)
+	agcPair = agcPairStuct{}
+	// liveData = new(LmData_t)
+	// cacheData = new(LmData_t)
 	isTuned   bool
 	isPlaying bool
 )
@@ -494,6 +477,34 @@ var (
 /***********************************************************
 	functions called from the main switch statement
 ***********************************************************/
+
+func (d *LmData_t) reset() {
+	d.resetPartial()
+	d.changed = false
+	d.State = kDash
+}
+
+func (d *LmData_t) resetPartial() {
+	d.StatusMsg = "Not tuned"
+	// d.State = kDash
+	d.Frequency = kDash
+	d.SymbolRate = kDash
+	d.DbMer = kDash
+	d.Provider = kDash
+	d.Service = kDash
+	d.NullRatio = kDash
+	d.PidPair1 = kDash
+	d.PidPair2 = kDash
+	d.VideoCodec = kDash
+	d.AudioCodec = kDash
+	d.Constellation = kDash
+	d.Fec = kDash
+	d.Mode = kDash
+	d.DbMargin = kDash
+	d.DbmPower = kDash
+	d.FreqOffset = kDash
+	d.changed = true
+}
 
 // State
 func (d *LmData_t) id1_setState(stateStr string) {
@@ -512,7 +523,9 @@ func (d *LmData_t) id1_setState(stateStr string) {
 		d.Mode = kDVB_S2
 	default:
 		log.Printf("WARN Undefined status: %v", stateStr)
+		return
 	}
+	d.changed = true
 }
 
 // Carrier Frequency - During a search this is the carrier frequency being trialled. When locked this is the Carrier Frequency detected in the stream. Sent in KHz
@@ -528,6 +541,7 @@ func (d *LmData_t) id6_setFrequency(carrierFrequencyStr string) {
 
 	frequencyErroorKHz := (receivedFrequencyKHz - frequencyRequestedKHz)
 	d.FreqOffset = fmt.Sprintf("%.3f", frequencyErroorKHz/1000)
+	d.changed = true
 }
 
 // Symbol Rate - During a search this is the symbol rate being trialled.  When locked this is the symbol rate detected in the stream
@@ -540,6 +554,7 @@ func (d *LmData_t) id9_setSymbolRate(symbolRateStr string) {
 	}
 	sysmbolRate := sysmbolRateFloat / 1000.0
 	d.SymbolRate = fmt.Sprintf("%.1f", sysmbolRate)
+	d.changed = true
 }
 
 // MER - Modulation Error Ratio in dB * 10
@@ -552,6 +567,7 @@ func (d *LmData_t) id12_setDbMer(merStr string) {
 	}
 	dbMer := dbMerFloat / 10.0
 	d.DbMer = fmt.Sprintf("%.1f", dbMer)
+	d.changed = true
 }
 
 // Service Provider - TS Service Provider Name
@@ -561,6 +577,7 @@ func (d *LmData_t) id13_setProvider(providerStr string) {
 		return
 	}
 	d.Provider = providerStr
+	d.changed = true
 }
 
 // Service Provider Service - TS Service Name
@@ -570,6 +587,7 @@ func (d *LmData_t) id14_setService(serviceStr string) {
 		return
 	}
 	d.Service = serviceStr
+	d.changed = true
 }
 
 // Null Ratio - Ratio of Nulls in TS as percentage
@@ -580,6 +598,7 @@ func (d *LmData_t) id15_setNullRatio(nullRatioStr string) {
 		return
 	}
 	d.NullRatio = nullRatioStr
+	d.changed = true
 }
 
 // The PID numbers themselves are fairly arbitrary, will vary based on the transmitted signal and don't really mean anything in a single program multiplex.
@@ -610,6 +629,11 @@ func (d *LmData_t) id16_setEsPid(esPidStr string) {
 
 // ES TYPE - Elementary Stream Type (repeated as pair with 16 for each ES)
 func (d *LmData_t) id17_setEsType(esType string) {
+	typ, err := strconv.Atoi(esType)
+	if err != nil {
+		log.Printf("WARN Failed to convert esType %v", err)
+		return
+	}
 	if esPair.waitingFor1stType {
 		esPair.the1stTypeValue = esType
 		esPair.waitingFor1stPid = false
@@ -617,6 +641,22 @@ func (d *LmData_t) id17_setEsType(esType string) {
 		esPair.waitingFor1stType = false
 		esPair.waitingFor2ndType = false
 		d.PidPair1 = fmt.Sprintf("%v %v", esPair.the1stPidValue, esPair.the1stTypeValue) // beacon 257 27 = video
+		switch typ {
+		case 1:
+			d.VideoCodec = "MPEG1"
+		case 16:
+			d.VideoCodec = "H.263"
+		case 27:
+			d.VideoCodec = "H.264"
+		case 33:
+			d.VideoCodec = "JPG2K"
+		case 36:
+			d.VideoCodec = "H.265"
+		case 51:
+			d.VideoCodec = "H.266"
+		default:
+			d.VideoCodec = "???"
+		}
 	}
 	if esPair.waitingFor2ndType {
 		esPair.the2ndTypeValue = esType
@@ -625,48 +665,65 @@ func (d *LmData_t) id17_setEsType(esType string) {
 		esPair.waitingFor1stType = false
 		esPair.waitingFor2ndType = false
 		d.PidPair2 = fmt.Sprintf("%v %v", esPair.the2ndPidValue, esPair.the2ndTypeValue) // beacon 258 3 = audio
+		log.Printf("Audio %v %v", esPair.the2ndPidValue, esPair.the2ndTypeValue)
+		switch typ {
+		case 2:
+			d.AudioCodec = "MPEG2"
+		case 3:
+			d.AudioCodec = "MPA" // was "MP3"
+		case 4:
+			d.AudioCodec = "MP3"
+		case 15:
+			d.AudioCodec = "ACC"
+		case 32:
+			d.AudioCodec = "MPA"
+		case 129:
+			d.AudioCodec = "AC3"
+		default:
+			d.AudioCodec = "???"
+		}
 		// NEWesPair.reset()
 	}
 
-	typ, err := strconv.Atoi(esType)
-	if err != nil {
-		log.Printf("WARN Failed to convert esType %v", err)
-		return
-	}
-	switch typ {
-	case 1:
-		d.VideoCodec = "MPEG1"
-	case 16:
-		d.VideoCodec = "H.263"
-	case 27:
-		d.VideoCodec = "H.264"
-	case 33:
-		d.VideoCodec = "JPG2K"
-	case 36:
-		d.VideoCodec = "H.265"
-	case 51:
-		d.VideoCodec = "H.266"
-	default:
-		d.VideoCodec = "???"
-	}
+	// typ, err := strconv.Atoi(esType)
+	// if err != nil {
+	// 	log.Printf("WARN Failed to convert esType %v", err)
+	// 	return
+	// }
+	// switch typ {
+	// case 1:
+	// 	d.VideoCodec = "MPEG1"
+	// case 16:
+	// 	d.VideoCodec = "H.263"
+	// case 27:
+	// 	d.VideoCodec = "H.264"
+	// case 33:
+	// 	d.VideoCodec = "JPG2K"
+	// case 36:
+	// 	d.VideoCodec = "H.265"
+	// case 51:
+	// 	d.VideoCodec = "H.266"
+	// default:
+	// 	d.VideoCodec = "???"
+	// }
 
-	switch typ {
-	case 2:
-		d.AudioCodec = "MPEG2"
-	case 3:
-		d.AudioCodec = "MPA" // was "MP3"
-	case 4:
-		d.AudioCodec = "MP3"
-	case 15:
-		d.AudioCodec = "ACC"
-	case 32:
-		d.AudioCodec = "MPA"
-	case 129:
-		d.AudioCodec = "AC3"
-	default:
-		d.AudioCodec = "???"
-	}
-
+	// switch typ {
+	// case 2:
+	// 	d.AudioCodec = "MPEG2"
+	// case 3:
+	// 	d.AudioCodec = "MPA" // was "MP3"
+	// case 4:
+	// 	d.AudioCodec = "MP3"
+	// case 15:
+	// 	d.AudioCodec = "ACC"
+	// case 32:
+	// 	d.AudioCodec = "MPA"
+	// case 129:
+	// 	d.AudioCodec = "AC3"
+	// default:
+	// 	d.AudioCodec = "???"
+	// }
+	d.changed = true
 }
 
 // MODCOD - Received Modulation & Coding Rate. See MODCOD Lookup Table below
@@ -736,6 +793,7 @@ func (d *LmData_t) id18_setConstellationAndFecAndMargin(modcodStr string) {
 		return
 	}
 	d.DbMargin = fmt.Sprintf("D %.1f", float_mer-float_threshold)
+	d.changed = true
 }
 
 // AGC1 Gain - Gain value of AGC1 (0: Signal too weak, 65535: Signal too strong)
