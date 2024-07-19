@@ -22,7 +22,7 @@ type (
 		lmExecCmd      *exec.Cmd
 		fpExecCmd      *exec.Cmd
 		fifo           *os.File
-		// fifoIsOpen     bool
+		fifoIsOpen     bool
 	}
 )
 
@@ -56,17 +56,19 @@ func (d *lmDependants_t) startLongmynd(frequency, symbolRate string) {
 		return
 	}
 	log.Printf("INFO longmynd has started with f = %v", requestKHzStr)
-	// d.fifo =
-	// var err error
+
 	d.fifo, err = os.OpenFile(config_LmStatusFifo, os.O_RDONLY, os.ModeNamedPipe)
 	if err != nil {
 		log.Fatalf("FATAL Failed to open '%v' fifo %v: ", config_LmStatusFifo, err)
 	}
+	log.Printf("INFO fifo is open %v", d.fifo.Name())
 	d.isTuned = true
+	d.fifoIsOpen = true
 }
 
 // Stop Longmynd
 func (d *lmDependants_t) stopLongmynd() {
+	d.fifoIsOpen = false
 	if d.isTuned {
 		log.Printf("INFO longmynd will stop...")
 		d.lmExecCmd.Process.Kill()
@@ -80,7 +82,7 @@ func (d *lmDependants_t) stopLongmynd() {
 	}
 	log.Printf("INFO longmynd has stopped")
 	d.isTuned = false
-	d.fifo.Close()
+	d.fifo.Close() // TODO: should this higher up ?
 }
 
 // Start ffplay
