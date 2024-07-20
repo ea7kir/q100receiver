@@ -1,4 +1,5 @@
 # TODO:
 
 - add connection diagram
-- add photographs
+- update rx.jpeg
+- add more photographs
