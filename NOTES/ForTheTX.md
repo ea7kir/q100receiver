@@ -6,7 +6,7 @@
 - [VivaDATV](http://vivadatv.org/viewtopic.php?f=84&t=940)
 - [amsat](https://forum.amsat-dl.org/index.php?thread/4059-new-soft-datv-easy-v1-20-download-v1-25/)
 
-The Cat22 video show a block diagram. It appears to use GNU Radio.
+The Cat22 video shows a block diagram. It appears to use GNU Radio.
 
 ## Network Routing
 
