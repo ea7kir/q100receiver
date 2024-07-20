@@ -25,9 +25,9 @@ CONFIGURE:
 		Use password authentication
 	Set username and password
 		Username:			pi
-		Password: 			<password>
+		Password: 			<choose a password>
 	Set locale settings
-		Time zone:			<Europe/Madrid> # or wherever you are
+		Time zone:			<choose a timezone>
 		Keyboard layout:	<us>
 	Eject media when finished
 SAVE and WRITE
@@ -50,6 +50,16 @@ chmod +x /home/pi/Q100/q100receiver/etc/install.sh
 ```
 
 THEN FOLLOW THE INSTRUCTIONS AND CONFIGURE THE DESKTOP
+
+### Updating
+
+First read the GitHub Release notes for the version you require
+
+```
+cd ~/pi/Q100/q100receiver/etc/
+chmod +x update.sh
+./update.sh
+```
 
 ## License
 Copyright (c) 2023 Michael Naylor EA7KIR (https://michaelnaylor.es)
