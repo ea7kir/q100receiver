@@ -99,8 +99,6 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 
 	liveData.reset()
 
-	esPair.reset() // TODO: move to lmDependants.go
-
 	isLocked := false
 
 	lmDataChan <- liveData
@@ -132,7 +130,7 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 		default:
 		}
 
-		if !dependant.fifoIsOpen {
+		if !dependant.isTuned {
 			time.Sleep(time.Microsecond * 50) // TODO: should I just slow down the entire loop ?
 			continue
 		}
@@ -159,10 +157,8 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 			isLocked = liveData.State == kLocked
 			if !isLocked { // if not locked, reset most status
 				liveData.resetPartial()
-				esPair.reset()  // TODO: move to lmDependants.go
-				agcPair.reset() // TODO: move to lmDependants.go
 				lmDataChan <- liveData
-				// time.Sleep(5 * time.Millisecond)
+				time.Sleep(time.Microsecond * 50)
 				continue
 			}
 		// case 2: // LNA Gain - On devices that have LNA Amplifiers this represents the two gain sent as N, where n = (lna_gain<<5) | lna_vgo. Though not actually linear, n can be usefully treated as a single byte representing the gain of the amplifier
@@ -203,6 +199,8 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 		case 27: // AGC2 Gain - Gain value of AGC2 (0: Minimum Gain, 65535: Maximum Gain)
 			liveData.id27_setDbmPower(lmVal)
 		} // switch
+
+		// TODO: the follwoing 4 if statement should be in a function in lmDependants.go
 
 		if dependant.isTuned && isLocked && !dependant.isPlaying {
 			dependant.startFfplay()

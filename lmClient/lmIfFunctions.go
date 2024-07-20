@@ -21,7 +21,7 @@ const (
 )
 
 type (
-	esPairStuct struct {
+	esPairStuct struct { // TODO: too complicated - why not similar to agcPairStuct ?
 		waitingFor1stPid  bool
 		waitingFor2ndPid  bool
 		waitingFor1stType bool
@@ -220,6 +220,13 @@ func (d *LmData_t) resetPartial() {
 	d.DbmPower = kDash
 	d.FreqOffset = kDash
 	d.changed = true
+
+	esPair.reset()
+	agcPair.reset()
+}
+
+func (d *LmData_t) isLocked() bool { // TODO: use this instear var isLockked in lmClient.go
+	return d.State == kLocked
 }
 
 // State
@@ -433,10 +440,10 @@ func (d *LmData_t) id18_setConstellationAndFecAndMargin(modcodStr string) {
 			d.Constellation = kDash
 			return
 		}
-		d.Constellation = kModcodeDvdS2[modcodInt].constellation // TODO: throws panic: runtime error: index out of range [31] with length 29
+		d.Constellation = kModcodeDvdS2[modcodInt].constellation // throws panic: runtime error: index out of range [31] with length 29
 		d.Fec = kModcodeDvdS2[modcodInt].fec
 	default:
-		log.Printf("WARN Unknkown longmyndData.mode %v", d.Mode) // TODO: why here, when no signal received ?
+		// log.Printf("WARN Unknkown d.mode %v", d.Mode) // TODO: why here, when no signal received ?
 		return
 	}
 	// set Margin
@@ -445,7 +452,7 @@ func (d *LmData_t) id18_setConstellationAndFecAndMargin(modcodStr string) {
 		d.DbMargin = kDash
 		return
 	}
-	//key := "KEY"
+	// key := "KEY"
 	var key string
 	switch d.Mode {
 	case kDVB_S:

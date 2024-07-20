@@ -22,7 +22,6 @@ type (
 		lmExecCmd      *exec.Cmd
 		fpExecCmd      *exec.Cmd
 		fifo           *os.File
-		fifoIsOpen     bool
 	}
 )
 
@@ -63,23 +62,21 @@ func (d *lmDependants_t) startLongmynd(frequency, symbolRate string) {
 	}
 	log.Printf("INFO fifo is open %v", d.fifo.Name())
 	d.isTuned = true
-	d.fifoIsOpen = true
 }
 
 // Stop Longmynd
 func (d *lmDependants_t) stopLongmynd() {
-	d.fifoIsOpen = false
-	if d.isTuned {
-		log.Printf("INFO longmynd will stop...")
-		d.lmExecCmd.Process.Kill()
-		d.lmExecCmd.Process.Wait()
-		cmd := exec.Command("/usr/bin/pkill", "longmynd")
-		if err := cmd.Start(); err != nil {
-			log.Printf("ERROR failed to stop longmynd: %v", err)
-			return
-		}
-		cmd.Wait()
+	// if d.isTuned {
+	log.Printf("INFO longmynd will stop...")
+	d.lmExecCmd.Process.Kill()
+	d.lmExecCmd.Process.Wait()
+	cmd := exec.Command("/usr/bin/pkill", "longmynd")
+	if err := cmd.Start(); err != nil {
+		log.Printf("ERROR failed to stop longmynd: %v", err)
+		return
 	}
+	cmd.Wait()
+	// }
 	log.Printf("INFO longmynd has stopped")
 	d.isTuned = false
 	d.fifo.Close() // TODO: should this higher up ?
