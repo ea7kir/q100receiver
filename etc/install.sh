@@ -3,8 +3,6 @@
 # Install Q100 Receiver on Raspberry Pi 4
 # Orignal design by Michael, EA7KIR
 
-# updated to GO 1.25 on July 6 2024
-
 GOVERSION=1.22.5
 
 whoami | grep -q pi
@@ -28,78 +26,99 @@ while true; do
    esac
 done
 
+echo "
 ###################################################
+Update Pi OS
+###################################################
+"
 
-echo Update Pi OS
 sudo apt update
 sudo apt -y full-upgrade
 sudo apt -y autoremove
 sudo apt clean
 
+echo "
 ###################################################
-
-# echo Running rfkill # not sure if this dupicates config.txt
-# rfkill block 0
-# rfkill block 1
-
+Making changes to config.txt
 ###################################################
-
-echo Making changes to config.txt
+"
 
 sudo sh -c "echo '\n# EA7KIR Additions' >> /boot/config.txt"
 
-echo Disable Wifi
+# Disable Wifi
 sudo sh -c "echo 'dtoverlay=disable-wifi' >> /boot/config.txt"
 
-echo Disable Bluetooth
+# Disable Bluetooth
 sudo sh -c "echo 'dtoverlay=disable-bt' >> /boot/config.txt"
 
-echo EXPERIMENTAL: raspi-config, select System / Audio, choose 1
+# EXPERIMENTAL: raspi-config, select System / Audio, choose 1
 sudo sh -c "echo 'dtparam=audio=off' >> /boot/config.txt"
 
+echo "
 ###################################################
-
-echo Making changes to .profile
+Making changes to .profile
+###################################################
+"
 
 sudo sh -c "echo '\n# EA7KIR Additions' >> /home/pi/.profile"
 
-echo Disbale Screen Blanking in .profile
+# Disbale Screen Blanking in .profile
 echo -e 'export DISPLAY=:0; xset s noblank; xset s off; xset -dpms' >> /home/pi/.profile
 
-echo Adding go path to .profile
+# Adding go path to .profile
 echo -e 'export PATH=$PATH:/usr/local/go/bin' >> /home/pi/.profile
 
+echo "
 ###################################################
+Installing Go $GOVERSION
+###################################################
+"
 
-echo Installing Go $GOVERSION
 GOFILE=go$GOVERSION.linux-arm64.tar.gz
 cd /usr/local
 sudo wget https://go.dev/dl/$GOFILE
 sudo tar -C /usr/local -xzf $GOFILE
 cd
 
-echo Installing gioui dependencies
-# sudo apt install gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
+echo "
+###################################################
+Installing gioui dependencies
+###################################################
+"
+
 sudo apt -y install pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
 
-echo Installing gioui tools
-# currently, allow 'go mod tidy' to instal gioui v0.6.1
-#/usr/local/go/bin/go install gioui.org/cmd/gogio@latest
-
+echo "
 ###################################################
+Installing gioui tools
+###################################################
+"
 
-echo Install the No Video caption
+/usr/local/go/bin/go install gioui.org/cmd/gogio@latest
+
+echo "
+###################################################
+Install the No Video caption
+###################################################
+"
+
 sudo cp /home/pi/Q100/q100receiver/etc/NoVideo.jpg /usr/share/rpd-wallpaper
 
+echo "
 ###################################################
+Install longmynd dependencies
+###################################################
+"
 
-echo Install longmynd dependencies
 #sudo apt install make gcc libusb-1.0-0-dev libasound2-dev
 sudo apt -y install libusb-1.0-0-dev libasound2-dev
 
+echo "
 ###################################################
+Cloning longmynd to /home/pi/Q100
+###################################################
+"
 
-echo Cloning longmynd to /home/pi/Q100
 cd /home/pi/Q100
 git clone https://github.com/ea7kir/longmynd.git
 cd longmynd
@@ -108,22 +127,30 @@ mkfifo longmynd_main_status
 mkfifo longmynd_main_ts
 cd
 
+echo "
 ###################################################
+Copying q100receiver.service
+###################################################
+"
 
-echo Copying q100receiver.service
 cd /home/pi/Q100/q100receiver/etc
 sudo cp q100receiver.service /etc/systemd/system/
 sudo chmod 644 /etc/systemd/system/q100receiver.service
 sudo systemctl daemon-reload
 cd
 
+echo "
 ###################################################
+Prevent this script form being executed again
+###################################################
+"
 
 chmod -x /home/pi/Q100/etc/install.sh # to prevent it from being run a second time
 
 echo "
 INSTALL HAS COMPLETED
-    after rebooting...
+
+    AFTER REBOOTING...
 
     Ues your finger to configure some Desktop settings:
 
