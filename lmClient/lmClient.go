@@ -167,7 +167,7 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 		// case 4: // I Symbol Power - Measure of the current power being seen in the I symbols
 		// case 5: // Q Symbol Power - Measure of the current power being seen in the Q symbols
 		case 6: // Carrier Frequency - During a search this is the carrier frequency being trialled. When locked this is the Carrier Frequency detected in the stream. Sent in KHz
-			liveData.id6_setFrequency(lmVal) //, offset)
+			liveData.id6_setFrequency(lmVal, dependant.requestKHz) //, offset)
 		// case 7: // I Constellation - Single signed byte representing the voltage of a sampled I point
 		// case 8: // Q Constellation - Single signed byte representing the voltage of a sampled Q point
 		case 9: // Symbol Rate - During a search this is the symbol rate being trialled.  When locked this is the symbol rate detected in the stream

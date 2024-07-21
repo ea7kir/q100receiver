@@ -22,6 +22,7 @@ type (
 		lmExecCmd      *exec.Cmd
 		fpExecCmd      *exec.Cmd
 		fifo           *os.File
+		requestKHz     float64
 	}
 )
 
@@ -45,8 +46,8 @@ func (d *lmDependants_t) startLongmynd(frequency, symbolRate string) {
 		log.Fatalf("FATAL bad lmFrequency: %v", err)
 
 	}
-	requestKHz := (requestedFrequency * 1000) - config_LmOffset
-	requestKHzStr := strconv.FormatFloat(requestKHz, 'f', 0, 64)
+	d.requestKHz = (requestedFrequency * 1000) - config_LmOffset
+	requestKHzStr := strconv.FormatFloat(d.requestKHz, 'f', 0, 64)
 	log.Printf("INFO longmynd will start...")
 	d.lmExecCmd = exec.Command("./longmynd", "-S", "0.6", requestKHzStr, symbolRate)
 	d.lmExecCmd.Dir = config_LmFolder // ie. /home/pi/Q100/longmynd/

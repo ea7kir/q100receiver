@@ -257,7 +257,7 @@ func (d *LmData_t) id1_setState(stateStr string) {
 }
 
 // Carrier Frequency - During a search this is the carrier frequency being trialled. When locked this is the Carrier Frequency detected in the stream. Sent in KHz
-func (d *LmData_t) id6_setFrequency(carrierFrequencyStr string) {
+func (d *LmData_t) id6_setFrequency(carrierFrequencyStr string, requestedKHz float64) {
 	kHzFloat, err := strconv.ParseFloat(carrierFrequencyStr, 64)
 	if err != nil {
 		log.Printf("WARN Bad carrierFrequencyStr: %v", err)
@@ -267,7 +267,7 @@ func (d *LmData_t) id6_setFrequency(carrierFrequencyStr string) {
 	receivedFrequencyKHz := kHzFloat + config_LmOffset
 	d.Frequency = fmt.Sprintf("%.2f", receivedFrequencyKHz/1000)
 
-	frequencyErroorKHz := 0.0 //(receivedFrequencyKHz - frequencyRequestedKHz)
+	frequencyErroorKHz := (kHzFloat - requestedKHz)
 	d.FreqOffset = fmt.Sprintf("%.3f", frequencyErroorKHz/1000)
 	d.changed = true
 }
