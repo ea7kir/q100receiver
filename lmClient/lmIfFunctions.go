@@ -225,9 +225,9 @@ func (d *LmData_t) resetPartial() {
 	agcPair.reset()
 }
 
-func (d *LmData_t) isLocked() bool { // TODO: use this instear var isLockked in lmClient.go
-	return d.State == kLocked
-}
+// func (d *LmData_t) isLocked() bool { // TODO: use this instead of var isLockked in lmClient.go
+// 	return d.State == kLocked
+// }
 
 // State
 func (d *LmData_t) id1_setState(stateStr string) {
@@ -267,7 +267,7 @@ func (d *LmData_t) id6_setFrequency(carrierFrequencyStr string) {
 	receivedFrequencyKHz := kHzFloat + config_LmOffset
 	d.Frequency = fmt.Sprintf("%.2f", receivedFrequencyKHz/1000)
 
-	frequencyErroorKHz := (receivedFrequencyKHz - frequencyRequestedKHz)
+	frequencyErroorKHz := 0.0 //(receivedFrequencyKHz - frequencyRequestedKHz)
 	d.FreqOffset = fmt.Sprintf("%.3f", frequencyErroorKHz/1000)
 	d.changed = true
 }

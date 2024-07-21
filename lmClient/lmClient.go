@@ -67,8 +67,8 @@ type (
 )
 
 var (
-	frequencyRequestedKHz float64
-	dependant             = lmDependants_t{}
+	// frequencyRequestedKHz float64
+	dependant = lmDependants_t{}
 )
 
 func idAndValFromString(s string) (int, string, error) {
@@ -106,6 +106,7 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 	var reader *bufio.Reader = nil
 
 	for {
+		time.Sleep(time.Microsecond * 50)
 
 		select {
 		case <-ctx.Done():
@@ -131,7 +132,7 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 		}
 
 		if !dependant.isTuned {
-			time.Sleep(time.Microsecond * 50) // TODO: should I just slow down the entire loop ?
+			// time.Sleep(time.Microsecond * 50) // TODO: should I just slow down the entire loop ?
 			continue
 		}
 
@@ -158,7 +159,7 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 			if !isLocked { // if not locked, reset most status
 				liveData.resetPartial()
 				lmDataChan <- liveData
-				time.Sleep(time.Microsecond * 50)
+				// time.Sleep(time.Microsecond * 50)
 				continue
 			}
 		// case 2: // LNA Gain - On devices that have LNA Amplifiers this represents the two gain sent as N, where n = (lna_gain<<5) | lna_vgo. Though not actually linear, n can be usefully treated as a single byte representing the gain of the amplifier
