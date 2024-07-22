@@ -54,7 +54,7 @@ var (
 	rxData     = rxControl.RxData_t{}
 	rxDataChan = make(chan rxControl.RxData_t)
 	spData     = spClient.SpData_t{}
-	spDataChan = make(chan spClient.SpData_t)
+	spDataChan = make(chan spClient.SpData_t, 1)
 	lmData     = lmClient.LmData_t{}
 	lmDataChan = make(chan lmClient.LmData_t)
 )
