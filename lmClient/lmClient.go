@@ -28,10 +28,11 @@ const (
 	config_FpBinary = "/usr/bin/ffplay"
 	config_FpVolume = "100"
 
-	CmdTune          = 1
-	CmdUnTune        = 2
-	CmdEnableOffset  = 3
-	CmdDisableOffset = 4
+	CmdTune            = 1
+	CmdUnTune          = 2
+	CmdToggleCalibrate = 3
+	// CmdEnableOffset  = 3
+	// CmdDisableOffset = 4
 )
 
 type (
@@ -67,8 +68,7 @@ type (
 )
 
 var (
-	// frequencyRequestedKHz float64
-	dependant = lmDependants_t{}
+// dependant = lmDependants_t{}
 )
 
 func idAndValFromString(s string) (int, string, error) {
@@ -97,9 +97,14 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 
 	liveData := LmData_t{}
 
+	dependant := lmDependants_t{}
+
 	liveData.reset()
 
 	isLocked := false
+
+	isBeacon := false
+	errStr := "0"
 
 	lmDataChan <- liveData
 
@@ -116,23 +121,25 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 		case cmd := <-lmCmdChan:
 			switch cmd.Type {
 			case CmdTune:
+				isBeacon = cmd.FrequencyStr == "10491.50 / 00"
 				log.Printf("INFO ------ WILL TUNE")
-				dependant.startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr)
+				dependant.startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr, errStr)
 				reader = bufio.NewReader(dependant.fifo)
 			case CmdUnTune:
 				log.Printf("INFO ------ WILL UNTUNE")
 				dependant.stopFfPlayAndLongmynd()
-			case CmdEnableOffset:
-				enableOffset()
-			case CmdDisableOffset:
-				disableOffset()
-
+			case CmdToggleCalibrate:
+				if isBeacon && isLocked {
+					errStr = liveData.FreqOffset
+				}
 			}
 		default:
 		}
 
 		if !dependant.isTuned {
 			// time.Sleep(time.Microsecond * 50) // TODO: should I just slow down the entire loop ?
+			liveData.reset()
+			lmDataChan <- liveData
 			continue
 		}
 
@@ -225,12 +232,4 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 			liveData.changed = false
 		}
 	}
-}
-
-func enableOffset() {
-
-}
-
-func disableOffset() {
-
 }

@@ -38,16 +38,17 @@ func (d *lmDependants_t) stopFfPlayAndLongmynd() {
 // Start Longmynd with frequency and symbolrate
 //
 //	ie. /home/pi/q100/longmynd/longmynd -S 0.6 requestKHzStr symbolRateStr
-func (d *lmDependants_t) startLongmynd(frequency, symbolRate string) {
+func (d *lmDependants_t) startLongmynd(frequency, symbolRate string, errStr string) {
+	log.Printf("WILL SUBTRACK %v MHz", errStr)
 	// trim "10491.50 / 00" to "10491.50"
 	frequencySplit := strings.SplitN(frequency, " ", 2)[0]
 	requestedFrequency, err := strconv.ParseFloat(frequencySplit, 64)
 	if err != nil {
 		log.Fatalf("FATAL bad lmFrequency: %v", err)
-
 	}
 	d.requestKHz = (requestedFrequency * 1000) - config_LmOffset
 	requestKHzStr := strconv.FormatFloat(d.requestKHz, 'f', 0, 64)
+
 	log.Printf("INFO longmynd will start...")
 	d.lmExecCmd = exec.Command("./longmynd", "-S", "0.6", requestKHzStr, symbolRate)
 	d.lmExecCmd.Dir = config_LmFolder // ie. /home/pi/Q100/longmynd/

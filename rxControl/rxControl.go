@@ -95,7 +95,8 @@ func HandleCommands(ctx context.Context, rxCmdChan <-chan RxCmd_t, rxDataCh chan
 			case CmdTune:
 				setLongmynd()
 			case CmdCalibrate:
-				setOffset()
+				lmCmd.Type = lmClient.CmdToggleCalibrate
+				lmCmdChan <- lmCmd
 			}
 			// default:
 		}
@@ -118,19 +119,19 @@ func setLongmynd() {
 	rxDataChan <- rxData
 }
 
-func setOffset() { // not sure if this is the right place. may lmClient would be better
-	if isOffset {
-		lmCmd.Type = lmClient.CmdDisableOffset
-		lmCmdChan <- lmCmd
-		isOffset = false
-	} else {
-		lmCmd.Type = lmClient.CmdEnableOffset
-		lmCmdChan <- lmCmd
-		isOffset = true
-	}
-	rxData.CurIsOffset = isOffset
-	rxDataChan <- rxData
-}
+// func setOffset() { // not sure if this is the right place. may lmClient would be better
+// 	if isOffset {
+// 		lmCmd.Type = lmClient.CmdDisableOffset
+// 		lmCmdChan <- lmCmd
+// 		isOffset = false
+// 	} else {
+// 		lmCmd.Type = lmClient.CmdEnableOffset
+// 		lmCmdChan <- lmCmd
+// 		isOffset = true
+// 	}
+// 	rxData.CurIsOffset = isOffset
+// 	rxDataChan <- rxData
+// }
 
 type selector_t struct {
 	currIndex int
