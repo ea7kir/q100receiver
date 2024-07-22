@@ -1,6 +1,5 @@
 ## TODO:
 
-- remove unused files and folders
 - test install.sh
 - test update.sh
 - revise what data to monitor

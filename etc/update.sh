@@ -84,7 +84,7 @@ UPDATE HAS COMPLETED
 
     Login from your PC, Mc, or Linux computer
 
-    ssh pi@txtouch.local
+    ssh pi@rxtouch.local
 
     and either execute the following commands
     

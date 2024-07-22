@@ -167,7 +167,7 @@ INSTALL HAS COMPLETED
 
     Then login from your PC, Mc, or Linux computer
 
-    ssh pi@txtouch.local
+    ssh pi@rxtouch.local
 
     Now execute the following commands
     
