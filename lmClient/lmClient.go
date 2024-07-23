@@ -102,6 +102,7 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 	for {
 		select {
 		case <-ctx.Done():
+			log.Printf("WILL CANCEL")
 			dependant.stopFfPlayAndLongmynd()
 			log.Printf("CANCEL ----- lmClient has cancelled")
 			return

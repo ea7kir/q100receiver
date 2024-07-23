@@ -36,7 +36,7 @@ type (
 
 var (
 	lmCmd              = lmClient.LmCmd_t{}
-	lmCmdChan          = make(chan lmClient.LmCmd_t, 5)
+	lmCmdChan          = make(chan lmClient.LmCmd_t, 1)
 	rxData             RxData_t
 	rxDataChan         chan<- RxData_t
 	bandSelector       selector_t
