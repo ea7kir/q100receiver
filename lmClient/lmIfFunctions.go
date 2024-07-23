@@ -196,8 +196,11 @@ func (d *agcPairStuct) reset() {
 
 func (d *LmData_t) reset() {
 	d.resetPartial()
-	d.changed = false
+
 	d.State = kDash
+
+	d.changed = false
+	d.Locked = false
 }
 
 func (d *LmData_t) resetPartial() {
@@ -220,35 +223,32 @@ func (d *LmData_t) resetPartial() {
 	d.DbmPower = kDash
 	d.FreqOffset = kDash
 	d.changed = true
+	// d.Locked =
 
 	esPair.reset()
 	agcPair.reset()
 }
-
-// func (d *LmData_t) isLocked() bool { // TODO: use this instead of var isLockked in lmClient.go
-// 	return d.State == kLocked
-// }
 
 // State
 func (d *LmData_t) id1_setState(stateStr string) {
 	switch stateStr {
 	case "0":
 		d.State = kInitialising
-		// d.isLocked = false
+		d.Locked = false
 	case "1":
 		d.State = kSeaching
-		// d.isLocked = false
+		d.Locked = false
 	case "2":
 		d.State = kFoundHeaders
-		// d.isLocked = false
+		d.Locked = false
 	case "3":
 		d.State = kLocked
 		d.Mode = kDVB_S
-		// d.isLocked = true
+		d.Locked = true
 	case "4":
 		d.State = kLocked
 		d.Mode = kDVB_S2
-		// d.isLocked = true
+		d.Locked = true
 	default:
 		log.Printf("WARN Undefined status: %v", stateStr)
 		return

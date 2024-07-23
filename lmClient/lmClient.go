@@ -44,8 +44,6 @@ type (
 	}
 
 	LmData_t struct {
-		changed bool
-		// isLocked      bool
 		StatusMsg     string
 		State         string
 		Frequency     string
@@ -64,11 +62,9 @@ type (
 		DbMargin      string
 		DbmPower      string
 		FreqOffset    string
+		changed       bool
+		Locked        bool
 	}
-)
-
-var (
-// dependant = lmDependants_t{}
 )
 
 func idAndValFromString(s string) (int, string, error) {
@@ -96,24 +92,18 @@ func idAndValFromString(s string) (int, string, error) {
 func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan chan<- LmData_t) {
 
 	liveData := LmData_t{}
-
 	dependant := lmDependants_t{}
 
 	liveData.reset()
-
-	isLocked := false
-
 	lmDataChan <- liveData
 
 	var reader *bufio.Reader = nil
 
 	for {
-		time.Sleep(time.Microsecond * 50)
-
 		select {
 		case <-ctx.Done():
 			dependant.stopFfPlayAndLongmynd()
-			log.Printf("CANCEL ----- lmClient 2 has cancelled")
+			log.Printf("CANCEL ----- lmClient has cancelled")
 			return
 		case cmd := <-lmCmdChan:
 			switch cmd.Type {
@@ -131,7 +121,7 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 		}
 
 		if !dependant.isTuned {
-			// time.Sleep(time.Microsecond * 50) // TODO: should I just slow down the entire loop ?
+			time.Sleep(time.Microsecond * 50)
 			liveData.reset()
 			lmDataChan <- liveData
 			continue
@@ -141,9 +131,8 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 		if err != nil {
 			log.Printf("ERROR reading fifo: %v", err)
 			liveData.reset()
-			// cacheData.reset()
 			lmDataChan <- liveData
-			// time.Sleep(100 * time.Millisecond)
+			time.Sleep(time.Millisecond * 50)
 			continue
 		}
 
@@ -156,8 +145,7 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 		switch lmId {
 		case 1: // State
 			liveData.id1_setState(lmVal)
-			isLocked = liveData.State == kLocked
-			if !isLocked { // if not locked, reset most status
+			if !liveData.Locked { // if not locked, reset most status
 				liveData.resetPartial()
 				lmDataChan <- liveData
 				// time.Sleep(time.Microsecond * 50)
@@ -204,18 +192,18 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 
 		// TODO: the follwoing 4 if statement should be in a function in lmDependants.go
 
-		if dependant.isTuned && isLocked && !dependant.isPlaying {
+		if dependant.isTuned && liveData.Locked && !dependant.isPlaying {
 			dependant.startFfplay()
 		}
-		if dependant.isTuned && !isLocked && dependant.isPlaying {
+		if dependant.isTuned && !liveData.Locked && dependant.isPlaying {
 			dependant.stopFfplay()
 		}
 		if !dependant.isTuned && dependant.isPlaying {
-			isLocked = false
+			liveData.Locked = false
 			dependant.stopFfPlayAndLongmynd()
 		}
 
-		if isLocked {
+		if liveData.Locked {
 			liveData.StatusMsg = fmt.Sprintf("%s : %s : %s", liveData.State, liveData.Provider, liveData.Service)
 		} else {
 			liveData.StatusMsg = liveData.State
