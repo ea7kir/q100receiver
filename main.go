@@ -40,6 +40,7 @@ import (
 
 	"gioui.org/app"
 	"gioui.org/font/gofont"
+	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/paint"
@@ -87,9 +88,9 @@ func main() {
 		}
 
 		cancel()
-		log.Printf("CANCEL IN MAIN ----- cancel() called")
+		// log.Printf("CANCEL IN MAIN ----- cancel() called")
 		// allow time to cancel all functions
-		time.Sleep(time.Second * 5)
+		time.Sleep(time.Second * 3)
 
 		// TODO: control this with a flag
 		if shutdown {
@@ -137,9 +138,10 @@ func loop(w *app.Window) error {
 			// When the context cancels, assign the done channel to nil to
 			// prevent it from firing over and over.
 			// done = nil
-			log.Printf("INTERRUPT")
-			return nil
-			// w.Perform(system.ActionClose) // panics
+			// interrupt = nil
+			// log.Printf("INTERRUPT")
+			// return nil
+			w.Perform(system.ActionClose)
 		case rxData = <-rxDataChan:
 			// log.Printf("TEMP got rxData")
 			w.Invalidate()
@@ -159,10 +161,8 @@ func loop(w *app.Window) error {
 				showAboutBox()
 			}
 			if ui.shutdown.Clicked(gtx) {
-				interrupt <- syscall.SIGINT
-				// TODO: try using continue
-				// return nil
-				// w.Perform(system.ActionClose)
+				// interrupt <- syscall.SIGINT
+				w.Perform(system.ActionClose)
 			}
 			if ui.decBand.Clicked(gtx) {
 				rxCmdChan <- rxControl.CmdDecBand
