@@ -23,7 +23,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"image"
 	"image/color"
 	"log"
@@ -70,7 +69,7 @@ func main() {
 	var shutdown bool
 	flag.BoolVar(&shutdown, "shutdown", false, "close and poweroff")
 	flag.Parse()
-	fmt.Println("shudown: ", shutdown)
+	// fmt.Println("shudown: ", shutdown)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -137,10 +136,6 @@ func loop(w *app.Window) error {
 		case <-interrupt:
 			// When the context cancels, assign the done channel to nil to
 			// prevent it from firing over and over.
-			// done = nil
-			// interrupt = nil
-			// log.Printf("INTERRUPT")
-			// return nil
 			w.Perform(system.ActionClose)
 		case rxData = <-rxDataChan:
 			// log.Printf("TEMP got rxData")
