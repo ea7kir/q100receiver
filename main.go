@@ -89,10 +89,10 @@ func main() {
 		cancel()
 		log.Printf("CANCEL IN MAIN ----- cancel() called")
 		// allow time to cancel all functions
-		time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 5)
 
 		// TODO: control this with a flag
-		if shutdown { // change to true for powerdown
+		if shutdown {
 			log.Printf("INFO ----- q100receiver will poweroff -----")
 			time.Sleep(1 * time.Second)
 			cmd := exec.Command("sudo", "poweroff")

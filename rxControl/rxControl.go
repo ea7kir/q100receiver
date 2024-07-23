@@ -119,20 +119,6 @@ func setLongmynd() {
 	rxDataChan <- rxData
 }
 
-// func setOffset() { // not sure if this is the right place. may lmClient would be better
-// 	if isOffset {
-// 		lmCmd.Type = lmClient.CmdDisableOffset
-// 		lmCmdChan <- lmCmd
-// 		isOffset = false
-// 	} else {
-// 		lmCmd.Type = lmClient.CmdEnableOffset
-// 		lmCmdChan <- lmCmd
-// 		isOffset = true
-// 	}
-// 	rxData.CurIsOffset = isOffset
-// 	rxDataChan <- rxData
-// }
-
 type selector_t struct {
 	currIndex int
 	lastIndex int
