@@ -103,9 +103,6 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 
 	isLocked := false
 
-	isBeacon := false
-	errStr := "0"
-
 	lmDataChan <- liveData
 
 	var reader *bufio.Reader = nil
@@ -121,17 +118,14 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 		case cmd := <-lmCmdChan:
 			switch cmd.Type {
 			case CmdTune:
-				isBeacon = cmd.FrequencyStr == "10491.50 / 00"
 				log.Printf("INFO ------ WILL TUNE")
-				dependant.startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr, errStr)
+				dependant.startLongmynd(cmd.FrequencyStr, cmd.SymbolRateStr)
 				reader = bufio.NewReader(dependant.fifo)
 			case CmdUnTune:
 				log.Printf("INFO ------ WILL UNTUNE")
 				dependant.stopFfPlayAndLongmynd()
 			case CmdToggleCalibrate:
-				if isBeacon && isLocked {
-					errStr = liveData.FreqOffset
-				}
+				// TODO: implement
 			}
 		default:
 		}

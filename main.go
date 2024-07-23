@@ -22,6 +22,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"image"
 	"image/color"
 	"log"
@@ -64,10 +66,14 @@ func main() {
 
 	log.Printf("INFO ----- q100receiver Opened -----")
 
+	var shutdown bool
+	flag.BoolVar(&shutdown, "shutdown", false, "close and poweroff")
+	flag.Parse()
+	fmt.Println("shudown: ", shutdown)
+
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go spClient.ReadSpectrumServer(ctx, spDataChan)
-
 	go rxControl.HandleCommands(ctx, rxCmdChan, rxDataChan, lmDataChan)
 
 	go func() {
@@ -86,7 +92,7 @@ func main() {
 		time.Sleep(time.Second * 3)
 
 		// TODO: control this with a flag
-		if !true { // change to true for powerdown
+		if shutdown { // change to true for powerdown
 			log.Printf("INFO ----- q100receiver will poweroff -----")
 			time.Sleep(1 * time.Second)
 			cmd := exec.Command("sudo", "poweroff")

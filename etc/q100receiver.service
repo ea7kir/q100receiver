@@ -27,7 +27,7 @@ StandardOutput=append:/home/pi/Q100/receiver.log
 StandardError=append:/home/pi/Q100/receiver.log
 Environment="DISPLAY=:0"
 WorkingDirectory=/home/pi/Q100/q100receiver
-ExecStart=/home/pi/Q100/q100receiver/q100receiver
+ExecStart=/home/pi/Q100/q100receiver/q100receiver -shutdown
 
 [Install]
 WantedBy=graphical.target  network-online.target
