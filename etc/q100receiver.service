@@ -17,7 +17,7 @@
 
 [Unit]
 Description=Q-100 Receiver
-Wants=nraphical.target network-online.target
+Wants=graphical.target network-online.target
 After=graphical.target network-online.target
 
 [Service]

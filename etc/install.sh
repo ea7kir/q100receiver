@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Install Q100 Receiver on Raspberry Pi 4
+# Install Q100 Receiver on rxtouch.local
 # Orignal design by Michael, EA7KIR
 
 GOVERSION=1.22.5
@@ -86,7 +86,7 @@ Installing gioui dependencies
 ###################################################
 "
 
-sudo apt -y install pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
+sudo apt -y install gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
 
 echo "
 ###################################################
