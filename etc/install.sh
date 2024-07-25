@@ -177,6 +177,8 @@ INSTALL HAS COMPLETED
     sudo systemctl enable q100receiver
     sudo systemctl start q100receiver
 
+    The App should now be ruuning on the touch screen
+
 "
 
 while true; do
