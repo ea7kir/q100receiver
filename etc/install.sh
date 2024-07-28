@@ -43,16 +43,16 @@ Making changes to config.txt
 ###################################################
 "
 
-sudo sh -c "echo '\n# EA7KIR Additions' >> /boot/config.txt"
+#sudo sh -c "echo '\n# EA7KIR Additions' >> /boot/config.txt"
 
 # Disable Wifi
-sudo sh -c "echo 'dtoverlay=disable-wifi' >> /boot/config.txt"
+#sudo sh -c "echo 'dtoverlay=disable-wifi' >> /boot/config.txt"
 
 # Disable Bluetooth
-sudo sh -c "echo 'dtoverlay=disable-bt' >> /boot/config.txt"
+#sudo sh -c "echo 'dtoverlay=disable-bt' >> /boot/config.txt"
 
 # EXPERIMENTAL: raspi-config, select System / Audio, choose 1
-sudo sh -c "echo 'dtparam=audio=off' >> /boot/config.txt"
+#sudo sh -c "echo 'dtparam=audio=off' >> /boot/config.txt"
 
 echo "
 ###################################################
