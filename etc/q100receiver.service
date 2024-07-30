@@ -25,6 +25,7 @@ User=pi
 Group=pi
 StandardOutput=append:/home/pi/Q100/receiver.log
 StandardError=append:/home/pi/Q100/receiver.log
+#Environment="XDG_RUNTIME_DIR=/run/user/1000"
 Environment="DISPLAY=:0"
 WorkingDirectory=/home/pi/Q100/q100receiver
 ExecStart=/home/pi/Q100/q100receiver/q100receiver -shutdown
