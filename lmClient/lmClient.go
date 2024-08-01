@@ -28,9 +28,9 @@ const (
 	config_FpBinary = "/usr/bin/ffplay"
 	config_FpVolume = "100"
 
-	CmdTune            = 1
-	CmdUnTune          = 2
-	CmdToggleCalibrate = 3
+	CmdTune   = 1
+	CmdUnTune = 2
+	// CmdToggleCalibrate = 3
 	// CmdEnableOffset  = 3
 	// CmdDisableOffset = 4
 )
@@ -114,7 +114,7 @@ func ReadLonmyndStatus(ctx context.Context, lmCmdChan <-chan LmCmd_t, lmDataChan
 			case CmdUnTune:
 				log.Printf("INFO ------ WILL UNTUNE")
 				dependant.stopFfPlayAndLongmynd()
-			case CmdToggleCalibrate:
+				// case CmdToggleCalibrate:
 				// TODO: implement
 			}
 		default:

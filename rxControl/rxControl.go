@@ -19,18 +19,19 @@ const (
 	config_rxWideFrequency        = "10494.75 / 09"
 	config_rxNarrowFrequency      = "10499.25 / 27"
 	config_rxVeryNarrowFrequency  = "10496.00 / 14"
+	config_streamUrl              = "rtmp://rtmp.batc.org.uk/live/" // or some youtube channel
+	config_streamKey              = "my-stream-key"
 )
 
 type (
 	RxData_t struct {
-		CurBand       string
-		CurSymbolRate string
-		CurFrequency  string
-
-		MarkerCentre float32
-		MarkerWidth  float32
-		CurIsTuned   bool
-		CurIsOffset  bool
+		CurBand        string
+		CurSymbolRate  string
+		CurFrequency   string
+		MarkerCentre   float32
+		MarkerWidth    float32
+		CurIsTuned     bool
+		CurIsStreaming bool
 	}
 )
 
@@ -94,9 +95,8 @@ func HandleCommands(ctx context.Context, rxCmdChan <-chan RxCmd_t, rxDataCh chan
 				frequencySelector.incSelector()
 			case CmdTune:
 				setLongmynd()
-			case CmdCalibrate:
-				lmCmd.Type = lmClient.CmdToggleCalibrate
-				lmCmdChan <- lmCmd
+			case CmdStream:
+				toggleStreaming()
 			}
 			// default:
 		}
@@ -116,6 +116,17 @@ func setLongmynd() {
 		isTuned = true
 	}
 	rxData.CurIsTuned = isTuned
+	rxDataChan <- rxData
+}
+
+func toggleStreaming() {
+	if rxData.CurIsStreaming {
+		log.Printf("TODO stop streaming to %v %v", config_streamUrl, config_streamKey)
+		rxData.CurIsStreaming = false
+	} else {
+		log.Printf("TODO start streaming to %v %v", config_streamUrl, config_streamKey)
+		rxData.CurIsStreaming = true
+	}
 	rxDataChan <- rxData
 }
 
@@ -257,7 +268,7 @@ const (
 	CmdDecFrequency  = 5
 	CmdIncFrequency  = 6
 	CmdTune          = 7
-	CmdCalibrate     = 8
+	CmdStream        = 8
 )
 
 func indexInList(list []string, with string) int { // TODO: add error check
@@ -310,6 +321,6 @@ func somethingChanged() {
 	rxData.MarkerCentre = const_frequencyCentre[frequencySelector.value] / 9.18 // NOTE: 9.18 is a temporary kludge
 	rxData.MarkerWidth = const_symbolRateWidth[symbolRateSelector.value]
 	rxData.CurIsTuned = isTuned
-	rxData.CurIsOffset = isOffset
+	rxData.CurIsStreaming = isOffset
 	rxDataChan <- rxData
 }
