@@ -77,8 +77,10 @@ func main() {
 	go rxControl.HandleCommands(ctx, rxCmdChan, rxDataChan, lmDataChan)
 
 	go func() {
-		os.Setenv("DISPLAY", ":0") // required for X11
-		// app.Size(800, 480) // I don't know if this is help in any way
+		os.Setenv("XDG_RUNTIME_DIR", "/run/user/1000") // TODO: is 1000 corrrect?
+		os.Setenv("DISPLAY", ":0")                     // required for X11. Compile wit: go build --tags nowayland .
+		// os.Setenv("WAYLAND_DISPLAY", "wayland-1") // required for wayland. Compile with: go build --tags nox11 .
+		app.Size(800, 480) // I don't know if this is help in any way
 		var w app.Window
 		w.Option(app.Fullscreen.Option())
 
@@ -180,8 +182,8 @@ func loop(w *app.Window) error {
 			if ui.tune.Clicked(gtx) {
 				rxCmdChan <- rxControl.CmdTune
 			}
-			if ui.freqOffset.Clicked(gtx) {
-				rxCmdChan <- rxControl.CmdCalibrate
+			if ui.stream.Clicked(gtx) {
+				rxCmdChan <- rxControl.CmdStream
 			}
 
 			paint.Fill(gtx.Ops, q100color.screenGrey)
@@ -221,7 +223,7 @@ type UI struct {
 	decBand, incBand             widget.Clickable
 	decSymbolRate, incSymbolRate widget.Clickable
 	decFrequency, incFrequency   widget.Clickable
-	tune, freqOffset             widget.Clickable
+	tune, stream                 widget.Clickable
 	th                           *material.Theme
 }
 
@@ -490,7 +492,7 @@ func (ui *UI) q100_Column2Buttons(gtx C) D {
 			return inset.Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Dp(btnWidth)
 				gtx.Constraints.Min.Y = gtx.Dp(btnHeight)
-				return ui.q100_Button(gtx, &ui.freqOffset, lmData.FreqOffset, rxData.CurIsOffset, q100color.buttonRed)
+				return ui.q100_Button(gtx, &ui.stream, "Stream", rxData.CurIsStreaming, q100color.buttonRed)
 			})
 		}),
 	)

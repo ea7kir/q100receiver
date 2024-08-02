@@ -110,7 +110,6 @@ Install longmynd dependencies
 ###################################################
 "
 
-#sudo apt install make gcc libusb-1.0-0-dev libasound2-dev
 sudo apt -y install libusb-1.0-0-dev libasound2-dev
 
 echo "
