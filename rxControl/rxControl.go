@@ -121,11 +121,11 @@ func setLongmynd() {
 
 func toggleStreaming() {
 	if rxData.CurIsStreaming {
-		log.Printf("TODO stop streaming to %v %v", config_streamUrl, config_streamKey)
+		// log.Printf("TODO stop streaming to %v %v", config_streamUrl, config_streamKey)
 		rxData.CurIsStreaming = false
 	} else {
-		log.Printf("TODO start streaming to %v %v", config_streamUrl, config_streamKey)
-		rxData.CurIsStreaming = true
+		// log.Printf("TODO start streaming to %v %v", config_streamUrl, config_streamKey)
+		rxData.CurIsStreaming = !true
 	}
 	rxDataChan <- rxData
 }
