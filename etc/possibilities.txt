@@ -1,0 +1,18 @@
+Possible ays to disbale bt and wifi
+
+/boot/firmware/config.txt
+	dtoverlay=disable-wifi
+	dtoverlay=disable-bt
+
+or maybe
+	sudo systemctl disable bluetooth.service
+	sudo systemctl stop bluetooth.service
+
+or maybe
+	sudo rfkill block wifi
+	sudo rfkill block bluetooth
+
+or maybe
+	sudo systemctl disable wpa_supplicant
+	sudo systemctl disable bluetooth
+	sudo systemctl disable hciuart
