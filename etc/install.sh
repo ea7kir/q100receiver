@@ -32,10 +32,10 @@ Update Pi OS
 ###################################################
 "
 
-sudo apt update
-sudo apt -y full-upgrade
-sudo apt -y autoremove
-sudo apt clean
+# sudo apt update
+# sudo apt -y full-upgrade
+# sudo apt -y autoremove
+# sudo apt clean
 
 echo "
 ###################################################
@@ -43,16 +43,16 @@ Making changes to config.txt
 ###################################################
 "
 
-sudo sh -c "echo '\n# EA7KIR Additions' >> /boot/config.txt"
+#sudo sh -c "echo '\n# EA7KIR Additions' >> /boot/firmware/config.txt"
 
 # Disable Wifi
-sudo sh -c "echo 'dtoverlay=disable-wifi' >> /boot/config.txt"
+#sudo sh -c "echo 'dtoverlay=disable-wifi' >> /boot/firmware/config.txt"
 
 # Disable Bluetooth
-sudo sh -c "echo 'dtoverlay=disable-bt' >> /boot/config.txt"
+#sudo sh -c "echo 'dtoverlay=disable-bt' >> /boot/firmware/config.txt"
 
 # EXPERIMENTAL: raspi-config, select System / Audio, choose 1
-sudo sh -c "echo 'dtparam=audio=off' >> /boot/config.txt"
+#sudo sh -c "echo 'dtparam=audio=off' >> /boot/firmware/config.txt"
 
 echo "
 ###################################################
@@ -63,7 +63,7 @@ Making changes to .profile
 sudo sh -c "echo '\n# EA7KIR Additions' >> /home/pi/.profile"
 
 # Disbale Screen Blanking in .profile
-echo -e 'export DISPLAY=:0; xset s noblank; xset s off; xset -dpms' >> /home/pi/.profile
+# echo -e 'export DISPLAY=:0; xset s noblank; xset s off; xset -dpms' >> /home/pi/.profile
 
 # Adding go path to .profile
 echo -e 'export PATH=$PATH:/usr/local/go/bin' >> /home/pi/.profile
@@ -86,7 +86,7 @@ Installing gioui dependencies
 ###################################################
 "
 
-sudo apt -y install gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
+sudo apt -y install pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
 
 echo "
 ###################################################
@@ -151,32 +151,44 @@ INSTALL HAS COMPLETED
 
     AFTER REBOOTING...
 
-    Ues your finger to configure some Desktop settings:
+    Cconfigure some Desktop settings:
 
-    Screen Layout Editor
-	    move DSI-1 to the left of HDMI-1
-	    Layout/Screens set DSI-1 to Active, Primary
-	    Layout/Screens set HDMI-1 to Active, 1920x1080, 50Hz
-    Appearance Settings
-	    DSI-1 Layout No Image
-	    HDMI-1 Layout NoVideo.jpg
-	    Disable Wastebasket & External Disks
-    Raspberry Pi Configuration
-	    System set Network at Boot to ON
+    Install OS updates
+
+    Edit ~/.config/wayfire.ini
+
+[output:DSI-1]
+mode = 800x480@60000
+position = 0,0
+transform = normal
+
+[output:HDMI-A-1]
+mode = 1920x1080@50000
+position = 800,0
+transform = normal
+
+    Set Taskbar to DSI-1
+
+    Right click Volume and direct audio to HDMI and disable audio jack
+
+    Push Volume level to max
+
+    Reboot
 
     Then login from your PC, Mc, or Linux computer
 
-    ssh pi@rxtouch.local
+    ssh pi@rxtouch.local or open VSCODE to RxTouch  ~/Q100/q100receiver/q100reciever
 
     Now execute the following commands
     
     cd Q100/q100receiver
     go mod tidy
-    go build .
-    sudo systemctl enable q100receiver
-    sudo systemctl start q100receiver
+    go build --tags nox11 .
+    
+    Do not sudo systemctl enable q100receiver
+    Do not sudo systemctl start q100receiver
 
-    The App should now be ruuning on the touch screen
+    Will not The App should now be ruuning on the touch screen
 
 "
 

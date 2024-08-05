@@ -13,11 +13,10 @@ Control and monitor a DATV receiver with a touch screen.
 ## Connections
 TODO: add more details and photos
 ## Installing
-NOTE: CURRENTLY REQUIRES PI OS BULLSEYE 64-BIT
 
 ### Using Raspberry Pi Imager v1.8.5:
 ```
-CHOOSE OS: Raspberry Pi OS (other) -> Raspberry Pi OS (Legacy 64-bit)
+CHOOSE OS: Raspberry Pi OS (64-bit)
 
 CONFIGURE:
 	Set hostname:			rxtouch

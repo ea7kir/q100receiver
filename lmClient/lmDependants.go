@@ -88,6 +88,7 @@ func (d *lmDependants_t) startFfplay() {
 	if !d.isPlaying && !d.ffPlayIsACtive {
 		log.Printf("INFO ffplay will start...")
 		d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-left", "800", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
+		// d.lmExecCmd.Env[0] = "WAYLAND_DISPLAY=wayland-2" // TODO: would this help?
 		if err := d.fpExecCmd.Start(); err != nil {
 			log.Printf("ERROR failed to start ffplay: %v", err)
 			return
