@@ -9,8 +9,15 @@ Control and monitor a DATV receiver with a touch screen.
 - Raspberry Pi Official 7" Touch Screen
 - BATC MiniTiouner v2.0
 
-**A keyboard and mouse are not required at any time**
+** A KEYBOARD & MOUSE IS REQUIRED DURING INSTALLATION **
+
 ## Connections
+- Mount Pi 4B to the Touch Screen, including GPIO power wires
+- Connect 5v to MiniTiouner
+- Connect 5v to RPi
+- Connect MiniTiouner USB to RPi bottom right USB (next to RJ45)
+- Connect RPi RJ45 to local network
+
 TODO: add more details and photos
 ## Installing
 

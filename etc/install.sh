@@ -140,22 +140,11 @@ cd
 
 echo "
 ###################################################
-Prevent this script form being executed again
+Making changes to wayfire.ini
 ###################################################
 "
 
-chmod -x /home/pi/Q100/q100receiver/etc/install.sh # to prevent it from being run a second time
-
 echo "
-INSTALL HAS COMPLETED
-
-    AFTER REBOOTING...
-
-    Cconfigure some Desktop settings:
-
-    Install OS updates
-
-    Edit ~/.config/wayfire.ini
 
 [output:DSI-1]
 mode = 800x480@60000
@@ -166,6 +155,25 @@ transform = normal
 mode = 1920x1080@50000
 position = 800,0
 transform = normal
+
+" >> ~/.config/wayfire.ini-test
+
+echo "
+###################################################
+Prevent this script form being executed again
+###################################################
+"
+
+chmod -x /home/pi/Q100/q100receiver/etc/install.sh
+
+echo "
+###################################################
+INSTALL HAS COMPLETED
+###################################################
+
+    AFTER REBOOTING... AFTER REBOOTING... AFTER REBOOTING... AFTER REBOOTING...
+
+    Cconfigure some Desktop settings:
 
     Appearance Steetings / Taskbar
         Set Taskbar to DSI-1
@@ -182,9 +190,9 @@ transform = normal
 
     Right click Volume and direct audio to HDMI and disable audio jack
 
-    If aupdates are available, install updates
+    TurnOff Bluetooth
 
-    Reboot
+    If updates are available, install then now
 
     Then login from your PC, Mc, or Linux computer
 
@@ -195,11 +203,16 @@ transform = normal
     cd Q100/q100receiver
     go mod tidy
     go build --tags nox11 .
-    
-    Do not sudo systemctl enable q100receiver
-    Do not sudo systemctl start q100receiver
 
-    Will not The App should now be ruuning on the touch screen
+    And execute it with
+
+    ./q100receiver
+    
+    If all goes well it can be run at boot, by appending to ~/.config/wayfire.ini
+        [autostart]
+        receiver = /home/pi/Q100/q100receiver/q100receiver -shutdown
+    
+    Note: omit the -shutdown flag to prevent a full shutdown if required
 
 "
 
