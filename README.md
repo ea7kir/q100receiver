@@ -50,16 +50,6 @@ chmod +x /home/pi/Q100/q100receiver/etc/install.sh
 
 THEN FOLLOW THE INSTRUCTIONS AND CONFIGURE THE DESKTOP
 
-### Updating
-
-First read the GitHub Release notes for the version you require
-
-```
-cd ~/pi/Q100/q100receiver/etc/
-chmod +x update.sh
-./update.sh
-```
-
 ## License
 Copyright (c) 2023 Michael Naylor EA7KIR (https://michaelnaylor.es)
 

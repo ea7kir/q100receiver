@@ -144,7 +144,7 @@ Prevent this script form being executed again
 ###################################################
 "
 
-chmod -x /home/pi/Q100/etc/install.sh # to prevent it from being run a second time
+chmod -x /home/pi/Q100/q100receiver/etc/install.sh # to prevent it from being run a second time
 
 echo "
 INSTALL HAS COMPLETED
@@ -167,11 +167,22 @@ mode = 1920x1080@50000
 position = 800,0
 transform = normal
 
-    Set Taskbar to DSI-1
+    Appearance Steetings / Taskbar
+        Set Taskbar to DSI-1
+
+    Appearance Steetings / Desktop:
+        Set HDMI wallpaper to NoVideo.jpg
+        Disable Documents, Wastebasket and External Disks for HDMI and DSI-1
+
+    Appearance Steetings / Desktop:
+        Set HDMI wallpaper to NoVideo.jpg
+        Disable Documents, Wastebasket and External Disks
+
+    Adjust Volume level to maximum
 
     Right click Volume and direct audio to HDMI and disable audio jack
 
-    Push Volume level to max
+    If aupdates are available, install updates
 
     Reboot
 
