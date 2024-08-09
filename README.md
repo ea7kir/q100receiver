@@ -9,7 +9,7 @@ Control and monitor a DATV receiver with a touch screen.
 - Raspberry Pi Official 7" Touch Screen
 - BATC MiniTiouner v2.0
 
-** A KEYBOARD & MOUSE IS REQUIRED DURING INSTALLATION **
+** A KEYBOARD & MOUSE IS HELPFUL DURING INSTALLATION **
 
 ## Connections
 - Mount Pi 4B to the Touch Screen, including GPIO power wires
@@ -55,7 +55,7 @@ chmod +x /home/pi/Q100/q100receiver/etc/install.sh
 /home/pi/Q100/q100receiver/etc/install.sh
 ```
 
-THEN FOLLOW THE INSTRUCTIONS AND CONFIGURE THE DESKTOP
+THEN FOLLOW THE INSTRUCTIONS TO CONFIGURE THE DESKTOP
 
 ## License
 Copyright (c) 2023 Michael Naylor EA7KIR (https://michaelnaylor.es)

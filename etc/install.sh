@@ -28,7 +28,7 @@ done
 
 echo "
 ###################################################
-Update Pi OS
+Update Pi OS - TODO:
 ###################################################
 "
 
@@ -39,7 +39,7 @@ Update Pi OS
 
 echo "
 ###################################################
-Making changes to config.txt
+Making changes to config.txt - TODO:
 ###################################################
 "
 
@@ -94,7 +94,7 @@ Installing gioui tools
 ###################################################
 "
 
-/usr/local/go/bin/go install gioui.org/cmd/gogio@latest
+/usr/local/go/bin/go install gioui.org/cmd/gogio@v0.7.1
 
 echo "
 ###################################################
@@ -194,7 +194,7 @@ INSTALL HAS COMPLETED
 
     If updates are available, install then now
 
-    Then login from your PC, Mc, or Linux computer
+    Then login from your PC, Mac, or Linux computer
 
     ssh pi@rxtouch.local or open VSCODE to RxTouch  ~/Q100/q100receiver/q100reciever
 
@@ -208,10 +208,10 @@ INSTALL HAS COMPLETED
 
     ./q100receiver
     
-    If all goes well it can be run at boot, by appending to ~/.config/wayfire.ini
-        [autostart]
-        receiver = /home/pi/Q100/q100receiver/q100receiver -shutdown
-    
+    If all goes well it can be run at boot, by enabling auto run at boot
+        sudo systemctl enable q100receiver
+        sudo systemctl start q100receiver
+
     Note: omit the -shutdown flag to prevent a full shutdown if required
 
 "

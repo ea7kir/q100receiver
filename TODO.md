@@ -26,11 +26,12 @@
 - If updates are available, install updates
 
 ## Auto Start
-- Currently using wayfire.ini NOT system servoces
+- Currently using systemctl NOT wayfire.ini for run at boot
+    - because Wayland [autostart] isn't behaving - video appears on touchscreen!
 
 ## Maybe one day - Bookworm Light
 
-- eg: [Kiosk #1](https://raspberrypi.stackexchange.com/questions/120345/starting-rpi-gui-application-at-boot-without-desktop-gui-and-other-functionaliti)
+- eg: [Kiosk #1](https://raspberrypi.stackexchange.com/questions/120345/-starting-rpi-gui-application-at-boot-without-desktop-gui-and-other-functionaliti)
 - eg: [Kiosk #2](https://medium.com/@daddycat/setting-up-raspberry-pi-to-launch-python-gui-app-without-raspbian-desktop-5022a90e5b63)
 - eg: [Ultra Minimal Kiosk Setup](https://gist.github.com/seffs/2395ca640d6d8d8228a19a9995418211)
 - eg: [cage](https://github.com/cage-kiosk/cage)

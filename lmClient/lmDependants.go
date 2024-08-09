@@ -87,9 +87,12 @@ func (d *lmDependants_t) stopLongmynd() {
 func (d *lmDependants_t) startFfplay() {
 	if !d.isPlaying && !d.ffPlayIsACtive {
 		log.Printf("INFO ffplay will start...")
-		d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-left", "800", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
+		// d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-left", "800", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
 
-		// d.lmExecCmd.Env = append(d.lmExecCmd.Environ(), "WAYLAND_DISPLAY=wayland-1")// TODO: could this help?
+		d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
+		// d.lmExecCmd.Env = append(d.lmExecCmd.Environ(), "WAYLAND_DISPLAY=wayland-0") // TODO: could this help?
+
+		log.Println(d.lmExecCmd.Env)
 
 		if err := d.fpExecCmd.Start(); err != nil {
 			log.Printf("ERROR failed to start ffplay: %v", err)
