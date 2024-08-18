@@ -3,7 +3,16 @@
 # Install Q100 Receiver on rxtouch.local
 # Orignal design by Michael, EA7KIR
 
+# CONFIFIGURATION
 GOVERSION=1.22.5
+GIOUIVERSION=7.1
+
+# nmcli device
+# DEVICE         TYPE      STATE                   CONNECTION         
+# eth0           ethernet  connected               Wired connection 1 
+# lo             loopback  connected (externally)  lo                 
+# wlan0          wifi      disconnected            --                 
+# p2p-dev-wlan0  wifi-p2p  disconnected            --                 
 
 whoami | grep -q pi
 if [ $? != 0 ]; then
@@ -18,7 +27,7 @@ if [ $? != 0 ]; then
 fi
 
 while true; do
-   read -p "Install q100receiver using Go version $GOVERSION (y/n)? " answer
+   read -p "Install q100receiver using Go version $GOVERSION and GIO $GIOUIVERSION (y/n)? " answer
    case ${answer:0:1} in
        y|Y ) break;;
        n|N ) exit;;
@@ -90,11 +99,11 @@ sudo apt -y install pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbco
 
 echo "
 ###################################################
-Installing gioui tools
+Installing gioui tools $GIOUIVERSION
 ###################################################
 "
 
-/usr/local/go/bin/go install gioui.org/cmd/gogio@v0.7.1
+/usr/local/go/bin/go install gioui.org/cmd/gogio@$GIOUIVERSION
 
 echo "
 ###################################################
@@ -170,50 +179,6 @@ echo "
 ###################################################
 INSTALL HAS COMPLETED
 ###################################################
-
-    AFTER REBOOTING... AFTER REBOOTING... AFTER REBOOTING... AFTER REBOOTING...
-
-    Cconfigure some Desktop settings:
-
-    Appearance Steetings / Taskbar
-        Set Taskbar to DSI-1
-
-    Appearance Steetings / Desktop:
-        Set HDMI wallpaper to NoVideo.jpg
-        Disable Documents, Wastebasket and External Disks for HDMI and DSI-1
-
-    Appearance Steetings / Desktop:
-        Set HDMI wallpaper to NoVideo.jpg
-        Disable Documents, Wastebasket and External Disks
-
-    Adjust Volume level to maximum
-
-    Right click Volume and direct audio to HDMI and disable audio jack
-
-    TurnOff Bluetooth
-
-    If updates are available, install then now
-
-    Then login from your PC, Mac, or Linux computer
-
-    ssh pi@rxtouch.local or open VSCODE to RxTouch  ~/Q100/q100receiver/q100reciever
-
-    Now execute the following commands
-    
-    cd Q100/q100receiver
-    go mod tidy
-    go build --tags nox11 .
-
-    And execute it with
-
-    ./q100receiver
-    
-    If all goes well it can be run at boot, by enabling auto run at boot
-        sudo systemctl enable q100receiver
-        sudo systemctl start q100receiver
-
-    Note: omit the -shutdown flag to prevent a full shutdown if required
-
 "
 
 while true; do
