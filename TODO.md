@@ -1,13 +1,8 @@
 ## TODO:
 
-- test install.sh
-- revise what data to monitor - eg resolution & frame r ate
-- revise what parameters to use
+- revise what data to monitor - eg resolution & frame rate
 - implement auto calibrate on beacon
 - improve marker widths
-- during install, raspi-config, select System / Audio, choose 1, then reboot
-    - or append 'dtparam=audio=off' to boot/config.txt
-    - however, I think I've already dealt with this
 - more to do in spClient to deal with doubling / fast changes /etc
 
 ## Find ways to make install easier
@@ -17,22 +12,33 @@
 - Appearance Steetings / Desktop:
     - Set HDMI wallpaper to NoVideo.jpg
     - Disable Documents, Wastebasket and External Disks for HDMI and DSI-1
-- Appearance Steetings / Desktop:
+- Appearance Setings / Desktop:
     - Set HDMI wallpaper to NoVideo.jpg
     - Disable Documents, Wastebasket and External Disks
 - Adjust Volume level to maximum
 - Right click Volume and direct audio to HDMI and disable audio jack
 - TurnOff Bluetooth
-- If updates are available, install updates
 
 ## Auto Start
-- Currently using systemctl NOT wayfire.ini for run at boot
-    - because Wayland [autostart] isn't behaving - video appears on touchscreen!
+- Currently using systemctl and NOT wayfire.ini for run at boot
+    - because ~/wayland.ini ```[autostart]``` isn't behaving - video appears on touchscreen!
 
-## Maybe one day - Bookworm Light
+## Maybe one day
 
-- eg: [Kiosk #1](https://raspberrypi.stackexchange.com/questions/120345/-starting-rpi-gui-application-at-boot-without-desktop-gui-and-other-functionaliti)
-- eg: [Kiosk #2](https://medium.com/@daddycat/setting-up-raspberry-pi-to-launch-python-gui-app-without-raspbian-desktop-5022a90e5b63)
-- eg: [Ultra Minimal Kiosk Setup](https://gist.github.com/seffs/2395ca640d6d8d8228a19a9995418211)
-- eg: [cage](https://github.com/cage-kiosk/cage)
-- but Bookworm may have other ways - sooner or later
+- move from Bookworm Desktop to Bookworm Lite or FreeBSD
+
+## Possible ways to disbale bt and wifi
+
+- /boot/firmware/config.txt
+	- dtoverlay=disable-wifi
+	- dtoverlay=disable-bt
+- or maybe
+	- sudo systemctl disable bluetooth.service
+	- sudo systemctl stop bluetooth.service
+- or maybe
+	- sudo rfkill block wifi
+	- sudo rfkill block bluetooth
+- or maybe
+	- sudo systemctl disable wpa_supplicant
+	- sudo systemctl disable bluetooth
+	- sudo systemctl disable hciuart

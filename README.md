@@ -8,8 +8,6 @@
 - Raspberry Pi Official 7" Touch Screen
 - BATC MiniTiouner v2.0
 
-** A KEYBOARD & MOUSE IS HELPFUL DURING INSTALLATION **
-
 ## Connections
 - Wired internet connection (not wifi)
 - Mount Pi 4B to the Touch Screen, including GPIO power wires
@@ -43,7 +41,7 @@ SAVE and WRITE
 
 Insert the card into the Raspberry Pi and switch on
 
-WARNING: the Pi may reboot during the install, so please allow it to complete
+NOTE: the Pi will reboot during the install, so please allow it to complete
 
 ### Remote login from a Mac, PC or Linux host
 ```
@@ -57,9 +55,7 @@ chmod +x /home/pi/Q100/q100receiver/etc/install.sh
 ```
 ### After rebboting
 Use your finger to configure some Desktop settings:
-
-Cconfigure some Desktop settings:
-
+```
 Appearance Steetings / Taskbar
     Set Taskbar to DSI-1
 Appearance Steetings / Desktop:
@@ -72,26 +68,27 @@ Adjust Volume level to maximum
 Right click Volume and direct audio to HDMI and disable audio jack
 TurnOff Bluetooth
 If updates are available, install then now
-Then login from your PC, Mac, or Linux computer
+```
+Login from a PC, Mac, or Linux computer
 ```
 ssh pi@rxtouch.local or open VSCODE to RxTouch  ~/Q100/q100receiver/q100reciever
 ```
-Now execute the following commands
+Execute the following commands
 ```
 cd Q100/q100receiver
 go mod tidy
 go build --tags nox11 .
 ```
-And execute it with
+Execute q100receiver from the current directory
 ```
 ./q100receiver
 ```
-If all goes well it can be run at boot, by enabling auto run at boot
+If all went well it can be executed at boot by enabling systemctl
 ```
 sudo systemctl enable q100receiver
 sudo systemctl start q100receiver
 ```
-Note: omit the -shutdown flag in the service file to prevent a full shutdown if required
+Note: add or omit the ```-shutdown``` flag in the service file to allow a full shutdown as required
 
 ## License
 Copyright (c) 2023 Michael Naylor EA7KIR (https://michaelnaylor.es)

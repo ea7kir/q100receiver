@@ -287,7 +287,7 @@ func (ui *UI) q100_TopStatusRow(gtx C) D {
 		layout.Rigid(func(gtx C) D {
 			return inset.Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Dp(btnWidth)
-				return ui.q100_Button(gtx, &ui.about, "Q-100 Receiver", false, q100color.buttonGrey)
+				return ui.q100_Button(gtx, &ui.about, "Q0-100 Receiver", false, q100color.buttonGrey)
 			})
 		}),
 		layout.Flexed(1, func(gtx C) D {
