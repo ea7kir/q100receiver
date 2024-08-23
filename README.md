@@ -53,7 +53,7 @@ git clone https://github.com/ea7kir/q100receiver.git
 chmod +x /home/pi/Q100/q100receiver/etc/install.sh
 /home/pi/Q100/q100receiver/etc/install.sh
 ```
-### After rebboting
+### After rebooting
 Use your finger to configure some Desktop settings:
 ```
 Appearance Steetings / Taskbar
