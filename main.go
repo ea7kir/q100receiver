@@ -124,6 +124,7 @@ func loop(w *app.Window) error {
 		// th: material.NewTheme(gofont.Collection()),
 		th: material.NewTheme(),
 	}
+	// without this, the font sizes are inconsistent
 	// Chris says keep using the original font
 	ui.th.Shaper = text.NewShaper(text.NoSystemFonts(), text.WithCollection(gofont.Collection()))
 
@@ -154,35 +155,28 @@ func loop(w *app.Window) error {
 			return event.Err
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, event)
-			if ui.about.Clicked(gtx) {
+
+			switch {
+			case ui.about.Clicked(gtx):
 				showAboutBox()
-			}
-			if ui.shutdown.Clicked(gtx) {
+			case ui.shutdown.Clicked(gtx):
 				// interrupt <- syscall.SIGINT
 				w.Perform(system.ActionClose)
-			}
-			if ui.decBand.Clicked(gtx) {
+			case ui.decBand.Clicked(gtx):
 				rxCmdChan <- rxControl.CmdDecBand
-			}
-			if ui.incBand.Clicked(gtx) {
+			case ui.incBand.Clicked(gtx):
 				rxCmdChan <- rxControl.CmdIncBand
-			}
-			if ui.decSymbolRate.Clicked(gtx) {
+			case ui.decSymbolRate.Clicked(gtx):
 				rxCmdChan <- rxControl.CmdDecSymbolRate
-			}
-			if ui.incSymbolRate.Clicked(gtx) {
+			case ui.incSymbolRate.Clicked(gtx):
 				rxCmdChan <- rxControl.CmdIncSymbolRate
-			}
-			if ui.decFrequency.Clicked(gtx) {
+			case ui.decFrequency.Clicked(gtx):
 				rxCmdChan <- rxControl.CmdDecFrequency
-			}
-			if ui.incFrequency.Clicked(gtx) {
+			case ui.incFrequency.Clicked(gtx):
 				rxCmdChan <- rxControl.CmdIncFrequency
-			}
-			if ui.tune.Clicked(gtx) {
+			case ui.tune.Clicked(gtx):
 				rxCmdChan <- rxControl.CmdTune
-			}
-			if ui.stream.Clicked(gtx) {
+			case ui.stream.Clicked(gtx):
 				rxCmdChan <- rxControl.CmdStream
 			}
 
