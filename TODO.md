@@ -3,13 +3,12 @@
 - revise what data to monitor - eg resolution & frame rate
 - implement auto calibrate on beacon
 - improve marker widths
-- more to do in spClient to deal with doubling / fast changes /etc
 
 ## Find ways to make install easier
 
-- Appearance Steetings / Taskbar
+- Appearance Setings / Taskbar
     - Set Taskbar to DSI-1
-- Appearance Steetings / Desktop:
+- Appearance Setings / Desktop:
     - Set HDMI wallpaper to NoVideo.jpg
     - Disable Documents, Wastebasket and External Disks for HDMI and DSI-1
 - Appearance Setings / Desktop:
@@ -21,7 +20,7 @@
 
 ## Auto Start
 - Currently using systemctl and NOT wayfire.ini for run at boot
-    - because ~/wayland.ini ```[autostart]``` isn't behaving - video appears on touchscreen!
+    - because ~/wayland.ini ```[autostart]``` isn't behaving (video appears on touchscreen!)
 
 ## Maybe one day
 
