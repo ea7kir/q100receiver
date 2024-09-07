@@ -91,7 +91,7 @@ func main() {
 		cancel()
 		// log.Printf("CANCEL IN MAIN ----- cancel() called")
 		// allow time to cancel all functions
-		time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 4)
 
 		// TODO: control this with a flag
 		if shutdown {
@@ -139,6 +139,7 @@ func loop(w *app.Window) error {
 		case <-interrupt:
 			// When the context cancels, assign the done channel to nil to
 			// prevent it from firing over and over.
+			interrupt = nil
 			w.Perform(system.ActionClose)
 		case rxData = <-rxDataChan:
 			// log.Printf("TEMP got rxData")
@@ -160,8 +161,8 @@ func loop(w *app.Window) error {
 			case ui.about.Clicked(gtx):
 				showAboutBox()
 			case ui.shutdown.Clicked(gtx):
-				// interrupt <- syscall.SIGINT
-				w.Perform(system.ActionClose)
+				interrupt <- syscall.SIGINT
+				// w.Perform(system.ActionClose)
 			case ui.decBand.Clicked(gtx):
 				rxCmdChan <- rxControl.CmdDecBand
 			case ui.incBand.Clicked(gtx):
