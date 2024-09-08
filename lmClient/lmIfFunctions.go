@@ -400,6 +400,8 @@ func (d *LmData_t) id17_setEsType(esType string) {
 			d.AudioCodec = "MPA" // was "MP3"
 		case 4:
 			d.AudioCodec = "MP3"
+		case 6:
+			d.AudioCodec = "OPUS"
 		case 15:
 			d.AudioCodec = "ACC"
 		case 32:
