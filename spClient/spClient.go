@@ -14,9 +14,9 @@ import (
 )
 
 const (
-	config_Origin    = "https://eshail.batc.org.uk/"
-	config_Url       = "wss://eshail.batc.org.uk/wb/fft/fft_ea7kirsatcontroller:443/wss"
-	config_NumPoints = 918
+	config_Origin = "https://eshail.batc.org.uk/"
+	config_Url    = "wss://eshail.batc.org.uk/wb/fft/fft_ea7kirsatcontroller:443/wss"
+	kNumPoints    = 918
 )
 
 type (
@@ -27,18 +27,26 @@ type (
 )
 
 var (
-	Xp = make([]float32, config_NumPoints) // x coordinates from 0.0 to 100.0
+	Xp = make([]float32, kNumPoints) // x coordinates from 0.0 to 100.0
 )
 
 func ReadSpectrumServer(ctx context.Context, spDataChan chan<- SpData_t) {
-	Xp[0] = 0
-	for i := 1; i < config_NumPoints-1; i++ {
-		Xp[i] = 100.0 * (float32(i) / float32(config_NumPoints))
-	}
-	Xp[config_NumPoints-1] = 100
+	var (
+		ws     *websocket.Conn
+		err    error
+		n      int
+		bytes  = make([]byte, 2048) // larger than 1844
+		spData = SpData_t{
+			Yp:          make([]float32, kNumPoints),
+			BeaconLevel: 0.5,
+		}
+	)
 
-	var ws *websocket.Conn
-	var err error
+	Xp[0] = 0
+	for i := 1; i < kNumPoints-1; i++ {
+		Xp[i] = 100.0 * (float32(i) / float32(kNumPoints))
+	}
+	Xp[kNumPoints-1] = 100
 
 	// TODO: needs a timeout. see https://pkg.go.dev/nhooyr.io/websocket
 	//	which uses: ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -47,7 +55,6 @@ func ReadSpectrumServer(ctx context.Context, spDataChan chan<- SpData_t) {
 		log.Printf("INFO Dial attempt %v", i)
 		ws, err = websocket.Dial(config_Url, "", config_Origin)
 		if err == nil {
-			// ws = new_ws
 			break
 		}
 		if i == MAXTRIES {
@@ -55,14 +62,6 @@ func ReadSpectrumServer(ctx context.Context, spDataChan chan<- SpData_t) {
 		}
 		time.Sleep(time.Millisecond * 500)
 	}
-
-	var spData = SpData_t{
-		Yp:          make([]float32, config_NumPoints),
-		BeaconLevel: 0.5,
-	}
-
-	var bytes = make([]byte, 2048) // larger than 1844
-	var n int
 
 	for {
 		select {
@@ -74,8 +73,8 @@ func ReadSpectrumServer(ctx context.Context, spDataChan chan<- SpData_t) {
 		}
 
 		if n, err = ws.Read(bytes); err != nil {
-			log.Printf("WARN Read failed: %v", err)
-			continue
+			// TODO: this is a PROBLEM - need to find a better way to recover
+			log.Fatalf("FATAL Read failed: %v", err)
 		}
 		if n != 1844 {
 			log.Printf("WARN reading : bytes != 1844\n")
@@ -96,7 +95,7 @@ func ReadSpectrumServer(ctx context.Context, spDataChan chan<- SpData_t) {
 		}
 		// log.Printf("INFO count = %v\n", count)
 		spData.Yp[0] = 0
-		spData.Yp[config_NumPoints-1] = 0
+		spData.Yp[kNumPoints-1] = 0
 
 		spData.BeaconLevel = 0
 		for i := 32; i <= 133; i++ { // beacon center is 103

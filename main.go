@@ -3,21 +3,6 @@
  *  Copyright (c) 2023 Michael Naylor EA7KIR (https://michaelnaylor.es)
  */
 
-/*********************************************************************************
-
-[ [ button ]  [ label_____________________________________________ ]  [ button ] ]
-
-[ [ ------------------------------- spectrum --------------------------------- ] ]
-
-[    [ button label button ]  [ button label button ]  [ button label button ]   ]
-
-[ [ label__  label__ ]   [ label__  label__ ]   [ label__  label__ ]  [ button ] ]
-[ [ label__  label__ ]   [ label__  label__ ]   [ label__  label__ ]             ]
-[ [ label__  label__ ]   [ label__  label__ ]   [ label__  label__ ]             ]
-[ [ label__  label__ ]   [ label__  label__ ]   [ label__  label__ ]  [ button ] ]
-
-*********************************************************************************/
-
 package main
 
 import (
@@ -227,6 +212,21 @@ type (
 	C = layout.Context
 	D = layout.Dimensions
 )
+
+/*********************************************************************************
+
+[ [ button ]  [ label_____________________________________________ ]  [ button ] ]
+
+[ [ ------------------------------- spectrum --------------------------------- ] ]
+
+[    [ button label button ]  [ button label button ]  [ button label button ]   ]
+
+[ [ label__  label__ ]   [ label__  label__ ]   [ label__  label__ ]  [ button ] ]
+[ [ label__  label__ ]   [ label__  label__ ]   [ label__  label__ ]             ]
+[ [ label__  label__ ]   [ label__  label__ ]   [ label__  label__ ]             ]
+[ [ label__  label__ ]   [ label__  label__ ]   [ label__  label__ ]  [ button ] ]
+
+*********************************************************************************/
 
 // Returns an About box
 func showAboutBox() {
