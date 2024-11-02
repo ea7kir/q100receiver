@@ -89,7 +89,7 @@ func (d *lmDependants_t) startFfplay() {
 		log.Printf("INFO ffplay will start...")
 		// d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-left", "800", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
 
-		d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
+		d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-left", "1920", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
 		// d.lmExecCmd.Env = append(d.lmExecCmd.Environ(), "WAYLAND_DISPLAY=wayland-0") // TODO: could this help?
 
 		// log.Printf("INFO: Env: %v", d.lmExecCmd.Env)
