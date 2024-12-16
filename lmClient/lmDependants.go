@@ -87,11 +87,21 @@ func (d *lmDependants_t) stopLongmynd() {
 func (d *lmDependants_t) startFfplay() {
 	if !d.isPlaying && !d.ffPlayIsACtive {
 		log.Printf("INFO ffplay will start...")
-		// d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-left", "800", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
+		const WINDOW_MANAGER = 2 // 1 = X!!, 2 = Wayfire, = Labwc
+		switch WINDOW_MANAGER {
+		case 1: // X11
+			d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
+		case 2: // Wayfire
+			d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
+		case 3: // Labwc
+			d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
+		}
 
-		d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-left", "1920", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
-		// d.lmExecCmd.Env = append(d.lmExecCmd.Environ(), "WAYLAND_DISPLAY=wayland-0") // TODO: could this help?
+		// d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-left", "-800", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
 
+		// d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
+		// d.lmExecCmd.Env = append(d.lmExecCmd.Environ(), "WAYLAND_DISPLAY=wayland-1") // TODO: could this help?
+		// d.lmExecCmd.Env = append(d.lmExecCmd.Environ(), "DISPLAY=:0") // TODO: could this help?
 		// log.Printf("INFO: Env: %v", d.lmExecCmd.Env)
 
 		if err := d.fpExecCmd.Start(); err != nil {

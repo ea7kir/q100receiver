@@ -41,10 +41,10 @@ Update Pi OS - TODO:
 ###################################################
 "
 
-# sudo apt update
-# sudo apt -y full-upgrade
-# sudo apt -y autoremove
-# sudo apt clean
+sudo apt update
+sudo apt -y full-upgrade
+sudo apt -y autoremove
+sudo apt clean
 
 echo "
 ###################################################
