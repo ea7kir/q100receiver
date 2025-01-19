@@ -1,17 +1,22 @@
 ## TODO:
 
-- revise what data to monitor - eg resolution & frame rate
-- implement auto calibrate on beacon
-- improve marker widths
+- Compositor
+    - make it work on Labwc
+- Spectrum
+    - improve marker widths
+- Display
+    - revise what to monitor - eg resolution & frame rate
+- Stream
+    - implement the Stream button
 
 ## Find ways to make install easier
 
-- Appearance Setings / Taskbar
+- Appearance Settings / Taskbar
     - Set Taskbar to DSI-1
-- Appearance Setings / Desktop:
+- Appearance Settings / Desktop:
     - Set HDMI wallpaper to NoVideo.jpg
     - Disable Documents, Wastebasket and External Disks for HDMI and DSI-1
-- Appearance Setings / Desktop:
+- Appearance Settings / Desktop:
     - Set HDMI wallpaper to NoVideo.jpg
     - Disable Documents, Wastebasket and External Disks
 - Adjust Volume level to maximum

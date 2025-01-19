@@ -5,7 +5,7 @@
 
 # CONFIFIGURATION
 GOVERSION=1.23.4
-GIOUIVERSION=8.0
+GIOUIVERSION=v0.8.0
 
 # nmcli device
 # DEVICE         TYPE      STATE                   CONNECTION         
