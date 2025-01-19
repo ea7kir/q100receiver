@@ -4,8 +4,8 @@
 # Orignal design by Michael, EA7KIR
 
 # CONFIFIGURATION
-GOVERSION=1.23.1
-GIOUIVERSION=7.1
+GOVERSION=1.23.4
+GIOUIVERSION=8.0
 
 # nmcli device
 # DEVICE         TYPE      STATE                   CONNECTION         

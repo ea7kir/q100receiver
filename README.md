@@ -56,12 +56,12 @@ chmod +x /home/pi/Q100/q100receiver/etc/install.sh
 ### After rebooting
 Use your finger to configure some Desktop settings:
 ```
-Appearance Steetings / Taskbar
+Appearance Settings / Taskbar
     Set Taskbar to DSI-1
-Appearance Steetings / Desktop:
+Appearance Settings / Desktop:
     Set HDMI wallpaper to NoVideo.jpg
     Disable Documents, Wastebasket and External Disks for HDMI and DSI-1
-Appearance Steetings / Desktop:
+Appearance Settings / Desktop:
     Set HDMI wallpaper to NoVideo.jpg
     Disable Documents, Wastebasket and External Disks
 Adjust Volume level to maximum
