@@ -19,10 +19,11 @@ import (
 const (
 	config_LmBaseFolder = "/home/pi/Q100/"
 
-	config_LmFolder     = config_LmBaseFolder + "longmynd/"
-	config_LmBinary     = config_LmBaseFolder + "longmynd/longmynd"
-	config_LmStatusFifo = config_LmBaseFolder + "longmynd/longmynd_main_status"
-	config_LmOffset     = float64(9750000)
+	config_LmFolder          = config_LmBaseFolder + "longmynd/"
+	config_LmBinary          = config_LmBaseFolder + "longmynd/longmynd"
+	config_LmStatusFifo      = config_LmBaseFolder + "longmynd/longmynd_main_status"
+	config_LmOffset_Received = float64(9750000 - 52) // only the displayed frequency
+	config_LmOffset_Reqested = float64(9750000 + 0)
 
 	config_FpTsFifo = config_LmBaseFolder + "longmynd/longmynd_main_ts"
 	config_FpBinary = "/usr/bin/ffplay"

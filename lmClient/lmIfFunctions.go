@@ -264,8 +264,8 @@ func (d *LmData_t) id6_setFrequency(carrierFrequencyStr string, requestedKHz flo
 		d.Frequency = kDash
 		return
 	}
-	receivedFrequencyKHz := kHzFloat + config_LmOffset
-	d.Frequency = fmt.Sprintf("%.2f", receivedFrequencyKHz/1000)
+	receivedFrequencyKHz := kHzFloat + config_LmOffset_Received
+	d.Frequency = fmt.Sprintf("%.3f", receivedFrequencyKHz/1000)
 
 	frequencyErroorKHz := (kHzFloat - requestedKHz)
 	d.FreqOffset = fmt.Sprintf("%.3f", frequencyErroorKHz/1000)
