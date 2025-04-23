@@ -20,8 +20,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ajstarks/giocanvas"
-
 	"gioui.org/app"
 	"gioui.org/font/gofont"
 	"gioui.org/io/system"
@@ -32,6 +30,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/ajstarks/giocanvas"
 	"golang.org/x/image/colornames"
 )
 
