@@ -93,6 +93,8 @@ func (d *lmDependants_t) startFfplay() {
 		case 1: // X11
 			d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
 		case 2: // Wayfire
+			// os.Setenv("XDG_RUNTIME_DIR", "/run/user/1000") // TODO: is 1000 corrrect?
+			// os.Setenv("WAYLAND_DISPLAY", "wayland-1")      // required for wayland. Compile with: go build --tags nox11 .
 			d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
 		case 3: // Labwc
 			d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
