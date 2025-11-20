@@ -4,7 +4,7 @@
 # Orignal design by Michael, EA7KIR
 
 # CONFIFIGURATION
-GOVERSION=1.24.5
+GOVERSION=1.25.4
 GIOUIVERSION=v0.9.0
 
 # nmcli device
