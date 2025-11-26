@@ -1,0 +1,38 @@
+# cd /home/pi/Q100/q100receiver/etc
+# sudo cp q100receiver.service /etc/systemd/system/
+# sudo chmod 644 /etc/systemd/system/q100receiver.service
+# sudo systemctl daemon-reload
+#
+# sudo systemctl enable q100receiver
+# sudo systemctl start q100receiver
+#
+# sudo systemctl status q100receiver
+#
+# sudo systemctl stop q100receiver
+# sudo systemctl disable q100receiver
+
+# TO GET AUDIO ON HDMI IT SEEMS NECCESSAY TO EDIT /boot/config.txt
+# AND COOMENT OUT dtparam=audio=on
+# OR append to [All] dtparam=audio=off
+
+[Unit]
+Description=Q-100 Receiver
+Wants=graphical.target network-online.target
+After=graphical.target network-online.target
+
+[Service]
+User=pi
+Group=pi
+StandardOutput=append:/home/pi/Q100/receiver.log
+StandardError=append:/home/pi/Q100/receiver.log
+Environment="XDG_RUNTIME_DIR=/run/user/1000"
+# Environment="DISPLAY=:0"
+Environment="WAYLAND_DISPLAY=wayland-1"
+WorkingDirectory=/home/pi/Q100/q100receiver
+
+# append -shutdown to implement poweroff on exit
+ExecStart=/home/pi/Q100/q100receiver/q100receiver
+# ExecStart=/home/pi/Q100/q100receiver/q100receiver -shutdown
+
+[Install]
+WantedBy=graphical.target  network-online.target
