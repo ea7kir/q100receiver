@@ -1,0 +1,98 @@
+Installing without a gui
+
+install:
+
+Pi OS Lite
+
+add .gitconfig
+
+follow README.md on GitHub
+
+run VSCODE and get GO Extension working - it takes time !
+
+compile with go build --tags nowayland .
+
+run from console with startx ./Q100/q100receiver/q100receiver
+
+or from console startx then ./Q100/q100receiver/q100receiver
+
+WOKKS, BUT ON BOTH MONITORS
+So, NEED TO DEFINE A 2ND MONITOR FO X11
+
+
+-----
+xrandr | awk /connected/
+HDMI-1 connected primary 720x480+0+0 (normal left inverted right x axis y axis) 527mm x 296mm
+HDMI-2 disconnected (normal left inverted right x axis y axis)
+DSI-1 connected 800x480+0+0 (normal left inverted right x axis y axis) 0mm x 0mm
+-----
+
+
+
+example .profile to auto startx after you set cli autologin in raspi-c
+if [ $(tty) == /dev/tty1 ]; then
+     exec startx
+fi
+
+DUCK.AI question
+How to configure y second display on a Raspberry Pi 4B running Pi OS Lite (64-bit). with only Xorg installed?  I have 2 monitors connected, the primary display is a 7 inch touch screen (800 x 480), the second display is a 24 inch (1920 x 1080).  I need to address each monitor individually.  The output from the command "xrandr | awk /connected/" is as follows:
+
+HDMI-1 connected primary 720x480+0+0 (normal left inverted right x axis y axis) 527mm x 296mm
+HDMI-2 disconnected (normal left inverted right x axis y axis)
+DSI-1 connected 800x480+0+0 (normal left inverted right x axis y axis) 0mm x 0mm
+
+
+If you want one-line final layout to drop into startup:
+DISPLAY=:0 xrandr --output DSI-1 --mode 800x480 --primary && DISPLAY=:0 xrandr --output HDMI-1 --mode 1920x1080 --right-of DSI-1 && xinput map-to-output "Your Touch Device Name" DSI-1
+
+drop this into .xsessionrc and make it executable
+
+=====================
+
+xrandr -q
+
+Screen 0: minimum 320 x 200, current 800 x 480, maximum 7680 x 7680
+HDMI-1 connected 720x480+0+0 (normal left inverted right x axis y axis) 527mm x 296mm
+   1920x1080    100.00    75.00    60.00    60.00    60.00    50.00    59.94
+   1920x1080i    60.00    59.94
+   1680x1050     59.88
+   1600x900      60.00
+   1280x1024     75.02    60.02
+   1440x900      59.90
+   1366x768      60.00
+   1152x864      59.97
+   1280x720      60.00    50.00    59.94
+   1024x768      75.03    70.07    60.00
+   800x600       72.19    75.00    60.32
+   720x480       60.00*   59.94
+   640x480       75.00    72.81    60.00    59.94
+HDMI-2 disconnected (normal left inverted right x axis y axis)
+DSI-1 connected primary 800x480+0+0 (normal left inverted right x axis y axis) 0mm x 0mm
+   800x480       60.03*+
+
+
+sudo apt install xinput-calibrator
+
+driver "10-0038 generic ft5x06 (79)"
+
+
+================ INSTALL DESKTOP
+
+1)
+
+###################################################
+Making changes to raspi-config
+###################################################
+
+sudo: pactl: command not found
+
+IE:  sudo raspi-config nonint do_audio 1  FAILS
+
+2)
+
+After rebooting, no auto login !
+
+onscreen keyboard and normal keyborad won't login, but ssh does !
+
+
+I began trying to update to the Trixie version a few days ago and forced to update Imager to 1.9.6.  It took hours of trial an error to overcome the authentication issue when all I wanted was simply a an old fashioned password. Then I seen days, only to discover so many things preventing my wayfire app from working.  Gave in and battled with Xorg/X11 without a desktop, but had to give in.  Then there was 2.0.0, which solved the password issue. Still with a solution for my wayfire application.  I decided to give label another try.  I head there is another Imager at 2.0.1, but it's not available for Mac.  Ok, here we go again... After installing the label desktop version, I can't login. Not from the keyboard, or from the on-screen keyboard.  Only way in is to the terminal console via SSH.   I can't imagine how you have managed to mess up so much.  Please try harder.

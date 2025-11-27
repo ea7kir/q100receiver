@@ -2,6 +2,8 @@
 ### Control and monitor a DATV receiver with a touch screen.
 ![tx](doc/rx.jpeg)
 ### REQUIRES Raspberry PI OS (Legacy 64-BIT) - the Bookworm Desktop version
+# DO NOT UPDATE Pi OS !
+## Perhaps caused bye the new version of Raspeberry Pi Imager
 
 The project was first commited to GitHub 2 years ago, but I screwed my git commands. This repro re-started late November, 2025.
 
@@ -31,7 +33,7 @@ CHOOSE Operating Sysytem: Raspberry Pi OS (Legacy 64-bit)
 
 Note: this is the Debian Bookwork version with a desktop environment
 
-Unforunatley, the new Trixie version, with labwc, is a load of crap
+Unforunatley, the new Trixie version with labwc desn't work
 
 Set hostname to: rxtouch
 Set city, timezone, kbd layout to: <whatever>
@@ -53,8 +55,6 @@ ssh pi@rxtouch.local
 ```
 ### From now on we're on the Pi
 ```
-sudo apt update
-sudo apt -y install git
 mkdir /home/pi/Q100
 cd /home/pi/Q100
 git clone https://github.com/ea7kir/q100receiver.git
