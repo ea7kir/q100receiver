@@ -107,7 +107,7 @@ func (d *lmDependants_t) startFfplay() {
 		// d.lmExecCmd.Env = append(d.lmExecCmd.Environ(), "DISPLAY=:0") // TODO: could this help?
 		// log.Printf("INFO: Env: %v", d.lmExecCmd.Env)
 
-		d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
+		d.fpExecCmd = exec.Command("/usr/bin/ffplay", "-left", "800", "-fs", "-volume", config_FpVolume, "-i", config_FpTsFifo)
 
 		if err := d.fpExecCmd.Start(); err != nil {
 			log.Printf("ERROR failed to start ffplay: %v", err)
