@@ -4,7 +4,7 @@
 # Orignal design by Michael, EA7KIR
 
 # CONFIFIGURATION
-GOVERSION=1.25.4
+GOVERSION=1.26.2
 GIOUIVERSION=v0.9.0
 
 # nmcli device
@@ -42,7 +42,7 @@ Update Pi OS - TODO:
 "
 
 sudo apt update
-sudo apt -y full-upgrade
+sudo apt -y upgrade
 sudo apt -y autoremove
 sudo apt clean
 

@@ -1,6 +1,6 @@
 module q100receiver
 
-go 1.25.4
+go 1.26.2
 
 require (
 	gioui.org v0.9.0
