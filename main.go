@@ -34,6 +34,13 @@ import (
 	"golang.org/x/image/colornames"
 )
 
+// profile from the Mac
+// go tool pprof http://txtouch.local:6060/debug/pprof/profile
+// go tool pprof -http=":" pprof.q100transmitter.samples.cpu.001.pb.gz
+
+// race detection
+// go run -race main.go
+
 // local data
 var (
 	rxCmdChan  = make(chan rxControl.RxCmd_t)
@@ -106,21 +113,19 @@ func main() {
 	}()
 
 	app.Main()
-}
+
+} // main
 
 func loop(w *app.Window) error {
-	// ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	// defer stop()
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
-	// defer signal.Stop(quit)
 
 	ui := UI{
-		// th: material.NewTheme(gofont.Collection()),
 		th: material.NewTheme(),
 	}
-	// without this, the font sizes are inconsistent
+
+	// Without this, the font sizes are inconsistent
 	// Chris says keep using the original font
 	ui.th.Shaper = text.NewShaper(text.NoSystemFonts(), text.WithCollection(gofont.Collection()))
 
@@ -133,8 +138,8 @@ func loop(w *app.Window) error {
 		select {
 		// case <-ctx.Done():
 		case <-interrupt:
-			// When the context cancels, assign the done channel to nil to
-			// prevent it from firing over and over.
+			// When the context cancels, assign the done channel to nil
+			// to prevent it from firing over and over.
 			interrupt = nil
 			w.Perform(system.ActionClose)
 		case rxData = <-rxDataChan:
@@ -182,7 +187,7 @@ func loop(w *app.Window) error {
 			event.Frame(gtx.Ops)
 		}
 	}
-}
+} // loop
 
 // custom color scheme
 var q100color = struct {
